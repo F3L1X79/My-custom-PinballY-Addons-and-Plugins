@@ -1,0 +1,230 @@
+﻿// ============================================================
+// Utilities for animating PinballY's game wheel to a target index by
+// simulating "Next" / "NextPage" button presses, with configurable
+// timing and an optional early-exit check (e.g. to cancel the animation
+// when the user opens a menu mid-spin).
+// ============================================================
+
+const ACCELERATION_DELAYS_MS = [200, 150, 100, 50];
+const DECELERATION_DELAYS_MS = [100, 200, 350, 500, 750, 1000];
+const SHORT_NAVIGATION_THRESHOLD = 20;
+
+/** Resolves after `ms` milliseconds. */
+export function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, Math.max(0, Number(ms) || 0)));
+}
+
+/**
+ * Computes the delay (ms) before the next button press.
+ * If `delayOptions.fixedDelayMs` is set, always returns that fixed value.
+ * Otherwise returns a "wheel of fortune" style curve: fast at first, then
+ * decelerating toward the end, scaled from `delayOptions.baseSpeedMs`.
+ *
+ * @param {number} stepIndex 1-based index of the step about to run.
+ * @param {number} totalSteps Total number of steps in the animation.
+ * @param {{fixedDelayMs?: number, baseSpeedMs?: number}} [delayOptions]
+ */
+export function computeStepDelay(stepIndex, totalSteps, delayOptions = {}) {
+    if (delayOptions.fixedDelayMs != null) {
+        return Math.max(0, Number(delayOptions.fixedDelayMs) || 0);
+    }
+
+    const baseSpeedMs = Math.max(0, Number(delayOptions.baseSpeedMs ?? 200) || 0);
+    const safeStepIndex = Math.max(1, Number(stepIndex) || 1);
+    const safeTotalSteps = Math.max(safeStepIndex, Number(totalSteps) || safeStepIndex);
+
+    if (safeStepIndex <= ACCELERATION_DELAYS_MS.length) {
+        return baseSpeedMs + ACCELERATION_DELAYS_MS[safeStepIndex - 1];
+    }
+
+    const stepsRemaining = safeTotalSteps - safeStepIndex;
+    if (stepsRemaining === 0) {
+        return baseSpeedMs
+            + DECELERATION_DELAYS_MS[DECELERATION_DELAYS_MS.length - 1]
+            + Math.floor(Math.random() * 700);
+    }
+
+    if (stepsRemaining < DECELERATION_DELAYS_MS.length) {
+        return baseSpeedMs + DECELERATION_DELAYS_MS[DECELERATION_DELAYS_MS.length - 1 - stepsRemaining];
+    }
+
+    return baseSpeedMs;
+}
+
+/**
+ * Presses a button repeatedly, waiting between presses according to
+ * `computeStepDelay`. Stops early if `abortCheck()` returns true.
+ *
+ * @returns {Promise<number>} Number of presses actually performed
+ *   (less than `times` if the animation was aborted early).
+ */
+export async function pressButtonRepeatedly(
+    buttonName,
+    times,
+    stepOffset,
+    totalSteps,
+    delayOptions,
+    abortCheck
+) {
+    const safeTimes = Math.max(0, Math.floor(Number(times) || 0));
+    const safeStepOffset = Math.max(0, Math.floor(Number(stepOffset) || 0));
+
+    for (let i = 0; i < safeTimes; i++) {
+        if (abortCheck && abortCheck()) return i;
+
+        mainWindow.doButtonCommand(buttonName, true, 0);
+        mainWindow.doButtonCommand(buttonName, false, 0);
+
+        await sleep(computeStepDelay(
+            safeStepOffset + i + 1,
+            totalSteps,
+            delayOptions
+        ));
+    }
+
+    return safeTimes;
+}
+
+function getGameFirstLetter(game) {
+    if (!game) return "";
+    const value = game.configId != null ? game.configId : game.title;
+    return String(value ?? "").charAt(0);
+}
+
+/**
+ * Splits a wheel navigation of `targetIndex` steps into "page jumps"
+ * (NextPage, roughly one per starting letter crossed) and "item jumps"
+ * (Next, one per table). This avoids hundreds of single-table "Next"
+ * presses for long jumps by using page-jumps to cross most of the alphabet,
+ * then fine-tuning with individual "Next" presses.
+ * Falls back to item-only jumps for short distances (<= 20 tables).
+ *
+ * @param {number} targetIndex Index to reach, relative to the current position.
+ * @param {object[]} games Ordered game list, as returned by gameList.getAllWheelGames().
+ * @returns {{pageJumpCount: number, itemJumpCount: number}}
+ */
+export function computeNavigationPlan(targetIndex, games) {
+    const safeTargetIndex = Math.max(0, Math.floor(Number(targetIndex) || 0));
+    if (safeTargetIndex <= SHORT_NAVIGATION_THRESHOLD) {
+        return { pageJumpCount: 0, itemJumpCount: safeTargetIndex };
+    }
+
+    if (!Array.isArray(games) || games.length === 0) {
+        return { pageJumpCount: 0, itemJumpCount: safeTargetIndex };
+    }
+
+    const cappedTargetIndex = Math.min(safeTargetIndex, games.length - 1);
+    const letterChangeIndexes = [];
+    let previousFirstLetter = getGameFirstLetter(games[0]);
+
+    for (let i = 0; i < cappedTargetIndex; i++) {
+        const firstLetter = getGameFirstLetter(games[i]);
+        if (firstLetter !== previousFirstLetter) {
+            previousFirstLetter = firstLetter;
+            letterChangeIndexes.push(i);
+        }
+    }
+
+    let pageJumpCount = 0;
+    let lastPageJumpIndex = cappedTargetIndex;
+
+    for (const letterChangeIndex of letterChangeIndexes) {
+        pageJumpCount++;
+        const remaining = cappedTargetIndex - letterChangeIndex;
+
+        if (remaining < SHORT_NAVIGATION_THRESHOLD) {
+            if (remaining <= 0) pageJumpCount--;
+            else lastPageJumpIndex = letterChangeIndex;
+            break;
+        }
+
+        lastPageJumpIndex = letterChangeIndex;
+    }
+
+    return {
+        pageJumpCount,
+        itemJumpCount: cappedTargetIndex - lastPageJumpIndex,
+    };
+}
+
+/**
+ * Animates the wheel from its current position to `targetIndex` within
+ * `games`, then returns the index actually reached (which can be one
+ * less than `targetIndex` if the final step was randomly skipped —
+ * see `skipFinalStepProbability`).
+ *
+ * @param {object[]} games Ordered game list, as returned by gameList.getAllWheelGames().
+ * @param {number} targetIndex Target index within `games`.
+ * @param {object} [options]
+ * @param {number} [options.fixedDelayMs] Fixed delay (ms) between presses. Overrides the acceleration curve.
+ * @param {number} [options.baseSpeedMs] Base speed (ms) for the acceleration curve (ignored if fixedDelayMs is set).
+ * @param {number} [options.skipFinalStepProbability] Probability (0-1) of skipping the very last "Next" press.
+ * @param {boolean} [options.usePageJumpOptimization] Use NextPage-based letter jumps for long distances.
+ * @param {() => boolean} [options.abortCheck] Checked before each press; the animation stops early if it returns true.
+ * @returns {Promise<number>} The index actually reached.
+ */
+export async function animateWheelTo(games, targetIndex, options = {}) {
+    const safeGames = Array.isArray(games) ? games : [];
+    if (safeGames.length === 0) return 0;
+
+    const maxIndex = safeGames.length - 1;
+    const safeTargetIndex = Math.max(0, Math.min(
+        maxIndex,
+        Math.floor(Number(targetIndex) || 0)
+    ));
+
+    if (safeTargetIndex === 0) return 0;
+
+    const skipFinalStepProbability = Math.max(0, Math.min(
+        1,
+        Number(options.skipFinalStepProbability ?? 0) || 0
+    ));
+    const usePageJumpOptimization = options.usePageJumpOptimization ?? false;
+    const abortCheck = options.abortCheck;
+    const delayOptions = {
+        fixedDelayMs: options.fixedDelayMs,
+        baseSpeedMs: options.baseSpeedMs,
+    };
+
+    let pageJumpCount = 0;
+    let itemJumpCount = safeTargetIndex;
+
+    if (usePageJumpOptimization) {
+        const plan = computeNavigationPlan(safeTargetIndex, safeGames);
+        pageJumpCount = plan.pageJumpCount;
+        itemJumpCount = plan.itemJumpCount;
+    }
+
+    const totalSteps = pageJumpCount + itemJumpCount;
+
+    if (pageJumpCount > 0) {
+        const completed = await pressButtonRepeatedly(
+            "NextPage",
+            pageJumpCount,
+            0,
+            totalSteps,
+            delayOptions,
+            abortCheck
+        );
+        if (completed < pageJumpCount) return 0;
+    }
+
+    let actualItemJumps = itemJumpCount;
+    let finalIndex = safeTargetIndex;
+
+    if (itemJumpCount > 0 && Math.random() < skipFinalStepProbability) {
+        actualItemJumps--;
+        finalIndex--;
+    }
+
+    await pressButtonRepeatedly(
+        "Next",
+        actualItemJumps,
+        pageJumpCount,
+        totalSteps,
+        delayOptions,
+        abortCheck
+    );
+
+    return Math.max(0, finalIndex);
+}

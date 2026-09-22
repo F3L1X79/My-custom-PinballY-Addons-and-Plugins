@@ -1,0 +1,20 @@
+﻿import lang from "./common/i18n.js";
+import config from "./common/config.js";
+
+// ============================================================
+// Adds an "Original Tables" filter to PinballY's native "Filter by
+// Manufacturer" menu, selecting every table EXCEPT the community-made
+// VPX tables (identified by config.tableMetadata.communityManufacturerName).
+// ============================================================
+
+export default function init() {
+    const { communityManufacturerName: COMMUNITY_MANUFACTURER_NAME } = config.tableMetadata;
+    const { originalTablesFilter: FILTER_TITLE } = lang.customMenuLabels;
+
+    gameList.createFilter({
+        id: "project.OriginalTables",
+        title: FILTER_TITLE,
+        group: "[Manuf]",
+        select: game => game.manufacturer !== COMMUNITY_MANUFACTURER_NAME,
+    });
+}
