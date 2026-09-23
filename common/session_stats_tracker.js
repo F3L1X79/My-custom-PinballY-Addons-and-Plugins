@@ -12,9 +12,15 @@ import { safeHandler } from "./safe_handler.js";
 // script load order.
 // ============================================================
 
-const LONGEST_SESSION_KEY = "custom.sessionStats.longestSeconds";
-const SHORTEST_SESSION_KEY = "custom.sessionStats.shortestSeconds";
-const GRAND_RETURN_FLAG_KEY = "custom.sessionStats.grandReturnUnlocked";
+// Exported so the achievement readers (achievements/session_milestones.js)
+// use the exact keys this tracker writes. The strings must never change,
+// or previously saved stats would be lost.
+/** Settings key of the longest session duration ever recorded, in seconds. */
+export const LONGEST_SESSION_KEY = "custom.sessionStats.longestSeconds";
+/** Settings key of the shortest session duration ever recorded, in seconds (-1 when none). */
+export const SHORTEST_SESSION_KEY = "custom.sessionStats.shortestSeconds";
+/** Settings key of the flag set once a table is relaunched after a long absence. */
+export const GRAND_RETURN_FLAG_KEY = "custom.sessionStats.grandReturnUnlocked";
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
 const SCRIPT_NAME = "SessionStatsTracker";
 

@@ -1,10 +1,12 @@
 ﻿import config from "../common/config.js";
 import lang from "../common/i18n.js";
+import { LONGEST_SESSION_KEY, SHORTEST_SESSION_KEY, GRAND_RETURN_FLAG_KEY } from "../common/session_stats_tracker.js";
 
-const LONGEST_SESSION_KEY = "custom.sessionStats.longestSeconds";
-const SHORTEST_SESSION_KEY = "custom.sessionStats.shortestSeconds";
-const GRAND_RETURN_FLAG_KEY = "custom.sessionStats.grandReturnUnlocked";
-
+/**
+ * Builds the marathon, rage-quit and grand-return achievements from the
+ * session stats recorded by common/session_stats_tracker.js.
+ * @returns {object[]} Achievement objects ({ id, getTitle, getDescription, checkUnlocked }).
+ */
 export function buildSessionMilestoneAchievements() {
     const { achievements: TEXT } = lang;
     const { marathonThresholdsMinutes, rageQuitThresholdSeconds, grandReturnThresholdDays } = config.achievements;

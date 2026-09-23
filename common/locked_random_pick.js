@@ -6,6 +6,8 @@
 // period key itself changes.
 // ============================================================
 
+import { getVisibleTables } from "./visible_tables.js";
+
 export function createLockedPicker({ settingsKeyPrefix, getPeriodKey, pickNew }) {
     const lockedPeriodKey = `${settingsKeyPrefix}.period`;
     const lockedConfigIdKey = `${settingsKeyPrefix}.configId`;
@@ -34,8 +36,14 @@ export function createLockedPicker({ settingsKeyPrefix, getPeriodKey, pickNew })
     };
 }
 
+/**
+ * Picks a random never-played visible table, or else the one played least
+ * recently, skipping the given table so the pick changes between periods.
+ * @param {string} excludeConfigId - Config id to skip ("" to skip none).
+ * @returns {object|null} The chosen game, or null when no candidate is left.
+ */
 export function pickNeverPlayedOrOldest(excludeConfigId) {
-    const allGames = gameList.getAllGames().filter(game => !game.isHidden && game.configId !== excludeConfigId);
+    const allGames = getVisibleTables().filter(game => game.configId !== excludeConfigId);
     if (allGames.length === 0) return null;
 
     const neverPlayed = allGames.filter(game => !game.lastPlayed);
@@ -48,8 +56,14 @@ export function pickNeverPlayedOrOldest(excludeConfigId) {
     );
 }
 
+/**
+ * Picks a uniformly random visible table, skipping the given table so the
+ * pick changes between periods.
+ * @param {string} excludeConfigId - Config id to skip ("" to skip none).
+ * @returns {object|null} The chosen game, or null when no candidate is left.
+ */
 export function pickPurelyRandom(excludeConfigId) {
-    const allGames = gameList.getAllGames().filter(game => !game.isHidden && game.configId !== excludeConfigId);
+    const allGames = getVisibleTables().filter(game => game.configId !== excludeConfigId);
     if (allGames.length === 0) return null;
     return allGames[Math.floor(Math.random() * allGames.length)];
 }

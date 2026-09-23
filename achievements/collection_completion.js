@@ -1,5 +1,6 @@
 ﻿import config from "../common/config.js";
 import lang from "../common/i18n.js";
+import { getVisibleTables } from "../common/visible_tables.js";
 
 // ============================================================
 // Achievements for the number of DISTINCT tables played at least once:
@@ -7,15 +8,24 @@ import lang from "../common/i18n.js";
 // percentage of the full collection.
 // ============================================================
 
+/**
+ * Builds the "first table" achievement and one achievement per configured
+ * percentage of the visible collection played at least once.
+ * @returns {object[]} Achievement objects ({ id, getTitle, getDescription, checkUnlocked }).
+ */
 export function buildCollectionCompletionAchievements() {
     const { achievements: TEXT } = lang;
     const { collectionPercentThresholds } = config.achievements;
 
-    const allGames = gameList.getAllGames().filter(game => !game.isHidden);
-    const totalCount = allGames.length;
+    const totalCount = getVisibleTables().length;
 
+    /**
+     * Counts visible tables played at least once, re-read on every check so
+     * that new plays are taken into account.
+     * @returns {number} Number of visible tables with a non-zero play count.
+     */
     function countPlayed() {
-        return gameList.getAllGames().filter(game => !game.isHidden && game.playCount > 0).length;
+        return getVisibleTables().filter(game => game.playCount > 0).length;
     }
 
     const achievements = [
