@@ -1,0 +1,159 @@
+// ============================================================
+// Contract tests for the PinballY host: the same behaviours are checked on
+// the in-memory fake host and on the production adapter running over the
+// fake PinballY globals, so both adapters stay interchangeable.
+// Run with "node --test" from the project folder.
+// ============================================================
+
+import { describe, test, beforeEach, afterEach } from "node:test";
+import assert from "node:assert/strict";
+import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createPinballYHost } from "../common/pinbally_host.js";
+
+const TABLES = [
+    { id: 1, configId: "Medieval Madness (Williams 1997)", title: "Medieval Madness", isHidden: false },
+    { id: 2, configId: "Attack from Mars (Bally 1995)", title: "Attack from Mars", isHidden: false },
+    { id: 3, configId: "Hidden Table (Gottlieb 1978)", title: "Hidden Table", isHidden: true },
+];
+
+const ADAPTERS = [
+    { name: "fake host", createHost: (fake) => fake },
+    { name: "production host over fake globals", createHost: () => createPinballYHost(), usesGlobals: true },
+];
+
+for (const { name, createHost, usesGlobals } of ADAPTERS) {
+    describe(name, () => {
+        let fake;
+        let host;
+        let uninstallGlobals = () => {};
+
+        beforeEach(() => {
+            fake = createFakePinballYHost({ now: new Date(2026, 8, 23, 10, 0, 0), tables: TABLES });
+            if (usesGlobals) uninstallGlobals = fake.installGlobals();
+            host = createHost(fake);
+        });
+
+        afterEach(() => uninstallGlobals());
+
+        test("reads back settings with their type, or the default when missing", () => {
+            host.settings.set("custom.test.count", 12);
+            host.settings.set("custom.test.ratio", 1.5);
+            host.settings.set("custom.test.flag", true);
+            host.settings.set("custom.test.name", "2026-09-21");
+
+            assert.equal(host.settings.getInt("custom.test.count", 0), 12);
+            assert.equal(host.settings.getFloat("custom.test.ratio", 0), 1.5);
+            assert.equal(host.settings.getBool("custom.test.flag", false), true);
+            assert.equal(host.settings.getString("custom.test.name", ""), "2026-09-21");
+            assert.equal(host.settings.getString("custom.test.count", ""), "12");
+
+            assert.equal(host.settings.getInt("custom.test.missing", 7), 7);
+            assert.equal(host.settings.getBool("custom.test.missing", false), false);
+            assert.equal(host.settings.getString("custom.test.missing", ""), "");
+        });
+
+        test("reports the written settings keys, not the seeded ones", () => {
+            fake.seedSettings({ "custom.test.seeded": "1" });
+            host.settings.set("custom.test.written", 3);
+
+            assert.equal(host.settings.getInt("custom.test.seeded", 0), 1);
+            assert.deepEqual([...fake.writtenSettingsKeys()], ["custom.test.written"]);
+        });
+
+        test("gives the date set by the test, and moves it forward", () => {
+            assert.equal(host.now().getTime(), new Date(2026, 8, 23, 10, 0, 0).getTime());
+
+            fake.advanceTime(90 * 60 * 1000);
+            assert.equal(host.now().getTime(), new Date(2026, 8, 23, 11, 30, 0).getTime());
+
+            fake.setNow(new Date(2026, 8, 28, 0, 0, 1));
+            assert.equal(host.now().getTime(), new Date(2026, 8, 28, 0, 0, 1).getTime());
+        });
+
+        test("lists the visible tables and finds a table by config ID", () => {
+            assert.deepEqual(host.getVisibleTables().map(game => game.configId), [
+                "Medieval Madness (Williams 1997)",
+                "Attack from Mars (Bally 1995)",
+            ]);
+            assert.equal(host.getGameInfo("Attack from Mars (Bally 1995)").title, "Attack from Mars");
+            assert.equal(host.getGameInfo("No Such Table"), null);
+
+            fake.setTables([{ id: 9, configId: "Theatre of Magic (Bally 1995)", title: "Theatre of Magic" }]);
+            assert.deepEqual(host.getVisibleTables().map(game => game.title), ["Theatre of Magic"]);
+        });
+
+        test("allocates a distinct command ID per name", () => {
+            const first = host.allocateCommand("first");
+            const second = host.allocateCommand("second");
+
+            assert.notEqual(first, second);
+            assert.equal(fake.commandId("second"), second);
+        });
+
+        test("shows a menu, then closing it fires menuclose and returns to the wheel", () => {
+            const events = [];
+            host.on("menuclose", ev => events.push(`menuclose:${ev.id}`));
+            host.on("wheelmode", () => events.push("wheelmode"));
+
+            assert.equal(host.getUIMode(), "wheel");
+            host.showMenu("testDialog", [{ title: "Hello", cmd: -1 }], { dialogStyle: true });
+
+            assert.equal(host.getUIMode(), "menu");
+            assert.equal(fake.currentMenu().id, "testDialog");
+            assert.deepEqual(fake.shownMenus().map(menu => menu.id), ["testDialog"]);
+
+            fake.closeMenu();
+            assert.equal(host.getUIMode(), "wheel");
+            assert.equal(fake.currentMenu(), null);
+            assert.deepEqual(events, ["menuclose:testDialog", "wheelmode"]);
+        });
+
+        test("selecting a menu item fires its command, then closes the menu", () => {
+            const events = [];
+            const okCommand = host.allocateCommand("ok");
+            host.on("command", ev => events.push(`command:${ev.id}`));
+            host.on("menuclose", ev => events.push(`menuclose:${ev.id}`));
+
+            host.showMenu("testDialog", [{ title: "OK", cmd: okCommand }], { dialogStyle: true });
+            fake.selectMenuItem("OK");
+
+            assert.deepEqual(events, [`command:${okCommand}`, "menuclose:testDialog"]);
+        });
+
+        test("records table launches and plays the game events the test fires", () => {
+            const events = [];
+            host.on("gamestarted", ev => events.push(`gamestarted:${ev.game.configId}:${host.getUIMode()}`));
+            host.on("gameover", ev => events.push(`gameover:${ev.game.configId}`));
+            host.on("wheelmode", () => events.push(`wheelmode:${host.getUIMode()}`));
+
+            const game = host.getGameInfo("Medieval Madness (Williams 1997)");
+            host.playGame(game);
+            assert.deepEqual(fake.launches().map(launched => launched.configId), [game.configId]);
+
+            fake.gameStarted(game);
+            fake.gameOver(game);
+            assert.deepEqual(events, [
+                `gamestarted:${game.configId}:running`,
+                `gameover:${game.configId}`,
+                "wheelmode:wheel",
+            ]);
+        });
+    });
+}
+
+describe("fake PinballY globals", () => {
+    test("the global Date follows the fake host clock until uninstalled", () => {
+        const fake = createFakePinballYHost({ now: new Date(2026, 8, 23, 10, 0, 0) });
+        const uninstall = fake.installGlobals();
+        try {
+            assert.equal(new Date().getTime(), new Date(2026, 8, 23, 10, 0, 0).getTime());
+            fake.advanceTime(1000);
+            assert.equal(Date.now(), new Date(2026, 8, 23, 10, 0, 1).getTime());
+            assert.equal(new Date("2020-01-01T00:00:00Z").toISOString(), "2020-01-01T00:00:00.000Z");
+        } finally {
+            uninstall();
+        }
+        assert.ok(Math.abs(Date.now() - new Date(2026, 8, 23, 10, 0, 1).getTime()) > 1000);
+        assert.equal(globalThis.optionSettings, undefined);
+    });
+});

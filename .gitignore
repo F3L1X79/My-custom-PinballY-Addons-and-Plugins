@@ -7,4 +7,5 @@ docs/agents/
 docs/adr/
 CONTEXT.md
 CONTEXT-MAP.md
-.scratch/
+.scratch
+System/
