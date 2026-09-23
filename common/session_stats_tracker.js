@@ -50,13 +50,11 @@ export default function init() {
         if (startTime !== undefined) {
             const durationSeconds = (Date.now() - startTime) / 1000;
 
-            const longest = optionSettings.get(LONGEST_SESSION_KEY, 0);
+            const longest = optionSettings.getFloat(LONGEST_SESSION_KEY, 0);
             if (durationSeconds > longest) optionSettings.set(LONGEST_SESSION_KEY, durationSeconds);
 
-            const shortest = optionSettings.get(SHORTEST_SESSION_KEY, -1);
+            const shortest = optionSettings.getFloat(SHORTEST_SESSION_KEY, -1);
             if (shortest < 0 || durationSeconds < shortest) optionSettings.set(SHORTEST_SESSION_KEY, durationSeconds);
         }
-
-        optionSettings.save();
     }));
 }

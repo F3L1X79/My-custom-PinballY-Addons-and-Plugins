@@ -1,8 +1,9 @@
 ﻿// ============================================================
 // After a play session, if the table's CUMULATIVE play time has just
 // crossed config.ratingPrompt.thresholdMinutes and the table isn't rated
-// yet, shows a dialog offering to open PinballY's native rating dialog.
-// Listens to "gamestarted", "gameover" and "command".
+// yet, shows a dialog offering to open PinballY's native rating dialog once
+// back at the free wheel. Listens to "gamestarted", "gameover", "wheelmode"
+// and "command".
 // ============================================================
 
 import lang from "./common/i18n.js";
@@ -29,7 +30,10 @@ export default function init() {
     // below), and PinballY closing the menu on selection is all it must do.
     const DISMISS_RATING_PROMPT_COMMAND = command.allocate("dismissRatingPrompt");
 
-    // Fires on table exit: shows the prompt if the threshold was just crossed.
+    // Game waiting for its prompt until the wheel is free again.
+    let pendingGame = null;
+
+    // Fires on table exit: queues the prompt if the threshold was just crossed.
     mainWindow.on("gameover", safeHandler(SCRIPT_NAME, ev => {
         const game = ev.game;
         const startPlayTime = playTimeAtSessionStart.get(game.id);
@@ -39,13 +43,22 @@ export default function init() {
         if (game.rating >= 0) return;
 
         const justCrossedThreshold = startPlayTime < THRESHOLD_SECONDS && game.playTime >= THRESHOLD_SECONDS;
-        if (!justCrossedThreshold) return;
+        if (justCrossedThreshold) pendingGame = game;
+    }));
+
+    // Fires on every return to the wheel. The prompt waits until no other
+    // dialog (e.g. an achievement) is open, since a new menu would replace it,
+    // and until the game has fully exited, so it isn't hidden by the launch overlay.
+    mainWindow.on("wheelmode", safeHandler(SCRIPT_NAME, () => {
+        if (!pendingGame || mainWindow.getUIMode().mode !== "wheel") return;
+        const game = pendingGame;
+        pendingGame = null;
 
         mainWindow.showMenu(
             "ratingPrompt",
             [
                 { title: RATING_PROMPT_TEXT.message(game.title, THRESHOLD_MINUTES), cmd: -1 },
-                { title: "-" },
+                { cmd: -1 },
                 { title: RATING_PROMPT_TEXT.rateNow, cmd: CONFIRM_RATING_PROMPT_COMMAND },
                 { title: RATING_PROMPT_TEXT.notNow, cmd: DISMISS_RATING_PROMPT_COMMAND },
             ],

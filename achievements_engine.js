@@ -1,8 +1,9 @@
 ﻿// ============================================================
 // Checks all registered achievements at startup and after every
 // "gamestarted" and "gameover" event, and shows a congratulations dialog
-// for each newly unlocked one. Simultaneous unlocks are queued and shown
-// one at a time; listens to "command" for the acknowledge button.
+// for each newly unlocked one, once back at the free wheel ("wheelmode").
+// Simultaneous unlocks are queued and shown one at a time; listens to
+// "command" for the acknowledge button.
 // ============================================================
 
 import { evaluateAchievements } from "./common/achievements.js";
@@ -35,6 +36,9 @@ export default function init() {
     const ACKNOWLEDGE_COMMAND = command.allocate("acknowledgeAchievement");
 
     const pendingQueue = [];
+    // True when an unlock is waiting for the wheel to be free (game running,
+    // or another dialog such as the startup prompt still open).
+    let displayPending = false;
 
     function showNextInQueue() {
         if (pendingQueue.length === 0) return;
@@ -44,11 +48,22 @@ export default function init() {
             "achievementUnlocked",
             [
                 { title: TEXT.unlockedIntro(achievement.getTitle(), achievement.getDescription()), cmd: -1 },
-                { title: "-" },
+                { cmd: -1 },
                 { title: TEXT.acknowledge, cmd: ACKNOWLEDGE_COMMAND },
             ],
             { dialogStyle: true }
         );
+    }
+
+    // A dialog opened while a game is exiting would sit under the launch
+    // overlay, and one opened over another menu would replace it.
+    function showWhenWheelIsFree() {
+        if (mainWindow.getUIMode().mode === "wheel") {
+            displayPending = false;
+            showNextInQueue();
+        } else {
+            displayPending = true;
+        }
     }
 
     // Fires on every command; the acknowledge button shows the next queued unlock.
@@ -63,9 +78,16 @@ export default function init() {
         evaluateAchievements(getAllAchievements(), (achievement) => {
             const queueWasEmpty = pendingQueue.length === 0;
             pendingQueue.push(achievement);
-            if (queueWasEmpty) showNextInQueue();
+            if (queueWasEmpty) showWhenWheelIsFree();
         });
     }
+
+    // Fires on every return to the wheel (from a game, a menu or a popup):
+    // shows the unlocks that were waiting. Unlocks dismissed without being
+    // acknowledged are not re-shown here, only those still waiting.
+    mainWindow.on("wheelmode", safeHandler(SCRIPT_NAME, () => {
+        if (displayPending) showWhenWheelIsFree();
+    }));
 
     // The timer callback runs outside the event handler's call stack, so it
     // needs its own guard.

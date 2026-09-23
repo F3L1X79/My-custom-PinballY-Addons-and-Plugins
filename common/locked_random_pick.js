@@ -2,8 +2,8 @@
 // Generic "pick and lock for a period" helper behind the table of the day /
 // week. The returned picker keeps its choice for the whole period and picks
 // again (never the previous period's table) only when the period key
-// changes. The lock is stored in optionSettings under "<prefix>.period",
-// "<prefix>.configId" and "<prefix>.previousConfigId".
+// changes. The lock is stored in optionSettings under "<prefix>.period"
+// and "<prefix>.configId".
 // ============================================================
 
 import { getVisibleTables } from "./visible_tables.js";
@@ -11,7 +11,6 @@ import { getVisibleTables } from "./visible_tables.js";
 export function createLockedPicker({ settingsKeyPrefix, getPeriodKey, pickNew }) {
     const lockedPeriodKey = `${settingsKeyPrefix}.period`;
     const lockedConfigIdKey = `${settingsKeyPrefix}.configId`;
-    const previousConfigIdKey = `${settingsKeyPrefix}.previousConfigId`;
 
     return function pick() {
         const currentPeriodKey = getPeriodKey();
@@ -29,8 +28,6 @@ export function createLockedPicker({ settingsKeyPrefix, getPeriodKey, pickNew })
 
         optionSettings.set(lockedPeriodKey, currentPeriodKey);
         optionSettings.set(lockedConfigIdKey, newPick.configId);
-        if (excludeConfigId) optionSettings.set(previousConfigIdKey, excludeConfigId);
-        optionSettings.save();
 
         return newPick;
     };

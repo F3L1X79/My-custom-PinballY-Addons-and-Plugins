@@ -15,15 +15,14 @@ export function recordPeriodCompleted(settingsKeyPrefix, periodKey, getPreviousP
     if (lastRecorded === periodKey) return; // already recorded for this period, avoid double-counting
 
     const previousPeriodKey = getPreviousPeriodKey(periodKey);
-    const currentStreak = optionSettings.get(currentStreakKey, 0);
+    const currentStreak = optionSettings.getInt(currentStreakKey, 0);
     const newStreak = (lastRecorded === previousPeriodKey) ? currentStreak + 1 : 1;
 
-    const longestStreak = optionSettings.get(longestStreakKey, 0);
+    const longestStreak = optionSettings.getInt(longestStreakKey, 0);
 
     optionSettings.set(lastRecordedKey, periodKey);
     optionSettings.set(currentStreakKey, newStreak);
     optionSettings.set(longestStreakKey, Math.max(longestStreak, newStreak));
-    optionSettings.save();
 }
 
 export function getCurrentStreak(settingsKeyPrefix, periodKey, getPreviousPeriodKey) {
@@ -31,7 +30,7 @@ export function getCurrentStreak(settingsKeyPrefix, periodKey, getPreviousPeriod
     const currentStreakKey = `${settingsKeyPrefix}.currentStreak`;
 
     const lastRecorded = optionSettings.get(lastRecordedKey, "");
-    const currentStreak = optionSettings.get(currentStreakKey, 0);
+    const currentStreak = optionSettings.getInt(currentStreakKey, 0);
 
     // If the last recorded period isn't today/this week nor the period right
     // before it, the streak has already been broken by inactivity, even

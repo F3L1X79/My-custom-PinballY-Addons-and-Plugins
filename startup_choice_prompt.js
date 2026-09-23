@@ -53,7 +53,7 @@ export default function init() {
         "startupChoicePrompt",
         [
             { title: introMessage, cmd: -1 },
-            { title: "---" },
+            { cmd: -1 },
             ...CHOICES.map(({ label, cmd }) => ({ title: label, cmd })),
         ],
         { dialogStyle: true }

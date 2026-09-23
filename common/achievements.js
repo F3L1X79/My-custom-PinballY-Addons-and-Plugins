@@ -9,12 +9,11 @@
 const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";
 
 function wasNotified(id) {
-    return optionSettings.get(NOTIFIED_KEY_PREFIX + id, false);
+    return optionSettings.getBool(NOTIFIED_KEY_PREFIX + id, false);
 }
 
 function markNotified(id) {
     optionSettings.set(NOTIFIED_KEY_PREFIX + id, true);
-    optionSettings.save();
 }
 
 /** Checks every achievement and calls onNewlyUnlocked(achievement) for each one that just became unlocked. */

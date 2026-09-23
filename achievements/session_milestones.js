@@ -17,7 +17,7 @@ export function buildSessionMilestoneAchievements() {
         id: `marathon:${minutes}`,
         getTitle: () => TEXT.marathonTitle(minutes),
         getDescription: () => TEXT.marathonDescription(minutes),
-        checkUnlocked: () => optionSettings.get(LONGEST_SESSION_KEY, 0) >= minutes * 60,
+        checkUnlocked: () => optionSettings.getFloat(LONGEST_SESSION_KEY, 0) >= minutes * 60,
     }));
 
     achievements.push({
@@ -25,7 +25,7 @@ export function buildSessionMilestoneAchievements() {
         getTitle: () => TEXT.rageQuitTitle(),
         getDescription: () => TEXT.rageQuitDescription(rageQuitThresholdSeconds),
         checkUnlocked: () => {
-            const shortest = optionSettings.get(SHORTEST_SESSION_KEY, -1);
+            const shortest = optionSettings.getFloat(SHORTEST_SESSION_KEY, -1);
             return shortest >= 0 && shortest <= rageQuitThresholdSeconds;
         },
     });
@@ -34,7 +34,7 @@ export function buildSessionMilestoneAchievements() {
         id: "grandReturn",
         getTitle: () => TEXT.grandReturnTitle(),
         getDescription: () => TEXT.grandReturnDescription(grandReturnThresholdDays),
-        checkUnlocked: () => optionSettings.get(GRAND_RETURN_FLAG_KEY, false),
+        checkUnlocked: () => optionSettings.getBool(GRAND_RETURN_FLAG_KEY, false),
     });
 
     return achievements;
