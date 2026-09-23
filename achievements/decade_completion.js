@@ -14,7 +14,9 @@ export function buildDecadeCompletionAchievements() {
             return decade ? [decade] : [];
         },
         idPrefix: "decadeCompletion",
-        getTitle: (decade) => TEXT.decadeCompletionTitle(decade),
-        getDescription: (decade, count) => TEXT.decadeCompletionDescription(decade, count),
+        // The "1980s" group key stays in the achievement ID for backward compatibility;
+        // the language files receive the bare start year and format it themselves.
+        getTitle: (decade) => TEXT.decadeCompletionTitle(parseInt(decade, 10)),
+        getDescription: (decade, count) => TEXT.decadeCompletionDescription(parseInt(decade, 10), count),
     });
 }

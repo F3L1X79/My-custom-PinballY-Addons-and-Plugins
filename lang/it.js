@@ -167,4 +167,36 @@ export default {
         tableOfTheWeek: "Avvia il tavolo della settimana",
         tableSetup: "Configurazione del tavolo",
     },
+
+    achievements: {
+        dailyStreakTitle: (days) => `${days} giorni di fila!`,
+        dailyStreakDescription: (days) => `Hai avviato il tavolo del giorno per ${days} giorni di fila!`,
+        weeklyStreakTitle: (weeks) => `${weeks} settimane di fila!`,
+        weeklyStreakDescription: (weeks) => `Hai avviato il tavolo della settimana per ${weeks} settimane di fila!`,
+        manufacturerCompletionTitle: (manufacturer) => `Collezione completa: ${manufacturer}`,
+        manufacturerCompletionDescription: (manufacturer, count) =>
+            `Hai giocato tutti i ${count} tavoli ${manufacturer} almeno una volta!`,
+        firstTableTitle: () => "Primi passi",
+        firstTableDescription: () => "Hai giocato il tuo primissimo tavolo!",
+        collectionPercentTitle: (percent) => `${percent}% della collezione`,
+        collectionPercentDescription: (percent, playedCount, totalCount) =>
+            `Hai giocato ${playedCount} tavoli su ${totalCount} (${percent}% della tua collezione)!`,
+        playTimeMilestoneTitle: (hours) => `${hours} h di gioco totali`,
+        playTimeMilestoneDescription: (hours) =>
+            `Hai accumulato più di ${hours} or${hours > 1 ? "e" : "a"} di gioco in totale!`,
+        decadeCompletionTitle: (decadeStartYear) => `Decennio completo: anni ${decadeStartYear}`,
+        decadeCompletionDescription: (decadeStartYear, count) =>
+            `Hai giocato tutti i ${count} tavoli degli anni ${decadeStartYear} almeno una volta!`,
+        categoryCompletionTitle: (category) => `Categoria completa: ${category}`,
+        categoryCompletionDescription: (category, count) =>
+            `Hai giocato tutti i ${count} tavoli "${category}" almeno una volta!`,
+        marathonTitle: (minutes) => `Maratona di ${minutes} minuti!`,
+        marathonDescription: (minutes) => `Hai giocato una singola sessione di oltre ${minutes} minuti!`,
+        rageQuitTitle: () => "Abbandono per rabbia?",
+        rageQuitDescription: (seconds) => `Hai lasciato un tavolo in meno di ${seconds} secondi...`,
+        grandReturnTitle: () => "Il grande ritorno",
+        grandReturnDescription: (days) => `Hai rigiocato un tavolo dopo oltre ${days} giorni di assenza!`,
+        unlockedIntro: (title, description) => `[Obiettivo sbloccato]\n\n${title}\n${description}`,
+        acknowledge: "Fantastico!",
+    },
 };

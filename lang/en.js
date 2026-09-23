@@ -98,8 +98,9 @@ export default {
         playTimeMilestoneTitle: (hours) => `${hours}h Total Play Time`,
         playTimeMilestoneDescription: (hours) =>
             `You've racked up over ${hours} hour${hours > 1 ? "s" : ""} of total play time!`,
-        decadeCompletionTitle: (decade) => `Full Decade: ${decade}`,
-        decadeCompletionDescription: (decade, count) => `You've played all ${count} tables from the ${decade} at least once!`,
+        decadeCompletionTitle: (decadeStartYear) => `Full Decade: ${decadeStartYear}s`,
+        decadeCompletionDescription: (decadeStartYear, count) =>
+            `You've played all ${count} tables from the ${decadeStartYear}s at least once!`,
         categoryCompletionTitle: (category) => `Full Category: ${category}`,
         categoryCompletionDescription: (category, count) => `You've played all ${count} "${category}" tables at least once!`,
         marathonTitle: (minutes) => `${minutes}-Minute Marathon!`,

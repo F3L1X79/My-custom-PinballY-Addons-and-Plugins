@@ -178,7 +178,7 @@ export default {
         dailyStreakDescription: (days) => `Vous avez lancé la table du jour ${days} jours consécutifs !`,
         weeklyStreakTitle: (weeks) => `${weeks} semaines d'affilée !`,
         weeklyStreakDescription: (weeks) => `Vous avez lancé la table de la semaine ${weeks} semaines consécutives !`,
-        decadeCompletionTitle: (decade) => `Décennie complète : ${decade}`,
+        decadeCompletionTitle: (decadeStartYear) => `Décennie complète : années ${decadeStartYear}`,
         manufacturerCompletionTitle: (manufacturer) => `Collection complète : ${manufacturer}`,
         manufacturerCompletionDescription: (manufacturer, count) =>
             `Vous avez joué aux ${count} tables ${manufacturer} au moins une fois !`,
@@ -190,7 +190,8 @@ export default {
         playTimeMilestoneTitle: (hours) => `${hours}h de jeu cumulées`,
         playTimeMilestoneDescription: (hours) =>
             `Vous avez cumulé plus de ${hours} heure${hours > 1 ? "s" : ""} de jeu au total !`,
-        decadeCompletionDescription: (decade, count) => `Vous avez joué aux ${count} tables des ${decade} au moins une fois !`,
+        decadeCompletionDescription: (decadeStartYear, count) =>
+            `Vous avez joué aux ${count} tables des années ${decadeStartYear} au moins une fois !`,
         categoryCompletionTitle: (category) => `Catégorie complète : ${category}`,
         categoryCompletionDescription: (category, count) => `Vous avez joué aux ${count} tables "${category}" au moins une fois !`,
         marathonTitle: (minutes) => `Marathon de ${minutes} min !`,

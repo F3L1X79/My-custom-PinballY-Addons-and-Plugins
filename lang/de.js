@@ -168,4 +168,36 @@ export default {
         tableOfTheWeek: "Tisch der Woche starten",
         tableSetup: "Tischkonfiguration",
     },
+
+    achievements: {
+        dailyStreakTitle: (days) => `${days} Tage in Folge!`,
+        dailyStreakDescription: (days) => `Sie haben den Tisch des Tages ${days} Tage in Folge gestartet!`,
+        weeklyStreakTitle: (weeks) => `${weeks} Wochen in Folge!`,
+        weeklyStreakDescription: (weeks) => `Sie haben den Tisch der Woche ${weeks} Wochen in Folge gestartet!`,
+        manufacturerCompletionTitle: (manufacturer) => `Komplette Sammlung: ${manufacturer}`,
+        manufacturerCompletionDescription: (manufacturer, count) =>
+            `Sie haben alle ${count} Tische von ${manufacturer} mindestens einmal gespielt!`,
+        firstTableTitle: () => "Erste Schritte",
+        firstTableDescription: () => "Sie haben Ihren allerersten Tisch gespielt!",
+        collectionPercentTitle: (percent) => `${percent} % der Sammlung`,
+        collectionPercentDescription: (percent, playedCount, totalCount) =>
+            `Sie haben ${playedCount} von ${totalCount} Tischen gespielt (${percent} % Ihrer Sammlung)!`,
+        playTimeMilestoneTitle: (hours) => `${hours} Std. Gesamtspielzeit`,
+        playTimeMilestoneDescription: (hours) =>
+            `Sie haben insgesamt über ${hours} Stunde${hours > 1 ? "n" : ""} gespielt!`,
+        decadeCompletionTitle: (decadeStartYear) => `Komplettes Jahrzehnt: ${decadeStartYear}er`,
+        decadeCompletionDescription: (decadeStartYear, count) =>
+            `Sie haben alle ${count} Tische der ${decadeStartYear}er mindestens einmal gespielt!`,
+        categoryCompletionTitle: (category) => `Komplette Kategorie: ${category}`,
+        categoryCompletionDescription: (category, count) =>
+            `Sie haben alle ${count} Tische der Kategorie "${category}" mindestens einmal gespielt!`,
+        marathonTitle: (minutes) => `${minutes}-Minuten-Marathon!`,
+        marathonDescription: (minutes) => `Sie haben eine einzige Session von über ${minutes} Minuten gespielt!`,
+        rageQuitTitle: () => "Wutausstieg?",
+        rageQuitDescription: (seconds) => `Sie haben einen Tisch nach weniger als ${seconds} Sekunden verlassen...`,
+        grandReturnTitle: () => "Die große Rückkehr",
+        grandReturnDescription: (days) => `Sie haben einen Tisch nach mehr als ${days} Tagen Pause wieder gespielt!`,
+        unlockedIntro: (title, description) => `[Erfolg freigeschaltet]\n\n${title}\n${description}`,
+        acknowledge: "Super!",
+    },
 };

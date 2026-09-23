@@ -1,0 +1,10 @@
+.claude/
+.agents/
+CLAUDE.md
+AGENTS.md
+skills-lock.json
+docs/agents/
+docs/adr/
+CONTEXT.md
+CONTEXT-MAP.md
+.scratch/

@@ -1,4 +1,5 @@
 ﻿import { launchRandomGame } from "./common/random_game.js";
+import { launchTableOfTheDay, launchTableOfTheWeek } from "./common/table_of_period_launch.js";
 import { pickTableOfTheDay } from "./table_of_the_day.js";
 import { pickTableOfTheWeek } from "./table_of_the_week.js";
 import lang from "./common/i18n.js";
@@ -17,13 +18,11 @@ export default function init() {
 
     mainWindow.on("command", async ev => {
         if (ev.id === TABLE_OF_DAY_COMMAND) {
-            const game = pickTableOfTheDay();
-            if (game) mainWindow.playGame(game);
+            launchTableOfTheDay();
             return;
         }
         if (ev.id === TABLE_OF_WEEK_COMMAND) {
-            const game = pickTableOfTheWeek();
-            if (game) mainWindow.playGame(game);
+            launchTableOfTheWeek();
             return;
         }
         if (ev.id === RANDOM_COMMAND) {
