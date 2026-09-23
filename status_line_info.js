@@ -1,5 +1,6 @@
 ﻿import lang from "./common/i18n.js";
 import config from "./common/config.js";
+import { safeHandler } from "./common/safe_handler.js";
 
 // ============================================================
 // Updates PinballY's lower status line with rotating info about the
@@ -7,6 +8,13 @@ import config from "./common/config.js";
 // and total play time.
 // ============================================================
 
+const SCRIPT_NAME = "StatusLineInfo";
+
+/**
+ * Registers the wheel listeners (protected by safeHandler) that keep the
+ * lower status line in sync with the selected table, then fills it once.
+ * @returns {void}
+ */
 export default function init() {
     const STATUS_LINE_TEXT = lang.tableInfoStatusLines;
     const COMMUNITY_MANUFACTURER_NAME = config.tableMetadata.communityManufacturerName;
@@ -99,14 +107,16 @@ export default function init() {
     // BEFORE PinballY's internal wheel data actually reflects the new filter,
     // so querying gameList synchronously here would still see the old list —
     // deferring by one tick lets the switch complete first.
-    gameList.on("filterselect", () => {
-        setTimeout(() => {
+    // The deferred callback runs outside the listener's call stack, so it is
+    // guarded separately from the listener itself.
+    gameList.on("filterselect", safeHandler(SCRIPT_NAME, () => {
+        setTimeout(safeHandler(SCRIPT_NAME, () => {
             buildSortedTitles();
             refreshStatusLine();
-        }, 0);
-    });
+        }), 0);
+    }));
 
-    gameList.on("gameselect", refreshStatusLine);
+    gameList.on("gameselect", safeHandler(SCRIPT_NAME, refreshStatusLine));
 
     refreshStatusLine();
 }

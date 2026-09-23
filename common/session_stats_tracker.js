@@ -1,4 +1,5 @@
 ﻿import config from "./config.js";
+import { safeHandler } from "./safe_handler.js";
 
 // ============================================================
 // Tracks per-session wall-clock duration (for marathon/rage-quit
@@ -15,12 +16,19 @@ const LONGEST_SESSION_KEY = "custom.sessionStats.longestSeconds";
 const SHORTEST_SESSION_KEY = "custom.sessionStats.shortestSeconds";
 const GRAND_RETURN_FLAG_KEY = "custom.sessionStats.grandReturnUnlocked";
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
+const SCRIPT_NAME = "SessionStatsTracker";
 
+/**
+ * Registers the gamestarted/gameover listeners (protected by safeHandler)
+ * that record session durations and previous-play dates.
+ * @returns {void}
+ */
 export default function init() {
     const { grandReturnThresholdDays } = config.achievements;
     const sessionStartTimes = new Map();
 
-    mainWindow.on("gamestarted", ev => {
+    // Fires on table launch: records the start time and flags a "grand return".
+    mainWindow.on("gamestarted", safeHandler(SCRIPT_NAME, ev => {
         const configId = ev.game.configId;
         sessionStartTimes.set(configId, Date.now());
 
@@ -34,9 +42,10 @@ export default function init() {
                 optionSettings.set(GRAND_RETURN_FLAG_KEY, true);
             }
         }
-    });
+    }));
 
-    mainWindow.on("gameover", ev => {
+    // Fires on table exit: stores the session duration and previous-play date.
+    mainWindow.on("gameover", safeHandler(SCRIPT_NAME, ev => {
         const configId = ev.game.configId;
         const startTime = sessionStartTimes.get(configId);
         sessionStartTimes.delete(configId);
@@ -54,5 +63,5 @@ export default function init() {
         }
 
         optionSettings.save();
-    });
+    }));
 }

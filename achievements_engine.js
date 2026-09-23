@@ -14,6 +14,9 @@ import { buildDecadeCompletionAchievements } from "./achievements/decade_complet
 import { buildCategoryCompletionAchievements } from "./achievements/category_completion.js";
 import { buildSessionMilestoneAchievements } from "./achievements/session_milestones.js";
 import lang from "./common/i18n.js";
+import { safeHandler } from "./common/safe_handler.js";
+
+const SCRIPT_NAME = "AchievementsEngine";
 
 function getAllAchievements() {
     return [
@@ -27,6 +30,11 @@ function getAllAchievements() {
     ];
 }
 
+/**
+ * Registers the acknowledge command and the post-session achievement checks
+ * (all protected by safeHandler), then runs a first check immediately.
+ * @returns {void}
+ */
 export default function init() {
     const { achievements: TEXT } = lang;
     const ACKNOWLEDGE_COMMAND = command.allocate("acknowledgeAchievement");
@@ -48,12 +56,13 @@ export default function init() {
         );
     }
 
-    mainWindow.on("command", ev => {
+    // Fires on every command; the acknowledge button shows the next queued unlock.
+    mainWindow.on("command", safeHandler(SCRIPT_NAME, ev => {
         if (ev.id === ACKNOWLEDGE_COMMAND) {
             pendingQueue.shift();
             showNextInQueue();
         }
-    });
+    }));
 
     function checkForNewAchievements() {
         evaluateAchievements(getAllAchievements(), (achievement) => {
@@ -63,13 +72,17 @@ export default function init() {
         });
     }
 
-    mainWindow.on("gamestarted", () => {
-        setTimeout(checkForNewAchievements, 0);
-    });
+    // The timer callback runs outside the event handler's call stack, so it
+    // needs its own guard.
+    const safeCheckForNewAchievements = safeHandler(SCRIPT_NAME, checkForNewAchievements);
 
-    mainWindow.on("gameover", () => {
-        setTimeout(checkForNewAchievements, 0);
-    });
+    mainWindow.on("gamestarted", safeHandler(SCRIPT_NAME, () => {
+        setTimeout(safeCheckForNewAchievements, 0);
+    }));
+
+    mainWindow.on("gameover", safeHandler(SCRIPT_NAME, () => {
+        setTimeout(safeCheckForNewAchievements, 0);
+    }));
 
     checkForNewAchievements();
 }

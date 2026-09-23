@@ -1,13 +1,21 @@
 ﻿import lang from "./common/i18n.js";
 import config from "./common/config.js";
+import { safeHandler } from "./common/safe_handler.js";
 
 // ============================================================
 // Translates PinballY's native menu titles and launch-overlay status
 // messages using the active project language.
 // ============================================================
 
+const SCRIPT_NAME = "UITranslation";
+
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 
+/**
+ * Registers the menu and launch-overlay listeners (protected by safeHandler)
+ * that translate PinballY's native texts into the active language.
+ * @returns {void}
+ */
 export default function init() {
     const NATIVE_MENU_LABELS = lang.nativeMenuLabels || {};
     const MEDIA_CAPTURE_ITEM_LABELS = lang.mediaCaptureItemLabels || {};
@@ -108,14 +116,14 @@ export default function init() {
         });
     }
 
-    mainWindow.on("menuopen", ev => {
+    mainWindow.on("menuopen", safeHandler(SCRIPT_NAME, ev => {
         translateMenuItems(ev.items);
         ev.menuUpdated = true;
-    });
+    }));
 
-    mainWindow.on("launchoverlaymessage", ev => {
+    mainWindow.on("launchoverlaymessage", safeHandler(SCRIPT_NAME, ev => {
         if (hasOwn(LAUNCH_OVERLAY_MESSAGES, ev.id)) {
             ev.message = LAUNCH_OVERLAY_MESSAGES[ev.id];
         }
-    });
+    }));
 }

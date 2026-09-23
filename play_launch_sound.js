@@ -1,4 +1,5 @@
 ﻿import config from "./common/config.js";
+import { safeHandler } from "./common/safe_handler.js";
 
 // ============================================================
 // Plays a sound effect whenever a table is launched, using the Windows
@@ -26,10 +27,19 @@ function initializeMediaPlayer() {
     }
 }
 
+const SCRIPT_NAME = "LaunchSound";
+
+/**
+ * Creates the media player and registers the listeners that start the launch
+ * sound and stop it on exit. The inner try/catch blocks keep their specific
+ * messages; safeHandler catches anything else the handlers may throw.
+ * @returns {void}
+ */
 export default function init() {
     const mediaPlayer = initializeMediaPlayer();
 
-    mainWindow.on("gamestarted", () => {
+    // Fires on table launch: starts playing the configured sound file.
+    mainWindow.on("gamestarted", safeHandler(SCRIPT_NAME, () => {
         if (!mediaPlayer) return;
 
         const filePath = config.launchSound.absoluteFilePath;
@@ -43,9 +53,10 @@ export default function init() {
         } catch (error) {
             logfile.log("[LaunchSound] ERROR: could not play launch sound (" + error.message + ").");
         }
-    });
+    }));
 
-    mainWindow.on("gameover", () => {
+    // Fires on table exit: stops the sound if it is still playing.
+    mainWindow.on("gameover", safeHandler(SCRIPT_NAME, () => {
         if (!mediaPlayer) return;
 
         try {
@@ -53,5 +64,5 @@ export default function init() {
         } catch (error) {
             logfile.log("[LaunchSound] WARNING: could not stop launch sound (" + error.message + ").");
         }
-    });
+    }));
 }

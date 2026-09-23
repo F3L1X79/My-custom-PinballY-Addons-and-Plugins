@@ -3,11 +3,19 @@ import { launchTableOfTheDay, launchTableOfTheWeek } from "./common/table_of_per
 import { pickTableOfTheDay } from "./table_of_the_day.js";
 import { pickTableOfTheWeek } from "./table_of_the_week.js";
 import lang from "./common/i18n.js";
+import { safeHandler } from "./common/safe_handler.js";
+
+const SCRIPT_NAME = "StartupChoicePrompt";
 
 function stripParentheticals(title) {
     return title.replace(/\s*\([^)]*\)/g, "").trim();
 }
 
+/**
+ * Registers the startup prompt's command handler (protected by safeHandler)
+ * and shows the prompt offering today's, this week's or a random table.
+ * @returns {void}
+ */
 export default function init() {
     const { startupPrompt: STARTUP_PROMPT_TEXT } = lang;
 
@@ -16,7 +24,9 @@ export default function init() {
     const TABLE_OF_WEEK_COMMAND = command.allocate("startupTableOfWeek");
     const RANDOM_COMMAND = command.allocate("startupRandom");
 
-    mainWindow.on("command", async ev => {
+    // Fires on every command; async because the random launch animates the
+    // wheel, so its rejections are logged by safeHandler too.
+    mainWindow.on("command", safeHandler(SCRIPT_NAME, async ev => {
         if (ev.id === TABLE_OF_DAY_COMMAND) {
             launchTableOfTheDay();
             return;
@@ -29,7 +39,7 @@ export default function init() {
             await launchRandomGame();
             return;
         }
-    });
+    }));
 
     const dayGame = pickTableOfTheDay();
     const weekGame = pickTableOfTheWeek();
