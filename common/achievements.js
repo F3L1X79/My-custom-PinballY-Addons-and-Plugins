@@ -26,7 +26,3 @@ export function evaluateAchievements(achievements, onNewlyUnlocked) {
         }
     }
 }
-
-export function isAchievementNotified(id) {
-    return wasNotified(id);
-}

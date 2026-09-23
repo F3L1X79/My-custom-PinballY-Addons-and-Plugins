@@ -27,6 +27,9 @@ export default function init() {
     }));
 
     const CONFIRM_RATING_PROMPT_COMMAND = command.allocate("confirmRatingPrompt");
+    // Intentionally never handled: the "Not now" item needs a real command ID
+    // to be selectable (cmd -1 makes a plain label, like the message line
+    // below), and PinballY closing the menu on selection is all it must do.
     const DISMISS_RATING_PROMPT_COMMAND = command.allocate("dismissRatingPrompt");
 
     // Fires on table exit: shows the prompt if the threshold was just crossed.

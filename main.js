@@ -12,8 +12,9 @@ import * as seamlessLaunchOverlay from "./seamless_launch_overlay.js";
 import * as playLaunchSound from "./play_launch_sound.js";
 import * as ratingPrompt from "./rating_prompt.js";
 
-
-// Order matters here exactly as it did with plain imports before.
+// Scripts are initialized in this order, which is also the order their event
+// listeners are registered in: keep a script ahead of the ones that rely on it
+// (e.g. uiTranslation first so its "menuopen" hook sees every menu).
 const SCRIPTS = [
     { key: "uiTranslation", module: uiTranslation },
     { key: "statusLineInfo", module: statusLineInfo },

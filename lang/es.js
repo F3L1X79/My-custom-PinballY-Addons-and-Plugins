@@ -110,8 +110,13 @@ export default {
     // Functions that build translated titles for PinballY's dynamically
     // generated menu text (category names, star ratings, etc.).
     dynamicLabelBuilders: {
+        /**
+         * Builds the media-capture instructions for a duration given in seconds.
+         * @param {string} seconds - Capture duration, as captured from PinballY's English text.
+         * @returns {string} Translated instructions.
+         */
         captureInstructions: (seconds) => {
-            let plural = seconds === "1" ? "" : "s";
+            const plural = seconds === "1" ? "" : "s";
             return `Selecciona los elementos que quieras capturar y, a continuación, haz clic en Iniciar captura. Esto iniciará el juego, capturará las imágenes de la pantalla y cerrará automáticamente el juego al finalizar. El proceso tardará aproximadamente ${seconds} segundo${plural}. (!) significa que se reemplazará un elemento existente.`;
         },
         captureInstructionsOneMinute: () =>
@@ -138,8 +143,14 @@ export default {
     },
 
     startupPrompt: {
+        /**
+         * Builds the startup prompt text, listing today's and this week's picks when known.
+         * @param {string | null} dayTitle - Title of the table of the day, or null if none.
+         * @param {string | null} weekTitle - Title of the table of the week, or null if none.
+         * @returns {string} Multi-line prompt text.
+         */
         introWithPicks: (dayTitle, weekTitle) => {
-            let lines = ["¿Cómo quieres empezar?"];
+            const lines = ["¿Cómo quieres empezar?"];
             if (dayTitle) lines.push(`Mesa del día: ${dayTitle}`);
             if (weekTitle) lines.push(`Mesa de la semana: ${weekTitle}`);
             return lines.join("\n");

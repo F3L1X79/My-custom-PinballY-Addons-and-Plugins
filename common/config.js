@@ -23,7 +23,7 @@ export default {
         },
         // Temporarily set to true to log each script's init duration (ms)
         // to the PinballY log file, to help find a slow-starting script.
-        logStartupTiming: true,
+        logStartupTiming: false,
     },
 
     // achievements/collection_completion.js et achievements/play_time_totals.js
@@ -61,13 +61,8 @@ export default {
         communityManufacturerName: "VPX Community",
     },
 
-    // random_table_at_startup.js
-    startupWheelSpin: {
-        // Delay (ms) between each wheel step during the startup spin.
-        stepDelayMs: 40,
-    },
-
-    // custom_menu_commands.js
+    // common/random_game.js (used by the "Random Game" menu command in
+    // custom_menu_commands.js and by the startup choice prompt)
     randomGameCommand: {
         // Base speed (ms) of the "wheel of fortune" animation.
         animationBaseSpeedMs: 200,
@@ -90,8 +85,12 @@ export default {
 
     // play_launch_sound.js
     launchSound: {
-        // ABSOLUTE path to the mp3 file played when a table launches.
-        absoluteFilePath: "C:\\vPinball\\PinballY\\Media\\Sounds\\super-mario-64-voice-clip-here-we-go.mp3",
+        // SET THIS FOR YOUR MACHINE: the one setting that depends on where
+        // your files live. ABSOLUTE path to the sound file played when a table
+        // launches, with doubled backslashes, e.g.
+        // "C:\\PinballY\\Media\\Sounds\\launch.mp3". Left empty, no sound is
+        // played (a single notice is written to the PinballY log at startup).
+        absoluteFilePath: "",
         // Playback volume, 0-100.
         volumePercent: 100,
     },

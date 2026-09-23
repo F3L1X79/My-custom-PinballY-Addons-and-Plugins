@@ -1,8 +1,7 @@
 ﻿// ============================================================
 // Utilities for animating PinballY's game wheel to a target index by
-// simulating "Next" / "NextPage" button presses, with configurable
-// timing and an optional early-exit check (e.g. to cancel the animation
-// when the user opens a menu mid-spin).
+// simulating "Next" / "NextPage" button presses, with a "wheel of
+// fortune" timing curve (fast start, slow finish).
 // ============================================================
 
 const ACCELERATION_DELAYS_MS = [200, 150, 100, 50];
@@ -15,20 +14,16 @@ export function sleep(ms) {
 }
 
 /**
- * Computes the delay (ms) before the next button press.
- * If `delayOptions.fixedDelayMs` is set, always returns that fixed value.
- * Otherwise returns a "wheel of fortune" style curve: fast at first, then
- * decelerating toward the end, scaled from `delayOptions.baseSpeedMs`.
+ * Computes the delay (ms) before the next button press, following a
+ * "wheel of fortune" style curve: fast at first, then decelerating toward
+ * the end, scaled from `delayOptions.baseSpeedMs`.
  *
  * @param {number} stepIndex 1-based index of the step about to run.
  * @param {number} totalSteps Total number of steps in the animation.
- * @param {{fixedDelayMs?: number, baseSpeedMs?: number}} [delayOptions]
+ * @param {{baseSpeedMs?: number}} [delayOptions]
+ * @returns {number} Delay in milliseconds.
  */
 export function computeStepDelay(stepIndex, totalSteps, delayOptions = {}) {
-    if (delayOptions.fixedDelayMs != null) {
-        return Math.max(0, Number(delayOptions.fixedDelayMs) || 0);
-    }
-
     const baseSpeedMs = Math.max(0, Number(delayOptions.baseSpeedMs ?? 200) || 0);
     const safeStepIndex = Math.max(1, Number(stepIndex) || 1);
     const safeTotalSteps = Math.max(safeStepIndex, Number(totalSteps) || safeStepIndex);
@@ -53,25 +48,26 @@ export function computeStepDelay(stepIndex, totalSteps, delayOptions = {}) {
 
 /**
  * Presses a button repeatedly, waiting between presses according to
- * `computeStepDelay`. Stops early if `abortCheck()` returns true.
+ * `computeStepDelay` so the whole animation follows one timing curve.
  *
- * @returns {Promise<number>} Number of presses actually performed
- *   (less than `times` if the animation was aborted early).
+ * @param {string} buttonName PinballY button command name (e.g. "Next", "NextPage").
+ * @param {number} times Number of presses.
+ * @param {number} stepOffset Number of steps already performed earlier in the same animation.
+ * @param {number} totalSteps Total number of steps in the whole animation.
+ * @param {{baseSpeedMs?: number}} [delayOptions] Timing options passed to `computeStepDelay`.
+ * @returns {Promise<void>} Resolves once every press (and its delay) is done.
  */
 export async function pressButtonRepeatedly(
     buttonName,
     times,
     stepOffset,
     totalSteps,
-    delayOptions,
-    abortCheck
+    delayOptions
 ) {
     const safeTimes = Math.max(0, Math.floor(Number(times) || 0));
     const safeStepOffset = Math.max(0, Math.floor(Number(stepOffset) || 0));
 
     for (let i = 0; i < safeTimes; i++) {
-        if (abortCheck && abortCheck()) return i;
-
         mainWindow.doButtonCommand(buttonName, true, 0);
         mainWindow.doButtonCommand(buttonName, false, 0);
 
@@ -81,13 +77,17 @@ export async function pressButtonRepeatedly(
             delayOptions
         ));
     }
-
-    return safeTimes;
 }
 
+/**
+ * Returns the first character used to group a game on the wheel: its config
+ * ID when it has one (null or undefined falls back to the title).
+ * @param {{configId?: string | null, title?: string} | null | undefined} game
+ * @returns {string} First character, or "" if unavailable.
+ */
 function getGameFirstLetter(game) {
     if (!game) return "";
-    const value = game.configId != null ? game.configId : game.title;
+    const value = game.configId ?? game.title;
     return String(value ?? "").charAt(0);
 }
 
@@ -156,11 +156,9 @@ export function computeNavigationPlan(targetIndex, games) {
  * @param {object[]} games Ordered game list, as returned by gameList.getAllWheelGames().
  * @param {number} targetIndex Target index within `games`.
  * @param {object} [options]
- * @param {number} [options.fixedDelayMs] Fixed delay (ms) between presses. Overrides the acceleration curve.
- * @param {number} [options.baseSpeedMs] Base speed (ms) for the acceleration curve (ignored if fixedDelayMs is set).
+ * @param {number} [options.baseSpeedMs] Base speed (ms) for the acceleration curve.
  * @param {number} [options.skipFinalStepProbability] Probability (0-1) of skipping the very last "Next" press.
  * @param {boolean} [options.usePageJumpOptimization] Use NextPage-based letter jumps for long distances.
- * @param {() => boolean} [options.abortCheck] Checked before each press; the animation stops early if it returns true.
  * @returns {Promise<number>} The index actually reached.
  */
 export async function animateWheelTo(games, targetIndex, options = {}) {
@@ -180,11 +178,7 @@ export async function animateWheelTo(games, targetIndex, options = {}) {
         Number(options.skipFinalStepProbability ?? 0) || 0
     ));
     const usePageJumpOptimization = options.usePageJumpOptimization ?? false;
-    const abortCheck = options.abortCheck;
-    const delayOptions = {
-        fixedDelayMs: options.fixedDelayMs,
-        baseSpeedMs: options.baseSpeedMs,
-    };
+    const delayOptions = { baseSpeedMs: options.baseSpeedMs };
 
     let pageJumpCount = 0;
     let itemJumpCount = safeTargetIndex;
@@ -198,15 +192,13 @@ export async function animateWheelTo(games, targetIndex, options = {}) {
     const totalSteps = pageJumpCount + itemJumpCount;
 
     if (pageJumpCount > 0) {
-        const completed = await pressButtonRepeatedly(
+        await pressButtonRepeatedly(
             "NextPage",
             pageJumpCount,
             0,
             totalSteps,
-            delayOptions,
-            abortCheck
+            delayOptions
         );
-        if (completed < pageJumpCount) return 0;
     }
 
     let actualItemJumps = itemJumpCount;
@@ -222,8 +214,7 @@ export async function animateWheelTo(games, targetIndex, options = {}) {
         actualItemJumps,
         pageJumpCount,
         totalSteps,
-        delayOptions,
-        abortCheck
+        delayOptions
     );
 
     return Math.max(0, finalIndex);

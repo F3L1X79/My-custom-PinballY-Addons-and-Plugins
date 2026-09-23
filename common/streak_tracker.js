@@ -41,7 +41,3 @@ export function getCurrentStreak(settingsKeyPrefix, periodKey, getPreviousPeriod
 
     return currentStreak;
 }
-
-export function getLongestStreak(settingsKeyPrefix) {
-    return optionSettings.get(`${settingsKeyPrefix}.longestStreak`, 0);
-}

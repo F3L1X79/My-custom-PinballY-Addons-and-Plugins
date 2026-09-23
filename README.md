@@ -50,7 +50,6 @@ PinballY
     ├── main.js
     ├── ui_translation.js
     ├── status_line_info.js
-    ├── random_table_at_startup.js
     ├── force_backglass.js
     ├── custom_menu_commands.js
     ├── seamless_launch_overlay.js
@@ -137,7 +136,6 @@ Pour une langue non latine ou un encodage particulier, vérifier également l'en
 
 Les principaux paramètres de l'animation se trouvent dans `config.js` :
 
-- `startupWheelSpin.stepDelayMs` pour le spin au démarrage ;
 - `randomGameCommand.animationBaseSpeedMs` pour la commande de jeu aléatoire ;
 - `randomGameCommand.skipAnimation` pour désactiver l'animation ;
 - `randomGameCommand.skipFinalStepProbability` pour le comportement de l'avant-dernier arrêt ;
@@ -146,11 +144,11 @@ Les principaux paramètres de l'animation se trouvent dans `config.js` :
 
 ### Son de lancement
 
-Modifier :
+C'est le seul réglage à adapter à votre machine. Il est vide par défaut : aucun son n'est joué tant qu'il n'est pas renseigné. Modifier :
 
 ```js
 launchSound: {
-    absoluteFilePath: "C:\\vPinball\\PinballY\\Media\\Sounds\\super-mario-64-voice-clip-here-we-go.mp3",
+    absoluteFilePath: "C:\\PinballY\\Media\\Sounds\\launch.mp3",
     volumePercent: 100,
 },
 ```

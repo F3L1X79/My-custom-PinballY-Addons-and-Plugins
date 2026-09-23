@@ -33,20 +33,22 @@ const SCRIPT_NAME = "LaunchSound";
  * Creates the media player and registers the listeners that start the launch
  * sound and stop it on exit. The inner try/catch blocks keep their specific
  * messages; safeHandler catches anything else the handlers may throw.
+ * Does nothing (beyond one log line) when no sound file is configured, since
+ * the shipped config leaves the machine-specific path empty.
  * @returns {void}
  */
 export default function init() {
+    const filePath = config.launchSound.absoluteFilePath;
+    if (typeof filePath !== "string" || filePath.length === 0) {
+        logfile.log("[LaunchSound] launchSound.absoluteFilePath is not set in common/config.js; launch sound disabled.");
+        return;
+    }
+
     const mediaPlayer = initializeMediaPlayer();
 
     // Fires on table launch: starts playing the configured sound file.
     mainWindow.on("gamestarted", safeHandler(SCRIPT_NAME, () => {
         if (!mediaPlayer) return;
-
-        const filePath = config.launchSound.absoluteFilePath;
-        if (typeof filePath !== "string" || filePath.length === 0) {
-            logfile.log("[LaunchSound] ERROR: launchSound.absoluteFilePath is empty.");
-            return;
-        }
 
         try {
             mediaPlayer.URL = filePath;
