@@ -1,187 +1,159 @@
-# PinballY Scripts
+# My custom PinballY add-ons
 
-Collection de scripts JavaScript pour personnaliser PinballY : traduction de l'interface, informations dans la ligne d'état, rotation aléatoire au démarrage, commande de lancement d'une table aléatoire, gestion du backglass, transition de lancement et son de lancement.
+A set of JavaScript add-ons for [PinballY](https://mjrnet.org/pinscape/PinballY.php), the virtual pinball front end. They make your cabinet feel more like an arcade machine:
+- a table of the day and a table of the week;
+- a random table picked by a "wheel of fortune" animation;
+- achievements;
+- a translated interface in 6 languages;
+- smoother table launches.
 
-## Prérequis
+Everything is plain JavaScript run by PinballY itself: no build step, no dependencies.
 
-### PinballY
+## Features
 
-Le package cible **PinballY 1.1.0 Beta 10 ou une version ultérieure**.
+**Choosing what to play**
+- **Startup dialog.** When PinballY starts, it offers to stay on the last played table, or to launch the table of the day, the table of the week or a random table.
+- **Table of the day.** One pick per day: a table you've never played, or else the one you played longest ago.
+- **Table of the week.** One purely random pick per week, Monday to Sunday.
+- **Random table.** The wheel spins to a random table with a "wheel of fortune" animation (fast start, slow finish), then launches it.
+- **Main menu entries.** "Launch Table of the Day", "Launch Table of the Week", "Start Random Game" and a shortcut to "Table Setup" are added right after "Play".
+- **"Original Tables" filter.** Added to the "Filter by Manufacturer" menu. It lists every table except the community-made ones (see `tableMetadata` in the configuration below).
 
-Le site officiel de PinballY indique que la version 1.1.0 Beta 10, publiée le 3 novembre 2024, est la dernière version publiée sur la page du projet au moment de la préparation de ce package. PinballY dispose d'un moteur JavaScript et d'une API de script permettant notamment de modifier les menus et les événements de lancement.
+**Achievements.** A congratulations dialog appears when you're back at the wheel. Each achievement is shown only once.
+- **First table.** Your very first table played.
+- **Collection.** 10, 25, 50, 75 and 100 % of your collection played.
+- **Completion.** All the tables of a manufacturer, of a decade or of a category played.
+- **Total play time.** 1, 5, 10, 50 and 100 hours.
+- **Streaks.** The table of the day launched 3, 7 or 30 days in a row; the table of the week launched 4 or 12 weeks in a row.
+- **Session milestones.** A 30 or 60 minute marathon, a rage quit (30 seconds or less), and a grand comeback on a table untouched for a year.
 
-> Remarque : cette version minimale est le **niveau de support du package**, pas une prétention sur la toute première version historique de PinballY capable d'exécuter chaque fichier. Le code utilise des modules JavaScript (`import` / `export`) et a été préparé pour l'environnement PinballY actuellement utilisé pour ce projet.
+**Interface**
+- **Translation.** PinballY's own menus and launch messages are translated into French, German, Spanish, Italian or Portuguese. English is the default.
+- **Status line.** The lower status line cycles through information about the selected table: its position in the list, release year, manufacturer, play count and total play time.
+- **Rating reminder.** Once a table's total play time passes 60 minutes, you're asked to rate it if you haven't yet.
 
-### Windows
+**Launching a table**
+- **Seamless launch.** The wheel is hidden during loading, which avoids a black flash between the wheel and the table's own loading screen.
+- **Launch sound.** An optional sound (for example "Here we go!") plays when a table starts.
+- **Backglass handling.** The backglass window is shown at startup, hidden while a table runs (Visual Pinball draws its own), then shown again.
 
-PinballY fonctionne sous Windows ; sa documentation officielle indique Windows 7 ou ultérieur.
+## Requirements
 
-### Son de lancement
+- **Windows**, with **PinballY 1.1.0 Beta 10** or later.
+- **For the launch sound only:** the **Windows Media Player** optional Windows feature (*Settings › Apps › Optional features*). Without it, only the sound is skipped; everything else works.
 
-Le son de lancement est **optionnel**. Pour activer cette fonctionnalité, le composant **Windows Media Player** doit être disponible comme fonctionnalité Windows, car le script utilise l'objet COM `WMPlayer.OCX.7`.
+## Quick install
 
-Si Windows Media Player n'est pas disponible, le script journalise l'erreur d'initialisation et les autres fonctionnalités du package continuent normalement de fonctionner.
+**1. Back up** your current `PinballY\Scripts` folder, especially `main.js` if you already have one: this project replaces it.
 
-## Installation
-
-Les scripts PinballY sont placés dans le dossier `Scripts` situé dans le dossier principal de PinballY. Le fichier `Main.js` sert ensuite de point d'entrée et importe les scripts à charger.
-
-### 1. Sauvegarder l'installation actuelle
-
-Avant toute mise à jour, faire une copie du dossier `PinballY\Scripts` existant, en particulier de votre `main.js`.
-
-### 2. Copier le package
-
-Copier le contenu du dossier du package dans :
+**2. Copy the project** into `PinballY\Scripts`. The `System` folder ships with PinballY itself: keep yours and don't overwrite it.
 
 ```text
-<dossier PinballY>\Scripts\
+PinballY\
+└── Scripts\
+    ├── System\            ← from your PinballY install, leave it alone
+    ├── main.js            ← entry point PinballY loads at startup
+    ├── common\config.js   ← the only file you need to edit
+    ├── lang\
+    ├── achievements\
+    └── *.js
 ```
 
-Le fichier `main.js` fourni par ce package devient le point d'entrée des scripts du projet.
+**3. Edit `common\config.js`.** Three settings depend on your machine and your preferences:
 
-### 3. Vérifier la structure
+| Setting | Default | What to set |
+|---|---|---|
+| `translation.language` | `"fr"` | Your language: `"en"`, `"fr"`, `"de"`, `"es"`, `"it"` or `"pt"`. |
+| `launchSound.absoluteFilePath` | the author's file | The **absolute** path to your own sound file, with doubled backslashes, e.g. `"C:\\PinballY\\Media\\Sounds\\launch.mp3"`. Use `""` for no sound. |
+| `tableMetadata.communityManufacturerName` | `"VPX Community"` | The manufacturer name you gave community-made tables in PinballY. It's used by the status line and the "Original Tables" filter. |
 
-La structure attendue est :
-
-```text
-PinballY
-└── Scripts
-    ├── main.js
-    ├── ui_translation.js
-    ├── status_line_info.js
-    ├── force_backglass.js
-    ├── custom_menu_commands.js
-    ├── seamless_launch_overlay.js
-    ├── play_launch_sound.js
-    ├── README.md
-    ├── LICENSE
-    ├── common
-    │   ├── config.js
-    │   ├── i18n.js
-    │   └── wheel_navigator.js
-    └── lang
-        ├── en.js
-        └── fr.js
-```
-
-Ne pas déplacer `common/` ou `lang/` : les `import` du projet utilisent cette arborescence.
-
-### 4. Configurer `common/config.js`
-
-Les réglages utilisateur sont regroupés dans `common/config.js`. Il n'est normalement pas nécessaire de modifier les autres scripts pour personnaliser le comportement.
-
-## Personnalisation
-
-### Langue
-
-La langue active est sélectionnée dans `common/config.js` :
-
-```js
-translation: {
-    enabled: true,
-    language: "fr",
-},
-```
-
-Pour utiliser l'anglais :
+For example, for an English setup with no launch sound:
 
 ```js
 translation: {
     enabled: true,
     language: "en",
 },
-```
-
-Pour désactiver la traduction et laisser l'interface en anglais :
-
-```js
-translation: {
-    enabled: false,
-    language: "fr",
-},
-```
-
-Quand `enabled` vaut `false`, le projet utilise explicitement l'anglais pour les éléments qu'il gère lui-même.
-
-### Ajouter une langue
-
-1. Créer un nouveau fichier dans `lang/`, par exemple `de.js`.
-2. Reprendre la structure de `lang/en.js` ou `lang/fr.js`.
-3. Traduire les libellés correspondants.
-4. Ajouter le module dans `common/i18n.js` :
-
-```js
-import de from "../lang/de.js";
-
-const AVAILABLE_LANGUAGES = {
-    en,
-    fr,
-    de,
-};
-```
-
-5. Utiliser ensuite :
-
-```js
-translation: {
-    enabled: true,
-    language: "de",
-},
-```
-
-Pour une langue non latine ou un encodage particulier, vérifier également l'encodage UTF-8 du fichier.
-
-### Configuration de l'animation
-
-Les principaux paramètres de l'animation se trouvent dans `config.js` :
-
-- `randomGameCommand.animationBaseSpeedMs` pour la commande de jeu aléatoire ;
-- `randomGameCommand.skipAnimation` pour désactiver l'animation ;
-- `randomGameCommand.skipFinalStepProbability` pour le comportement de l'avant-dernier arrêt ;
-- `randomGameCommand.usePageJumpOptimization` pour les longs déplacements ;
-- `randomGameCommand.postAnimationDelayMs` avant le lancement.
-
-### Son de lancement
-
-C'est le seul réglage à adapter à votre machine. Il est vide par défaut : aucun son n'est joué tant qu'il n'est pas renseigné. Modifier :
-
-```js
+// ...
 launchSound: {
-    absoluteFilePath: "C:\\PinballY\\Media\\Sounds\\launch.mp3",
+    absoluteFilePath: "",
     volumePercent: 100,
 },
 ```
 
-Le chemin du fichier audio est volontairement absolu. Le package ne suppose pas d'API PinballY supplémentaire pour convertir automatiquement un chemin relatif.
+**4. Restart PinballY**, then open `PinballY.log` in the PinballY folder. Every add-on writes a line like this:
 
-### Fabricant des tables communautaires
-
-Le message spécial de `status_line_info.js` utilise :
-
-```js
-tableMetadata: {
-    communityManufacturerName: "VPX Community",
-},
+```text
+[Script] [Startup] "achievements" initialized in 4 ms.
 ```
 
-Adapter cette valeur au nom réellement utilisé dans votre base PinballY.
+A line containing `ERROR` names the add-on at fault. The other add-ons keep working.
 
-## Points importants avant publication
+## Configuration
 
-- `main.js` charge l'ensemble des fonctionnalités du projet ; ne supprimez pas les `import` si vous voulez conserver toutes les fonctions.
-- Les fichiers `common/` et `lang/` sont des dépendances du point d'entrée et doivent être copiés avec le reste du package.
-- En cas de modification de PinballY ou de changement important de son moteur JavaScript, tester le package avant déploiement sur toutes les machines cibles.
+Every setting lives in `common\config.js`, and each one has a comment there. The main sections:
 
-## Licence
+| Section | What it controls |
+|---|---|
+| `scripts.enabled` | Turn any add-on off by setting it to `false`, for example `forceBackglass: false` if you have no backglass screen. |
+| `scripts.logStartupTiming` | Logs how long each add-on takes to start. |
+| `translation` | Language. `enabled: false` forces English. |
+| `menuTranslation.logUnknownTitles` | Logs PinballY menu titles that have no translation yet. Useful when adding a language. |
+| `achievements` | Thresholds: collection percentages, play time hours, marathon minutes, rage-quit seconds, grand-comeback days. |
+| `randomGameCommand` | Wheel animation: speed, skipping it, the chance of stopping one table early, the delay before launch. |
+| `ratingPrompt.thresholdMinutes` | Total play time before you're asked to rate a table. |
+| `launchSound` | Sound file and volume. |
+| `tableMetadata` | Name used for community-made tables. |
 
-Ce projet est distribué sous licence **MIT**. Voir `LICENSE`.
+## Where your progress is stored
 
-## Historique
+Streaks, session records, table-of-the-day picks and "already notified" achievements are saved in PinballY's own `Settings.txt`, under keys starting with `custom.`. To reset one, close PinballY and delete the matching lines. For example, deleting the `custom.achievements.notified.*` lines shows every unlocked achievement again.
 
-Voir `CHANGELOG.md` pour l'historique des versions.
+Collection, completion and play-time achievements are computed from PinballY's own play statistics, so tables you had already played before installing count straight away. Streaks and session milestones (marathon, rage quit, grand comeback) only count from installation onwards.
 
-## Références
+## Adding or improving a language
 
-- PinballY Project : https://mjrnet.org/pinscape/PinballY.php
-- PinballY Help — Installation : https://mjrnet.org/pinscape/downloads/PinballY/Help/Install.html
+Translations live in `lang\<code>.js`. English (`en.js`) is the fallback language.
+
+- **To improve a translation,** edit the text in that language's file.
+- **To add a language:**
+  1. Copy an existing translation such as `fr.js` (not `en.js`: its PinballY menu tables are empty, since PinballY's own texts are already in English) to a new file, for example `nl.js`, and translate it. Keep the keys, the `[Game.Xxx]` placeholders and the `${...}` parameters as they are.
+  2. Register it in `common\i18n.js`: add an `import` and an entry in `AVAILABLE_LANGUAGES`.
+  3. Select it with `translation.language`.
+
+If a text is missing from a language, the English text is shown instead, and the missing keys are listed once in `PinballY.log` at startup. Save language files as **UTF-8** so accented characters display correctly.
+
+## For contributors
+
+`main.js` starts each add-on in turn, in the order of its `SCRIPTS` list. The comment above the list explains which order constraints matter. Each add-on is a module whose default `init()` function sets it up, usually by registering PinballY event listeners.
+
+```text
+main.js                  entry point and add-on list
+*.js                     one file per add-on (ui_translation, rating_prompt, ...),
+                         plus the table of the day / week pickers
+achievements\            achievement definitions
+common\                  shared code: config, i18n, safe_handler, pickers, trackers...
+lang\                    translations
+```
+
+To add an add-on, create its file, then register it in `main.js` (`import` and `SCRIPTS`) and in `config.scripts.enabled`.
+
+The conventions, enforced in review:
+- **Language.** Code, comments and log messages are in English.
+- **Style.** File names in `snake_case.js`. No global variables: only the globals PinballY provides.
+- **Comments.** Each file starts with a header block describing its role, when it runs and its side effects. Add short `//` comments for the *why* of non-obvious choices. No JSDoc.
+- **Displayed text.** Every text shown to the player goes through `common/i18n.js` and must exist in all 6 languages.
+- **Error handling.** Wrap every event handler with `safeHandler(SCRIPT_NAME, ...)` from `common/safe_handler.js`. An error is then logged with the add-on's name, and the other add-ons keep working.
+- **Settings.**
+  - Read typed values with `optionSettings.getInt` / `getFloat` / `getBool`, because `get()` always returns a string.
+  - Don't call `optionSettings.save()`: PinballY saves on its own.
+- **Dialogs.** Only open a dialog when `mainWindow.getUIMode().mode === "wheel"`. Otherwise, wait for the `wheelmode` event.
+- **Menu separators** are written `{ cmd: -1 }`.
+
+The PinballY scripting reference is in PinballY's help (`PinballY\Help\Javascript.html`, also [online](https://mjrnet.org/pinscape/downloads/PinballY/Help/PinballY.html)). Official examples are in [PinballY-Addons-and-Examples](https://github.com/PinballY/PinballY-Addons-and-Examples).
+
+Bugs and ideas: [GitHub issues](https://github.com/F3L1X79/My-custom-PinballY-Addons-and-Plugins/issues).
+
+## License
+
+MIT. See [LICENSE](LICENSE).

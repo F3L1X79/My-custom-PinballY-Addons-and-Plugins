@@ -9,31 +9,45 @@ import config from "./common/config.js";
 
 import * as uiTranslation from "./ui_translation.js";
 import * as statusLineInfo from "./status_line_info.js";
-import * as startupChoicePrompt from "./startup_choice_prompt.js";
-import * as forceBackglass from "./force_backglass.js";
 import * as customMenuCommands from "./custom_menu_commands.js";
 import * as customFilter from "./custom_filter.js";
+import * as seamlessLaunchOverlay from "./seamless_launch_overlay.js";
+import * as forceBackglass from "./force_backglass.js";
+import * as playLaunchSound from "./play_launch_sound.js";
 import * as sessionStatsTracker from "./common/session_stats_tracker.js";
 import * as achievementsEngine from "./achievements_engine.js";
-import * as seamlessLaunchOverlay from "./seamless_launch_overlay.js";
-import * as playLaunchSound from "./play_launch_sound.js";
 import * as ratingPrompt from "./rating_prompt.js";
+import * as startupChoicePrompt from "./startup_choice_prompt.js";
 
 // Scripts are initialized in this order, which is also the order their event
-// listeners are registered in: keep a script ahead of the ones that rely on it
-// (e.g. uiTranslation first so its "menuopen" hook sees every menu).
+// listeners are registered in, and listeners for the same event run in that
+// order too:
+// - uiTranslation must come first, so its "menuopen" hook is in place before
+//   any menu opens (including the startup prompt, shown during init).
+// - achievements comes before ratingPrompt: both open a dialog on "wheelmode"
+//   when the wheel is free, so an unlock is shown first and the rating prompt
+//   waits for it to be closed.
+// - sessionStatsTracker is kept before achievements as a safety margin; the
+//   achievement checks are deferred by one tick, so the stats are recorded
+//   first either way.
+// The other scripts don't depend on each other's order.
 const SCRIPTS = [
+    // Interface: translations, status line, menus, filters, launch overlay.
     { key: "uiTranslation", module: uiTranslation },
     { key: "statusLineInfo", module: statusLineInfo },
-    { key: "startupChoicePrompt", module: startupChoicePrompt },
-    { key: "forceBackglass", module: forceBackglass },
     { key: "customMenuCommands", module: customMenuCommands },
     { key: "customFilter", module: customFilter },
+    { key: "seamlessLaunchOverlay", module: seamlessLaunchOverlay },
+
+    // Game session: windows, sound, stats, achievements, rating.
+    { key: "forceBackglass", module: forceBackglass },
+    { key: "playLaunchSound", module: playLaunchSound },
     { key: "sessionStatsTracker", module: sessionStatsTracker },
     { key: "achievements", module: achievementsEngine },
-    { key: "seamlessLaunchOverlay", module: seamlessLaunchOverlay },
-    { key: "playLaunchSound", module: playLaunchSound },
     { key: "ratingPrompt", module: ratingPrompt },
+
+    // Startup dialog: shown once every other script is ready.
+    { key: "startupChoicePrompt", module: startupChoicePrompt },
 ];
 
 const { enabled: ENABLED_SCRIPTS, logStartupTiming: LOG_STARTUP_TIMING } = config.scripts;

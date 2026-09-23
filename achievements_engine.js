@@ -104,5 +104,8 @@ export default function init() {
         setTimeout(safeCheckForNewAchievements, 0);
     }));
 
-    checkForNewAchievements();
+    // Deferred until every script has initialized, so a dialog opened at
+    // startup (e.g. the startup prompt) is already showing and the unlock
+    // waits for it instead of being replaced by it, whatever the order in main.js.
+    setTimeout(safeCheckForNewAchievements, 0);
 }
