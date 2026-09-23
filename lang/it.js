@@ -110,11 +110,6 @@ export default {
     // Functions that build translated titles for PinballY's dynamically
     // generated menu text (category names, star ratings, etc.).
     dynamicLabelBuilders: {
-        /**
-         * Builds the media-capture instructions for a duration given in seconds.
-         * @param {string} seconds - Capture duration, as captured from PinballY's English text.
-         * @returns {string} Translated instructions.
-         */
         captureInstructions: (seconds) => {
             const plural = seconds === "1" ? "" : "i";
             return `Seleziona gli elementi da acquisire, quindi fai clic su Avvia acquisizione. Questo avvierà il gioco, acquisirà le immagini dello schermo e chiuderà automaticamente il gioco al termine. Il processo richiederà circa ${seconds} second${plural}. (!) indica che un elemento esistente verrà sostituito.`;
@@ -143,12 +138,6 @@ export default {
     },
 
     startupPrompt: {
-        /**
-         * Builds the startup prompt text, listing today's and this week's picks when known.
-         * @param {string | null} dayTitle - Title of the table of the day, or null if none.
-         * @param {string | null} weekTitle - Title of the table of the week, or null if none.
-         * @returns {string} Multi-line prompt text.
-         */
         introWithPicks: (dayTitle, weekTitle) => {
             const lines = ["Come vuoi iniziare?"];
             if (dayTitle) lines.push(`Tavolo del giorno: ${dayTitle}`);

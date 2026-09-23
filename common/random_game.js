@@ -1,11 +1,12 @@
-﻿import { animateWheelTo, sleep } from "./wheel_navigator.js";
-import config from "./config.js";
-
-// ============================================================
+﻿// ============================================================
 // Shared logic for picking a random table from the current wheel
 // selection, animating the wheel to it, and launching it. Used by both
-// the "Random Game" menu command and the startup choice prompt.
+// the "Random Game" menu command and the startup choice prompt. Calls made
+// while an animation is already running are ignored.
 // ============================================================
+
+import { animateWheelTo, sleep } from "./wheel_navigator.js";
+import config from "./config.js";
 
 const {
     animationBaseSpeedMs: ANIMATION_BASE_SPEED_MS,

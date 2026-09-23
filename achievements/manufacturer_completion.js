@@ -1,18 +1,13 @@
-﻿import lang from "../common/i18n.js";
-import { getVisibleTables } from "../common/visible_tables.js";
-
-// ============================================================
+﻿// ============================================================
 // One achievement per manufacturer found in the collection (including
 // the fictional "VPX Community" manufacturer, treated like any other):
-// unlocked once every non-hidden table from that manufacturer has been
-// played at least once.
+// unlocked once every visible table from that manufacturer has been
+// played at least once. Called by achievements_engine.js; no side effects.
 // ============================================================
 
-/**
- * Builds one completion achievement per manufacturer present among the
- * visible tables.
- * @returns {object[]} Achievement objects ({ id, getTitle, getDescription, checkUnlocked }).
- */
+import lang from "../common/i18n.js";
+import { getVisibleTables } from "../common/visible_tables.js";
+
 export function buildManufacturerCompletionAchievements() {
     const { achievements: TEXT } = lang;
 

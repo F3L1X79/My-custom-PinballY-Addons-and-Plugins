@@ -1,9 +1,9 @@
 ﻿// ============================================================
-// Generic "pick and lock for a period" helper. Given a way to compute the
-// current period's key (e.g. today's date, or the current week's Monday
-// date) and a selection function, returns a game choice that stays locked
-// in optionSettings for the whole period, and only changes when the
-// period key itself changes.
+// Generic "pick and lock for a period" helper behind the table of the day /
+// week. The returned picker keeps its choice for the whole period and picks
+// again (never the previous period's table) only when the period key
+// changes. The lock is stored in optionSettings under "<prefix>.period",
+// "<prefix>.configId" and "<prefix>.previousConfigId".
 // ============================================================
 
 import { getVisibleTables } from "./visible_tables.js";
@@ -36,12 +36,6 @@ export function createLockedPicker({ settingsKeyPrefix, getPeriodKey, pickNew })
     };
 }
 
-/**
- * Picks a random never-played visible table, or else the one played least
- * recently, skipping the given table so the pick changes between periods.
- * @param {string} excludeConfigId - Config id to skip ("" to skip none).
- * @returns {object|null} The chosen game, or null when no candidate is left.
- */
 export function pickNeverPlayedOrOldest(excludeConfigId) {
     const allGames = getVisibleTables().filter(game => game.configId !== excludeConfigId);
     if (allGames.length === 0) return null;
@@ -56,12 +50,6 @@ export function pickNeverPlayedOrOldest(excludeConfigId) {
     );
 }
 
-/**
- * Picks a uniformly random visible table, skipping the given table so the
- * pick changes between periods.
- * @param {string} excludeConfigId - Config id to skip ("" to skip none).
- * @returns {object|null} The chosen game, or null when no candidate is left.
- */
 export function pickPurelyRandom(excludeConfigId) {
     const allGames = getVisibleTables().filter(game => game.configId !== excludeConfigId);
     if (allGames.length === 0) return null;

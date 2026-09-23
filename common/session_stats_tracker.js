@@ -1,34 +1,23 @@
-﻿import config from "./config.js";
-import { safeHandler } from "./safe_handler.js";
+﻿// ============================================================
+// Records session stats in optionSettings ("custom.sessionStats.*") for the
+// session achievements: longest / shortest session and a "grand return" flag
+// for a table replayed after a long break. Listens to "gamestarted" and
+// "gameover"; these handlers are synchronous, so they always finish before
+// achievements_engine's check, which is deferred with setTimeout(fn, 0).
+// ============================================================
 
-// ============================================================
-// Tracks per-session wall-clock duration (for marathon/rage-quit
-// achievements) and per-table previous-play dates (for the "grand
-// comeback" achievement), persisted across restarts via optionSettings.
-// Must run so its gameover handler completes BEFORE achievements_engine's
-// deferred check reads these values — since achievements_engine defers
-// its check with setTimeout(fn, 0), any synchronous handler registered
-// here for the same event is guaranteed to finish first regardless of
-// script load order.
-// ============================================================
+import config from "./config.js";
+import { safeHandler } from "./safe_handler.js";
 
 // Exported so the achievement readers (achievements/session_milestones.js)
 // use the exact keys this tracker writes. The strings must never change,
 // or previously saved stats would be lost.
-/** Settings key of the longest session duration ever recorded, in seconds. */
 export const LONGEST_SESSION_KEY = "custom.sessionStats.longestSeconds";
-/** Settings key of the shortest session duration ever recorded, in seconds (-1 when none). */
 export const SHORTEST_SESSION_KEY = "custom.sessionStats.shortestSeconds";
-/** Settings key of the flag set once a table is relaunched after a long absence. */
 export const GRAND_RETURN_FLAG_KEY = "custom.sessionStats.grandReturnUnlocked";
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
 const SCRIPT_NAME = "SessionStatsTracker";
 
-/**
- * Registers the gamestarted/gameover listeners (protected by safeHandler)
- * that record session durations and previous-play dates.
- * @returns {void}
- */
 export default function init() {
     const { grandReturnThresholdDays } = config.achievements;
     const sessionStartTimes = new Map();

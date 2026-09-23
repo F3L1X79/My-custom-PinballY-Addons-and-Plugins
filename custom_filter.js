@@ -1,11 +1,12 @@
-﻿import lang from "./common/i18n.js";
-import config from "./common/config.js";
-
-// ============================================================
+﻿// ============================================================
 // Adds an "Original Tables" filter to PinballY's native "Filter by
 // Manufacturer" menu, selecting every table EXCEPT the community-made
 // VPX tables (identified by config.tableMetadata.communityManufacturerName).
+// Registered once at init; no event listeners.
 // ============================================================
+
+import lang from "./common/i18n.js";
+import config from "./common/config.js";
 
 export default function init() {
     const { communityManufacturerName: COMMUNITY_MANUFACTURER_NAME } = config.tableMetadata;

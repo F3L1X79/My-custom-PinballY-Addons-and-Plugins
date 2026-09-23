@@ -1,11 +1,13 @@
-﻿import config from "./common/config.js";
-import { safeHandler } from "./common/safe_handler.js";
+﻿// ============================================================
+// Plays a sound effect when a table is launched ("gamestarted") and stops it
+// on "gameover", using the Windows Media Player COM component (WMPlayer.OCX)
+// via OLE automation, which requires the "Windows Media Player" optional
+// Windows feature. Does nothing (one log line at startup) when
+// config.launchSound.absoluteFilePath is empty.
+// ============================================================
 
-// ============================================================
-// Plays a sound effect whenever a table is launched, using the Windows
-// Media Player COM component (WMPlayer.OCX) via OLE automation.
-// Requires the "Windows Media Player" optional Windows feature to be enabled.
-// ============================================================
+import config from "./common/config.js";
+import { safeHandler } from "./common/safe_handler.js";
 
 function clampVolume(value) {
     return Math.max(0, Math.min(100, Number(value) || 0));
@@ -29,14 +31,6 @@ function initializeMediaPlayer() {
 
 const SCRIPT_NAME = "LaunchSound";
 
-/**
- * Creates the media player and registers the listeners that start the launch
- * sound and stop it on exit. The inner try/catch blocks keep their specific
- * messages; safeHandler catches anything else the handlers may throw.
- * Does nothing (beyond one log line) when no sound file is configured, since
- * the shipped config leaves the machine-specific path empty.
- * @returns {void}
- */
 export default function init() {
     const filePath = config.launchSound.absoluteFilePath;
     if (typeof filePath !== "string" || filePath.length === 0) {

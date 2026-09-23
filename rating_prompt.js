@@ -1,20 +1,16 @@
-﻿import lang from "./common/i18n.js";
+﻿// ============================================================
+// After a play session, if the table's CUMULATIVE play time has just
+// crossed config.ratingPrompt.thresholdMinutes and the table isn't rated
+// yet, shows a dialog offering to open PinballY's native rating dialog.
+// Listens to "gamestarted", "gameover" and "command".
+// ============================================================
+
+import lang from "./common/i18n.js";
 import config from "./common/config.js";
 import { safeHandler } from "./common/safe_handler.js";
 
-// ============================================================
-// After a play session, if the table's CUMULATIVE play time has just
-// crossed a configured threshold and the table hasn't been rated yet,
-// shows a custom prompt offering to open PinballY's native rating dialog.
-// ============================================================
-
 const SCRIPT_NAME = "RatingPrompt";
 
-/**
- * Registers the listeners (protected by safeHandler) that track play time per
- * session and offer to rate a table once it crosses the configured threshold.
- * @returns {void}
- */
 export default function init() {
     const { ratingPrompt: RATING_PROMPT_TEXT } = lang;
     const { thresholdMinutes: THRESHOLD_MINUTES } = config.ratingPrompt;
@@ -22,6 +18,7 @@ export default function init() {
 
     const playTimeAtSessionStart = new Map();
 
+    // Fires on table launch: remembers the play time before this session.
     mainWindow.on("gamestarted", safeHandler(SCRIPT_NAME, ev => {
         playTimeAtSessionStart.set(ev.game.id, ev.game.playTime);
     }));
@@ -56,6 +53,7 @@ export default function init() {
         );
     }));
 
+    // Fires on every command; only "Rate now" needs handling.
     mainWindow.on("command", safeHandler(SCRIPT_NAME, ev => {
         if (ev.id === CONFIRM_RATING_PROMPT_COMMAND) {
             mainWindow.doCommand(command.RateGame);

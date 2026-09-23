@@ -1,4 +1,10 @@
-﻿import { buildGroupedCompletionAchievements } from "../common/grouped_completion.js";
+﻿// ============================================================
+// Builds one achievement per table category (PinballY's game.categories):
+// unlocked once every visible table in that category has been played at
+// least once. Called by achievements_engine.js at each check; no side effects.
+// ============================================================
+
+import { buildGroupedCompletionAchievements } from "../common/grouped_completion.js";
 import lang from "../common/i18n.js";
 
 export function buildCategoryCompletionAchievements() {

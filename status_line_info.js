@@ -1,20 +1,16 @@
-﻿import lang from "./common/i18n.js";
+﻿// ============================================================
+// Fills PinballY's lower status line with rotating info about the selected
+// table: its alphabetical position within the active filter, release year,
+// manufacturer, play count and total play time. Refreshes on "gameselect"
+// and "filterselect".
+// ============================================================
+
+import lang from "./common/i18n.js";
 import config from "./common/config.js";
 import { safeHandler } from "./common/safe_handler.js";
 
-// ============================================================
-// Updates PinballY's lower status line with rotating info about the
-// currently selected table: release year, manufacturer, play count,
-// and total play time.
-// ============================================================
-
 const SCRIPT_NAME = "StatusLineInfo";
 
-/**
- * Registers the wheel listeners (protected by safeHandler) that keep the
- * lower status line in sync with the selected table, then fills it once.
- * @returns {void}
- */
 export default function init() {
     const STATUS_LINE_TEXT = lang.tableInfoStatusLines;
     const COMMUNITY_MANUFACTURER_NAME = config.tableMetadata.communityManufacturerName;

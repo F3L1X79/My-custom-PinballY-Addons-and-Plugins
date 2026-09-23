@@ -1,8 +1,8 @@
 ﻿// ============================================================
 // At startup, shows a dialog offering to stay on the last played table or
-// to launch today's table, this week's table or a random one. Every choice
-// is described once in PROMPT_CHOICES, which drives both the dialog items
-// and the command dispatch. Listens to "command" on the main window.
+// to launch today's table, this week's table or a random one (picking the
+// day / week tables here locks them in optionSettings). PROMPT_CHOICES drives
+// both the dialog items and the command dispatch. Listens to "command".
 // ============================================================
 
 import { launchRandomGame } from "./common/random_game.js";
@@ -14,40 +14,15 @@ import { safeHandler } from "./common/safe_handler.js";
 
 const SCRIPT_NAME = "StartupChoicePrompt";
 
-/**
- * One selectable choice of the startup prompt.
- * @typedef {object} PromptChoice
- * @property {string} name - Name passed to command.allocate(); must stay stable.
- * @property {string} label - Dialog item title, already translated.
- * @property {(() => (void | Promise<void>)) | null} action - Runs when the
- *   choice is selected; null when closing the dialog is all it must do.
- */
-
-/**
- * One startup prompt choice once its command ID has been allocated.
- * @typedef {PromptChoice & { cmd: number }} AllocatedPromptChoice
- */
-
-/**
- * Removes every "(...)" group from a table title, so the prompt shows a
- * short name without manufacturer and year.
- * @param {string} title - Full table title.
- * @returns {string} The title without its parenthetical parts.
- */
+// Drops parenthetical suffixes from table titles to keep the intro message short.
 function stripParentheticals(title) {
     return title.replace(/\s*\([^)]*\)/g, "").trim();
 }
 
-/**
- * Registers the startup prompt's command handler (protected by safeHandler)
- * and shows the prompt offering today's, this week's or a random table.
- * @returns {void}
- */
 export default function init() {
     const { startupPrompt: STARTUP_PROMPT_TEXT } = lang;
 
     // Listed in the order they appear in the dialog, top to bottom.
-    /** @type {PromptChoice[]} */
     const PROMPT_CHOICES = [
         // "Stay" needs a real command ID to be selectable (cmd -1 makes a
         // plain label), but PinballY closing the dialog is all it must do.
@@ -57,7 +32,6 @@ export default function init() {
         { name: "startupRandom", label: STARTUP_PROMPT_TEXT.randomTable, action: launchRandomGame },
     ];
 
-    /** @type {AllocatedPromptChoice[]} */
     const CHOICES = PROMPT_CHOICES.map(choice => ({ ...choice, cmd: command.allocate(choice.name) }));
 
     // Fires on every command; async because the random launch animates the

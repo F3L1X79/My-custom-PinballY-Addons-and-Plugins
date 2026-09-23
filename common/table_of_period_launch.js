@@ -1,4 +1,11 @@
-﻿import { pickTableOfTheDay } from "../table_of_the_day.js";
+﻿// ============================================================
+// Launches the table of the day / week and records the matching streak in
+// optionSettings ("custom.streaks.tableOfTheDay/Week.*"), which the streak
+// achievements read. Shared by the custom main menu entries and the
+// startup choice prompt.
+// ============================================================
+
+import { pickTableOfTheDay } from "../table_of_the_day.js";
 import { pickTableOfTheWeek } from "../table_of_the_week.js";
 import { recordPeriodCompleted } from "./streak_tracker.js";
 import { getTodayKey, getPreviousDayKey, getWeekKey, getPreviousWeekKey } from "./period_keys.js";
@@ -7,15 +14,9 @@ import { getTodayKey, getPreviousDayKey, getWeekKey, getPreviousWeekKey } from "
 // settings key prefixes; achievements/period_table_streaks.js imports them
 // to read the same streaks. The strings must never change, or previously
 // saved streaks would be lost.
-/** Settings key prefix of the table of the day streak (see streak_tracker.js). */
 export const TABLE_OF_THE_DAY_STREAK_KEY_PREFIX = "custom.streaks.tableOfTheDay";
-/** Settings key prefix of the table of the week streak (see streak_tracker.js). */
 export const TABLE_OF_THE_WEEK_STREAK_KEY_PREFIX = "custom.streaks.tableOfTheWeek";
 
-/**
- * Launches today's table and counts today toward the daily streak.
- * @returns {void}
- */
 export function launchTableOfTheDay() {
     const game = pickTableOfTheDay();
     if (!game) return;
@@ -23,10 +24,6 @@ export function launchTableOfTheDay() {
     mainWindow.playGame(game);
 }
 
-/**
- * Launches this week's table and counts this week toward the weekly streak.
- * @returns {void}
- */
 export function launchTableOfTheWeek() {
     const game = pickTableOfTheWeek();
     if (!game) return;

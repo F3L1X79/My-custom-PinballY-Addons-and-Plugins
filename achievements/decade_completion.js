@@ -1,4 +1,11 @@
-﻿import { buildGroupedCompletionAchievements } from "../common/grouped_completion.js";
+﻿// ============================================================
+// Builds one achievement per release decade (from game.year): unlocked once
+// every visible table released in that decade has been played at least once.
+// Tables without a year are ignored. Called by achievements_engine.js at
+// each check; no side effects.
+// ============================================================
+
+import { buildGroupedCompletionAchievements } from "../common/grouped_completion.js";
 import lang from "../common/i18n.js";
 
 function getDecadeLabel(year) {

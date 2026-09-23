@@ -1,6 +1,7 @@
 ﻿// ============================================================
-// Picks a "table of the day", locked for the current calendar day (see
-// createLockedPicker for the locking mechanism).
+// Picks the "table of the day": a random never-played table, or else the one
+// played longest ago, locked for the current calendar day in optionSettings
+// ("custom.tableOfTheDay.*", see createLockedPicker).
 // ============================================================
 
 import { createLockedPicker, pickNeverPlayedOrOldest } from "./common/locked_random_pick.js";

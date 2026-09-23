@@ -50,11 +50,6 @@ export function computeStepDelay(stepIndex, totalSteps, delayOptions = {}) {
  * Presses a button repeatedly, waiting between presses according to
  * `computeStepDelay` so the whole animation follows one timing curve.
  *
- * @param {string} buttonName PinballY button command name (e.g. "Next", "NextPage").
- * @param {number} times Number of presses.
- * @param {number} stepOffset Number of steps already performed earlier in the same animation.
- * @param {number} totalSteps Total number of steps in the whole animation.
- * @param {{baseSpeedMs?: number}} [delayOptions] Timing options passed to `computeStepDelay`.
  * @returns {Promise<void>} Resolves once every press (and its delay) is done.
  */
 export async function pressButtonRepeatedly(
@@ -79,12 +74,6 @@ export async function pressButtonRepeatedly(
     }
 }
 
-/**
- * Returns the first character used to group a game on the wheel: its config
- * ID when it has one (null or undefined falls back to the title).
- * @param {{configId?: string | null, title?: string} | null | undefined} game
- * @returns {string} First character, or "" if unavailable.
- */
 function getGameFirstLetter(game) {
     if (!game) return "";
     const value = game.configId ?? game.title;

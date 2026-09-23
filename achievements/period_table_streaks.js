@@ -1,13 +1,15 @@
-﻿import { getCurrentStreak } from "../common/streak_tracker.js";
+﻿// ============================================================
+// Achievements for consecutive days / weeks in which the table of the day /
+// week was launched (3, 7 and 30 days; 4 and 12 weeks). Reads the streaks
+// that common/table_of_period_launch.js records in optionSettings; writes
+// nothing.
+// ============================================================
+
+import { getCurrentStreak } from "../common/streak_tracker.js";
 import { getTodayKey, getPreviousDayKey, getWeekKey, getPreviousWeekKey } from "../common/period_keys.js";
 import lang from "../common/i18n.js";
 import { TABLE_OF_THE_DAY_STREAK_KEY_PREFIX, TABLE_OF_THE_WEEK_STREAK_KEY_PREFIX } from "../common/table_of_period_launch.js";
 
-/**
- * Builds the daily and weekly "table of the period" streak achievements
- * from the streaks recorded by common/table_of_period_launch.js.
- * @returns {object[]} Achievement objects ({ id, getTitle, getDescription, checkUnlocked }).
- */
 export function buildPeriodTableStreakAchievements() {
     const { achievements: TEXT } = lang;
 

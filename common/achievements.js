@@ -1,9 +1,9 @@
 ﻿// ============================================================
-// Generic achievement engine. An achievement is a plain object:
+// Generic achievement evaluation. An achievement is a plain object:
 //   { id, getTitle(), getDescription(), checkUnlocked() }
-// "Unlocked" is computed live from PinballY's own game stats (playCount,
-// etc.) — we only persist whether the player has already been notified,
-// to avoid re-showing the same congratulations popup every session.
+// "Unlocked" is computed live from game stats; only the fact that the player
+// was already notified is persisted (optionSettings key
+// "custom.achievements.notified.<id>"), so each popup is shown only once.
 // ============================================================
 
 const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";

@@ -51,12 +51,6 @@ export default {
     },
 
     startupPrompt: {
-        /**
-         * Builds the startup prompt text, listing today's and this week's picks when known.
-         * @param {string | null} dayTitle - Title of the table of the day, or null if none.
-         * @param {string | null} weekTitle - Title of the table of the week, or null if none.
-         * @returns {string} Multi-line prompt text.
-         */
         introWithPicks: (dayTitle, weekTitle) => {
             const lines = ["How would you like to start?"];
             if (dayTitle) lines.push(`Table of the Day: ${dayTitle}`);

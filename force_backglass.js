@@ -1,17 +1,13 @@
 ﻿// ============================================================
-// Keeps the backglass window hidden while a table is running (since VPX
-// renders its own backglass), and shows it again once back at the wheel.
+// Forces the backglass window visible at startup, hides it while a table is
+// running (VPX renders its own backglass), and shows it again once back at
+// the wheel. Listens to "gamestarted" and "gameover".
 // ============================================================
 
 import { safeHandler } from "./common/safe_handler.js";
 
 const SCRIPT_NAME = "ForceBackglass";
 
-/**
- * Shows the backglass once startup completes and toggles it around each
- * play session; every callback is protected by safeHandler.
- * @returns {void}
- */
 export default function init() {
     setTimeout(safeHandler(SCRIPT_NAME, () => {
         backglassWindow.showWindow(true);

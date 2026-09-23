@@ -1,7 +1,7 @@
 ﻿// ============================================================
 // Picks a "table of the week": a PURELY random table (no never-played
 // bias, unlike the table of the day), locked for the current calendar
-// week (Monday to Sunday).
+// week (Monday to Sunday) in optionSettings ("custom.tableOfTheWeek.*").
 // ============================================================
 
 import { createLockedPicker, pickPurelyRandom } from "./common/locked_random_pick.js";

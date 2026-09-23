@@ -13,29 +13,10 @@ import { safeHandler } from "./common/safe_handler.js";
 
 const SCRIPT_NAME = "CustomMenuCommands";
 
-/**
- * One custom main-menu entry.
- * @typedef {object} MenuCommand
- * @property {string} name - Name passed to command.allocate(); must stay stable.
- * @property {string} label - Menu title, already translated.
- * @property {() => (void | Promise<void>)} action - Runs when the entry is selected.
- */
-
-/**
- * One custom main-menu entry once its command ID has been allocated.
- * @typedef {MenuCommand & { cmd: number }} AllocatedMenuCommand
- */
-
-/**
- * Allocates the custom commands, adds them to PinballY's main menu and
- * handles them, with both listeners protected by safeHandler.
- * @returns {void}
- */
 export default function init() {
     const { customMenuLabels: MENU_LABELS } = lang;
 
     // Listed in the order they appear in the menu, top to bottom.
-    /** @type {MenuCommand[]} */
     const MENU_COMMANDS = [
         {
             name: "showTableSetup",
@@ -47,18 +28,12 @@ export default function init() {
         { name: "tableOfTheWeek", label: MENU_LABELS.tableOfTheWeek, action: launchTableOfTheWeek },
     ];
 
-    /** @type {AllocatedMenuCommand[]} */
     const COMMANDS = MENU_COMMANDS.map(entry => ({ ...entry, cmd: command.allocate(entry.name) }));
 
     // Fires when any menu opens: adds the custom entries to the main menu once.
     mainWindow.on("menuopen", safeHandler(SCRIPT_NAME, ev => {
         if (ev.id !== "main") return;
 
-        /**
-         * Tells whether the menu being opened already contains a command.
-         * @param {number} cmd - Command ID to look for.
-         * @returns {boolean} True if an item of the menu uses this command.
-         */
         const hasCommand = (cmd) => ev.items.some(item => item.cmd === cmd);
 
         // Each entry is inserted right after "Play", which pushes the previous

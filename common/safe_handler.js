@@ -2,17 +2,10 @@
 // Shared error guard for event handlers, timer callbacks and async menu
 // commands. main.js only protects each script's init(), so an uncaught
 // error in a handler would otherwise escape to the engine or become an
-// unhandled promise rejection. Wrapped handlers
-// log the error to logfile.log as "[<ScriptName>] ..." and never rethrow.
+// unhandled promise rejection. Wrapped handlers log the error to
+// logfile.log as "[<ScriptName>] ..." and never rethrow.
 // ============================================================
 
-/**
- * Writes an error caught in a handler to the PinballY log, tagged with the
- * name of the script it came from, including the stack trace when one exists.
- * @param {string} scriptName - Name of the script that owns the failing handler.
- * @param {unknown} error - The thrown value or rejection reason (not always an Error).
- * @returns {void}
- */
 export function logHandlerError(scriptName, error) {
     let details;
     try {
@@ -36,23 +29,9 @@ export function logHandlerError(scriptName, error) {
     }
 }
 
-/**
- * Wraps a handler so that a synchronous throw or an async rejection is
- * logged under the given script name instead of propagating. The event
- * argument(s), `this` and the return value are passed through unchanged, so
- * handlers relying on ev.preventDefault() or on returning a value still work.
- * @template {(...args: any[]) => any} T
- * @param {string} scriptName - Name used as the log prefix, e.g. "RatingPrompt".
- * @param {T} handler - The event handler, timer callback or async command to protect.
- * @returns {T} A handler with the same signature that never throws.
- */
+// `this`, the arguments and the return value are passed through unchanged,
+// so handlers relying on ev.preventDefault() or on returning a value still work.
 export function safeHandler(scriptName, handler) {
-    /**
-     * Calls the wrapped handler and routes any failure to the log.
-     * @this {unknown}
-     * @param {...any} args - Arguments forwarded as-is to the wrapped handler.
-     * @returns {any} Whatever the wrapped handler returned, or undefined if it threw.
-     */
     function guardedHandler(...args) {
         let result;
         try {
@@ -70,5 +49,5 @@ export function safeHandler(scriptName, handler) {
         return result;
     }
 
-    return /** @type {T} */ (/** @type {unknown} */ (guardedHandler));
+    return guardedHandler;
 }

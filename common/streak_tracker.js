@@ -1,8 +1,9 @@
 ﻿// ============================================================
-// Generic consecutive-period streak tracker. Records that a given period
-// key (e.g. "2025-08-22" for a day, or a week's Monday date) was
-// "completed", and computes the current consecutive streak length by
-// walking backwards from the most recent completed period.
+// Generic consecutive-period streak tracker. Records that a period key
+// (e.g. "2025-08-22" for a day, or a week's Monday date) was completed, and
+// returns the current streak, which drops to 0 once a whole period is
+// missed. Writes "<prefix>.lastPeriod", "<prefix>.currentStreak" and
+// "<prefix>.longestStreak" to optionSettings.
 // ============================================================
 
 export function recordPeriodCompleted(settingsKeyPrefix, periodKey, getPreviousPeriodKey) {

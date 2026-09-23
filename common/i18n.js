@@ -14,12 +14,6 @@ import it from "../lang/it.js";
 import pt from "../lang/pt.js";
 import config from "./config.js";
 
-/**
- * A language section: nested objects whose leaves are strings or text-building functions.
- * @typedef {{ [key: string]: any }} LanguageTexts
- */
-
-/** @type {{ [code: string]: LanguageTexts }} */
 const AVAILABLE_LANGUAGES = {
     de,
     en,
@@ -31,28 +25,13 @@ const AVAILABLE_LANGUAGES = {
 
 const DEFAULT_LANGUAGE_CODE = "en";
 
-/**
- * Tells whether a value is a plain nested section (as opposed to a text leaf).
- * @param {unknown} value - Value to test.
- * @returns {boolean} True for non-null, non-array objects.
- */
 function isSection(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/**
- * Builds a copy of a language where every key missing from it is filled in
- * from the fallback language, recursively. Keys present in the language are
- * never overridden, so translation maps keyed by English source text (which
- * are empty or partial in English) keep exactly their own entries.
- * @param {LanguageTexts} language - Selected language texts.
- * @param {LanguageTexts} fallback - Fallback (English) texts.
- * @param {string[]} [missingKeys] - Receives the dotted path of each key taken from the fallback.
- * @param {string} [pathPrefix] - Dotted path of the current section, used for missingKeys.
- * @returns {LanguageTexts} New object; neither input is mutated.
- */
+// Only fills in keys the language lacks and never overrides present ones, so
+// translation maps keyed by English source text (empty in en.js) keep their own entries.
 export function withFallback(language, fallback, missingKeys = [], pathPrefix = "") {
-    /** @type {LanguageTexts} */
     const merged = { ...language };
     for (const key of Object.keys(fallback)) {
         const path = pathPrefix ? `${pathPrefix}.${key}` : key;
@@ -74,7 +53,6 @@ const activeLanguageCodeResolved = AVAILABLE_LANGUAGES[activeLanguageCode]
     ? activeLanguageCode
     : DEFAULT_LANGUAGE_CODE;
 
-/** @type {string[]} */
 const missingKeys = [];
 const englishTexts = AVAILABLE_LANGUAGES[DEFAULT_LANGUAGE_CODE];
 

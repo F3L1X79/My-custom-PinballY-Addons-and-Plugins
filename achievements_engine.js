@@ -1,8 +1,8 @@
 ﻿// ============================================================
-// Checks all registered achievements after every play session (and once
-// at startup, in case stats changed while the script wasn't running),
-// and shows a congratulations popup for each newly unlocked one.
-// Multiple simultaneous unlocks are queued and shown one at a time.
+// Checks all registered achievements at startup and after every
+// "gamestarted" and "gameover" event, and shows a congratulations dialog
+// for each newly unlocked one. Simultaneous unlocks are queued and shown
+// one at a time; listens to "command" for the acknowledge button.
 // ============================================================
 
 import { evaluateAchievements } from "./common/achievements.js";
@@ -30,11 +30,6 @@ function getAllAchievements() {
     ];
 }
 
-/**
- * Registers the acknowledge command and the post-session achievement checks
- * (all protected by safeHandler), then runs a first check immediately.
- * @returns {void}
- */
 export default function init() {
     const { achievements: TEXT } = lang;
     const ACKNOWLEDGE_COMMAND = command.allocate("acknowledgeAchievement");
@@ -76,6 +71,9 @@ export default function init() {
     // needs its own guard.
     const safeCheckForNewAchievements = safeHandler(SCRIPT_NAME, checkForNewAchievements);
 
+    // Fire on table launch and exit (the launch check catches the "grand
+    // return" flag set at launch). Deferred by one tick so the stats trackers'
+    // handlers for the same event run first.
     mainWindow.on("gamestarted", safeHandler(SCRIPT_NAME, () => {
         setTimeout(safeCheckForNewAchievements, 0);
     }));

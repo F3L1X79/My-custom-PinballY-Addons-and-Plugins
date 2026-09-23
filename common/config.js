@@ -21,12 +21,12 @@ export default {
             playLaunchSound: true,
             ratingPrompt: true,
         },
-        // Temporarily set to true to log each script's init duration (ms)
-        // to the PinballY log file, to help find a slow-starting script.
-        logStartupTiming: false,
+        // Logs each script's init duration (ms) to the PinballY log file,
+        // to help find a slow-starting script.
+        logStartupTiming: true,
     },
 
-    // achievements/collection_completion.js et achievements/play_time_totals.js
+    // achievements/*.js (collection, play time and session milestones)
     achievements: {
         // Percentages of the collection played at least once (in addition to
         // a separate "first table ever played" achievement).
@@ -54,7 +54,7 @@ export default {
         ignoredScrollIndicators: ["\u2191", "\u2193"], // ↑ ↓
     },
 
-    // status_line_info.js
+    // status_line_info.js and custom_filter.js
     tableMetadata: {
         // Manufacturer name used in your game metadata to identify
         // fictional/community VPX tables (shows a different status message).
@@ -90,7 +90,7 @@ export default {
         // launches, with doubled backslashes, e.g.
         // "C:\\PinballY\\Media\\Sounds\\launch.mp3". Left empty, no sound is
         // played (a single notice is written to the PinballY log at startup).
-        absoluteFilePath: "",
+        absoluteFilePath: "C:\\vPinball\\PinballY\\Media\\Sounds\\super-mario-64-voice-clip-here-we-go.mp3",
         // Playback volume, 0-100.
         volumePercent: 100,
     },
