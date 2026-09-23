@@ -2,11 +2,11 @@
 // Checks all registered achievements at startup and after every
 // "gamestarted" and "gameover" event, and shows a congratulations dialog
 // for each newly unlocked one, once back at the free wheel ("wheelmode").
-// Simultaneous unlocks are queued and shown one at a time; listens to
-// "command" for the acknowledge button.
+// Simultaneous unlocks are queued and shown one at a time; the queue
+// advances on "menuclose", whether the dialog was acknowledged or dismissed.
 // ============================================================
 
-import { evaluateAchievements } from "./common/achievements.js";
+import { evaluateAchievements, markNotified } from "./common/achievements.js";
 import { buildManufacturerCompletionAchievements } from "./achievements/manufacturer_completion.js";
 import { buildCollectionCompletionAchievements } from "./achievements/collection_completion.js";
 import { buildPlayTimeTotalAchievements } from "./achievements/play_time_totals.js";
@@ -34,18 +34,22 @@ function getAllAchievements() {
 export default function init() {
     const { achievements: TEXT } = lang;
     const ACKNOWLEDGE_COMMAND = command.allocate("acknowledgeAchievement");
+    const DIALOG_ID = "achievementUnlocked";
 
+    // Unlocked achievements not shown yet; the head is the one on screen
+    // while dialogIsOpen is true.
     const pendingQueue = [];
+    let dialogIsOpen = false;
     // True when an unlock is waiting for the wheel to be free (game running,
     // or another dialog such as the startup prompt still open).
     let displayPending = false;
 
     function showNextInQueue() {
-        if (pendingQueue.length === 0) return;
+        if (pendingQueue.length === 0 || dialogIsOpen) return;
         const achievement = pendingQueue[0];
 
         mainWindow.showMenu(
-            "achievementUnlocked",
+            DIALOG_ID,
             [
                 { title: TEXT.unlockedIntro(achievement.getTitle(), achievement.getDescription()), cmd: -1 },
                 { cmd: -1 },
@@ -53,6 +57,8 @@ export default function init() {
             ],
             { dialogStyle: true }
         );
+        dialogIsOpen = true;
+        markNotified(achievement.id);
     }
 
     // A dialog opened while a game is exiting would sit under the launch
@@ -66,25 +72,26 @@ export default function init() {
         }
     }
 
-    // Fires on every command; the acknowledge button shows the next queued unlock.
-    mainWindow.on("command", safeHandler(SCRIPT_NAME, ev => {
-        if (ev.id === ACKNOWLEDGE_COMMAND) {
-            pendingQueue.shift();
-            showNextInQueue();
-        }
+    // Fires after any menu closes. The acknowledge button and Escape both
+    // close the dialog, so the queue advances here rather than on the command.
+    mainWindow.on("menuclose", safeHandler(SCRIPT_NAME, ev => {
+        if (ev.id !== DIALOG_ID || !dialogIsOpen) return;
+        dialogIsOpen = false;
+        pendingQueue.shift();
+        showWhenWheelIsFree();
     }));
 
     function checkForNewAchievements() {
         evaluateAchievements(getAllAchievements(), (achievement) => {
-            const queueWasEmpty = pendingQueue.length === 0;
+            // Not Notified until shown, so later checks find it again.
+            if (pendingQueue.some(queued => queued.id === achievement.id)) return;
             pendingQueue.push(achievement);
-            if (queueWasEmpty) showWhenWheelIsFree();
+            if (!dialogIsOpen) showWhenWheelIsFree();
         });
     }
 
     // Fires on every return to the wheel (from a game, a menu or a popup):
-    // shows the unlocks that were waiting. Unlocks dismissed without being
-    // acknowledged are not re-shown here, only those still waiting.
+    // shows the unlocks that were waiting.
     mainWindow.on("wheelmode", safeHandler(SCRIPT_NAME, () => {
         if (displayPending) showWhenWheelIsFree();
     }));
