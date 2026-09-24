@@ -170,6 +170,22 @@ export default {
     },
 
     achievements: {
+        dailyFirstPlayTitle: () => "¡Hola, mesa del día!",
+        dailyFirstPlayDescription: () => "¡Has iniciado la mesa del día por primera vez!",
+        weeklyFirstPlayTitle: () => "Cita semanal",
+        weeklyFirstPlayDescription: () => "¡Has iniciado la mesa de la semana por primera vez!",
+        dailyPeriodsPlayedTitles: {
+            10: "Explorador de domingo",
+            50: "Explorador veterano",
+            100: "Indiana Flippers",
+        },
+        dailyPeriodsPlayedDescription: (days) => `¡Has iniciado la mesa del día ${days} días en total!`,
+        weeklyPeriodsPlayedTitles: {
+            10: "Habitual de la semana",
+            26: "Seis meses de fidelidad",
+            52: "Un año sin una arruga",
+        },
+        weeklyPeriodsPlayedDescription: (weeks) => `¡Has iniciado la mesa de la semana ${weeks} semanas en total!`,
         dailyStreakTitles: {
             3: "No hay dos sin tres",
             7: "Semana perfecta",

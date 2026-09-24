@@ -240,3 +240,56 @@ test("replaces a Table of the Day hidden since it was picked", () => {
 
     assert.notEqual(tableOfTheDay.getTable().configId, "Theatre of Magic (Bally 1995)");
 });
+
+test("counts a day once in Periods Played, however many times the Table of the Day is played", () => {
+    const { fake, tableOfTheDay } = createTableOfTheDay();
+    assert.equal(tableOfTheDay.getPeriodsPlayed(), 0);
+
+    for (let play = 0; play < 3; play++) {
+        tableOfTheDay.launch();
+        const launches = fake.launches();
+        fake.gameStarted(launches[launches.length - 1]);
+        fake.gameOver(launches[launches.length - 1]);
+        fake.advanceTime(HOUR_MS);
+    }
+
+    assert.equal(tableOfTheDay.getPeriodsPlayed(), 1);
+    assert.equal(tableOfTheDay.getLongestStreak(), 1);
+});
+
+test("counts non-consecutive days in Periods Played, while the longest Streak keeps its record", () => {
+    const { fake, tableOfTheDay } = createTableOfTheDay();
+    const playToday = () => {
+        tableOfTheDay.launch();
+        const launches = fake.launches();
+        fake.gameStarted(launches[launches.length - 1]);
+        fake.gameOver(launches[launches.length - 1]);
+    };
+
+    playToday();
+    fake.advanceTime(DAY_MS);
+    playToday();
+    fake.advanceTime(3 * DAY_MS);
+    playToday();
+
+    assert.equal(tableOfTheDay.getPeriodsPlayed(), 3);
+    assert.equal(tableOfTheDay.getLongestStreak(), 2);
+});
+
+test("starts Periods Played at the longest Streak stored before, and adds the next day to it", () => {
+    const { fake, tableOfTheDay } = createTableOfTheDay({
+        settings: {
+            "custom.streaks.tableOfTheDay.lastPeriod": "2026-09-01",
+            "custom.streaks.tableOfTheDay.currentStreak": 12,
+            "custom.streaks.tableOfTheDay.longestStreak": 12,
+        },
+    });
+    assert.equal(tableOfTheDay.getPeriodsPlayed(), 12);
+
+    tableOfTheDay.launch();
+    fake.gameStarted(fake.launches()[0]);
+
+    assert.equal(tableOfTheDay.getPeriodsPlayed(), 13);
+    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheDay.periodsPlayed"], "13");
+    assert.equal(tableOfTheDay.getLongestStreak(), 12);
+});

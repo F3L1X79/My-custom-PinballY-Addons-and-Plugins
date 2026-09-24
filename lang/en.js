@@ -85,6 +85,22 @@ export default {
     // Thresholded titles are keyed by their threshold, which is part of the
     // Achievement ID (see achievements/).
     achievements: {
+        dailyFirstPlayTitle: () => "Hello, Table of the Day!",
+        dailyFirstPlayDescription: () => "You've launched the table of the day for the first time!",
+        weeklyFirstPlayTitle: () => "Weekly Date",
+        weeklyFirstPlayDescription: () => "You've launched the table of the week for the first time!",
+        dailyPeriodsPlayedTitles: {
+            10: "Sunday Explorer",
+            50: "Seasoned Explorer",
+            100: "Indiana Flippers",
+        },
+        dailyPeriodsPlayedDescription: (days) => `You've launched the table of the day on ${days} days in total!`,
+        weeklyPeriodsPlayedTitles: {
+            10: "Weekly Regular",
+            26: "Six Months of Loyalty",
+            52: "A Year Without a Wrinkle",
+        },
+        weeklyPeriodsPlayedDescription: (weeks) => `You've launched the table of the week in ${weeks} weeks in total!`,
         dailyStreakTitles: {
             3: "Third Time's the Charm",
             7: "Perfect Week",

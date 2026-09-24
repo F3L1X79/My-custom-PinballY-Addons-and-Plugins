@@ -174,6 +174,22 @@ export default {
     },
 
     achievements: {
+        dailyFirstPlayTitle: () => "Bonjour, table du jour !",
+        dailyFirstPlayDescription: () => "Vous avez lancé la table du jour pour la première fois !",
+        weeklyFirstPlayTitle: () => "Rendez-vous hebdo",
+        weeklyFirstPlayDescription: () => "Vous avez lancé la table de la semaine pour la première fois !",
+        dailyPeriodsPlayedTitles: {
+            10: "Explorateur du dimanche",
+            50: "Explorateur chevronné",
+            100: "Indiana Flippers",
+        },
+        dailyPeriodsPlayedDescription: (days) => `Vous avez lancé la table du jour ${days} jours au total !`,
+        weeklyPeriodsPlayedTitles: {
+            10: "Habitué de la semaine",
+            26: "Six mois de fidélité",
+            52: "Un an, pas une ride",
+        },
+        weeklyPeriodsPlayedDescription: (weeks) => `Vous avez lancé la table de la semaine ${weeks} semaines au total !`,
         dailyStreakTitles: {
             3: "Jamais deux sans trois",
             7: "Semaine parfaite",

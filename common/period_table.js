@@ -1,12 +1,14 @@
 ﻿// ============================================================
 // Period Table module: picks a table once per Period and keeps it for the
-// whole Period, launches it, and keeps its Streak. Created from the PinballY
-// host and a Period definition (TABLE_OF_THE_DAY, TABLE_OF_THE_WEEK); the
-// add-ons share one instance of each through getTableOfTheDay() and
-// getTableOfTheWeek(). A Period counts in the Streak when its table starts
-// playing ("gamestarted"), however it was launched. Writes
-// "<tableKeyPrefix>.period" / ".configId" and
-// "<streakKeyPrefix>.lastPeriod" / ".currentStreak" / ".longestStreak".
+// whole Period, launches it, and keeps its Streak and its Periods Played.
+// Created from the PinballY host and a Period definition (TABLE_OF_THE_DAY,
+// TABLE_OF_THE_WEEK); the add-ons share one instance of each through
+// getTableOfTheDay() and getTableOfTheWeek(). A Period counts in the Streak
+// and in Periods Played when its table starts playing ("gamestarted"),
+// however it was launched.
+// Writes "<tableKeyPrefix>.period" / ".configId" and
+// "<streakKeyPrefix>.lastPeriod" / ".currentStreak" / ".longestStreak" /
+// ".periodsPlayed".
 // ============================================================
 
 import { safeHandler } from "./safe_handler.js";
@@ -72,6 +74,7 @@ export function createPeriodTable(host, definition) {
     const lastPeriodKey = `${streakKeyPrefix}.lastPeriod`;
     const currentStreakKey = `${streakKeyPrefix}.currentStreak`;
     const longestStreakKey = `${streakKeyPrefix}.longestStreak`;
+    const periodsPlayedKey = `${streakKeyPrefix}.periodsPlayed`;
 
     function getTable() {
         const currentPeriod = getPeriodKey(host.now());
@@ -101,17 +104,31 @@ export function createPeriodTable(host, definition) {
         if (game) host.playGame(game);
     }
 
+    function getLongestStreak() {
+        return host.settings.getInt(longestStreakKey, 0);
+    }
+
+    // Periods Played did not exist before the Streaks: reading it as at least
+    // the longest Streak gives earlier players their history without a
+    // migration step.
+    function getPeriodsPlayed() {
+        return Math.max(host.settings.getInt(periodsPlayedKey, 0), getLongestStreak());
+    }
+
     function recordPeriodPlayed(currentPeriod) {
         const lastPeriod = host.settings.getString(lastPeriodKey, "");
         if (lastPeriod === currentPeriod) return;
 
         const currentStreak = host.settings.getInt(currentStreakKey, 0);
         const newStreak = lastPeriod === getPreviousPeriodKey(currentPeriod) ? currentStreak + 1 : 1;
-        const longestStreak = host.settings.getInt(longestStreakKey, 0);
+        // Both read before any write, so a seeded Periods Played counts once.
+        const longestStreak = getLongestStreak();
+        const periodsPlayed = getPeriodsPlayed();
 
         host.settings.set(lastPeriodKey, currentPeriod);
         host.settings.set(currentStreakKey, newStreak);
         host.settings.set(longestStreakKey, Math.max(longestStreak, newStreak));
+        host.settings.set(periodsPlayedKey, periodsPlayed + 1);
     }
 
     function getStreak() {
@@ -134,7 +151,7 @@ export function createPeriodTable(host, definition) {
         recordPeriodPlayed(getPeriodKey(host.now()));
     }));
 
-    return { getTable, launch, getStreak };
+    return { getTable, launch, getStreak, getLongestStreak, getPeriodsPlayed };
 }
 
 let sharedTableOfTheDay = null;

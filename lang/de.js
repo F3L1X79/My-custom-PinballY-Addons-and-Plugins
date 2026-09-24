@@ -170,6 +170,22 @@ export default {
     },
 
     achievements: {
+        dailyFirstPlayTitle: () => "Hallo, Tisch des Tages!",
+        dailyFirstPlayDescription: () => "Sie haben den Tisch des Tages zum ersten Mal gestartet!",
+        weeklyFirstPlayTitle: () => "Wöchentliches Rendezvous",
+        weeklyFirstPlayDescription: () => "Sie haben den Tisch der Woche zum ersten Mal gestartet!",
+        dailyPeriodsPlayedTitles: {
+            10: "Sonntagsentdecker",
+            50: "Erfahrener Entdecker",
+            100: "Indiana Flippers",
+        },
+        dailyPeriodsPlayedDescription: (days) => `Sie haben den Tisch des Tages an insgesamt ${days} Tagen gestartet!`,
+        weeklyPeriodsPlayedTitles: {
+            10: "Stammgast der Woche",
+            26: "Sechs Monate Treue",
+            52: "Ein Jahr und keine Falte",
+        },
+        weeklyPeriodsPlayedDescription: (weeks) => `Sie haben den Tisch der Woche in insgesamt ${weeks} Wochen gestartet!`,
         dailyStreakTitles: {
             3: "Aller guten Dinge sind drei",
             7: "Perfekte Woche",

@@ -1,9 +1,9 @@
 ﻿// ============================================================
 // Pinning test: starts the add-ons through main.js on the fake PinballY
 // globals, plays a scripted session on a fixture collection, and locks the
-// exact settings keys written (Period Table locks, Streaks, Notified flags,
-// session stats) and every Achievement ID produced. These strings are
-// players' saved progress: this test must keep passing unchanged.
+// exact settings keys written (Period Table locks, Streaks, Periods Played,
+// Notified flags, session stats) and every Achievement ID produced. These
+// strings are players' saved progress: this test must keep passing unchanged.
 // ============================================================
 
 import { test } from "node:test";
@@ -68,9 +68,17 @@ const EXPECTED_ACHIEVEMENT_IDS = [
     "playTimeMilestone:50h",
     "playTimeMilestone:5h",
     "rageQuit",
+    "tableOfTheDayFirstPlay",
+    "tableOfTheDayPeriodsPlayed:10",
+    "tableOfTheDayPeriodsPlayed:100",
+    "tableOfTheDayPeriodsPlayed:50",
     "tableOfTheDayStreak:3",
     "tableOfTheDayStreak:30",
     "tableOfTheDayStreak:7",
+    "tableOfTheWeekFirstPlay",
+    "tableOfTheWeekPeriodsPlayed:10",
+    "tableOfTheWeekPeriodsPlayed:26",
+    "tableOfTheWeekPeriodsPlayed:52",
     "tableOfTheWeekStreak:12",
     "tableOfTheWeekStreak:4",
 ];
@@ -82,9 +90,11 @@ const EXPECTED_FIXED_KEYS = [
     "custom.streaks.tableOfTheDay.currentStreak",
     "custom.streaks.tableOfTheDay.lastPeriod",
     "custom.streaks.tableOfTheDay.longestStreak",
+    "custom.streaks.tableOfTheDay.periodsPlayed",
     "custom.streaks.tableOfTheWeek.currentStreak",
     "custom.streaks.tableOfTheWeek.lastPeriod",
     "custom.streaks.tableOfTheWeek.longestStreak",
+    "custom.streaks.tableOfTheWeek.periodsPlayed",
     "custom.tableOfTheDay.configId",
     "custom.tableOfTheDay.period",
     "custom.tableOfTheWeek.configId",
@@ -133,13 +143,15 @@ async function closeEveryDialog(fake, closeDialog) {
 test("persisted settings keys and Achievement IDs stay byte-identical", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
     fake.seedSettings({
-        // One Period short of the longest Streak Achievements.
+        // One Period short of the longest Streak and Periods Played Achievements.
         "custom.streaks.tableOfTheDay.lastPeriod": "2026-09-22",
         "custom.streaks.tableOfTheDay.currentStreak": 29,
         "custom.streaks.tableOfTheDay.longestStreak": 29,
+        "custom.streaks.tableOfTheDay.periodsPlayed": 99,
         "custom.streaks.tableOfTheWeek.lastPeriod": "2026-09-14",
         "custom.streaks.tableOfTheWeek.currentStreak": 11,
         "custom.streaks.tableOfTheWeek.longestStreak": 11,
+        "custom.streaks.tableOfTheWeek.periodsPlayed": 51,
         // Every table last played two years ago, for the grand return.
         ...Object.fromEntries(TABLES.map(table =>
             [PREVIOUS_PLAY_KEY_PREFIX + table.configId, new Date(2024, 8, 1).toISOString()])),

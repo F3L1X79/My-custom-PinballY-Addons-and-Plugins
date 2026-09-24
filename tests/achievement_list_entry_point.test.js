@@ -97,6 +97,10 @@ test("the Achievement List entry follows Play and lists the real Achievements by
         ...[10, 50, 100].map(hours => `  ${ACHIEVEMENT.playTimeMilestoneTitles[hours]}`),
     ]);
     assert.deepEqual(openFamily("periodTables"), [
+        `  ${ACHIEVEMENT.dailyFirstPlayTitle()}`,
+        `  ${ACHIEVEMENT.weeklyFirstPlayTitle()}`,
+        ...[10, 50, 100].map(days => `  ${ACHIEVEMENT.dailyPeriodsPlayedTitles[days]}`),
+        ...[10, 26, 52].map(weeks => `  ${ACHIEVEMENT.weeklyPeriodsPlayedTitles[weeks]}`),
         ...[3, 7, 30].map(days => `  ${ACHIEVEMENT.dailyStreakTitles[days]}`),
         ...[4, 12].map(weeks => `  ${ACHIEVEMENT.weeklyStreakTitles[weeks]}`),
     ]);

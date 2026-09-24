@@ -25,6 +25,9 @@ function table(id, title) {
 
 const THIRTY_DAYS_AGO = table(1, "Thirty Days Ago");
 const THIRTY_ONE_DAYS_AGO = table(2, "Thirty-One Days Ago");
+// Kept as the Table of the Day and of the Week, so the plays above never
+// count as a Period Table play.
+const PERIOD_TABLE = table(3, "Period Table");
 
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
 const DIALOG_ID = "achievementUnlocked";
@@ -32,10 +35,14 @@ const DIALOG_ID = "achievementUnlocked";
 const settle = () => new Promise(resolve => setTimeout(resolve, 10));
 
 test("the grand return needs a 31-day break and says so", async () => {
-    const fake = createFakePinballYHost({ now: NOW, tables: [THIRTY_DAYS_AGO, THIRTY_ONE_DAYS_AGO] });
+    const fake = createFakePinballYHost({ now: NOW, tables: [THIRTY_DAYS_AGO, THIRTY_ONE_DAYS_AGO, PERIOD_TABLE] });
     fake.seedSettings({
         [PREVIOUS_PLAY_KEY_PREFIX + THIRTY_DAYS_AGO.configId]: new Date(NOW.getTime() - 30 * MS_PER_DAY).toISOString(),
         [PREVIOUS_PLAY_KEY_PREFIX + THIRTY_ONE_DAYS_AGO.configId]: new Date(NOW.getTime() - 31 * MS_PER_DAY).toISOString(),
+        "custom.tableOfTheDay.period": "2026-09-23",
+        "custom.tableOfTheDay.configId": PERIOD_TABLE.configId,
+        "custom.tableOfTheWeek.period": "2026-09-21",
+        "custom.tableOfTheWeek.configId": PERIOD_TABLE.configId,
     });
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();

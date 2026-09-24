@@ -11,7 +11,7 @@ import { evaluateAchievements, markNotified } from "./common/achievements.js";
 import { buildManufacturerCompletionAchievements } from "./achievements/manufacturer_completion.js";
 import { buildCollectionCompletionAchievements } from "./achievements/collection_completion.js";
 import { buildPlayTimeTotalAchievements } from "./achievements/play_time_totals.js";
-import { buildPeriodTableStreakAchievements } from "./achievements/period_table_streaks.js";
+import { buildPeriodTableAchievements } from "./achievements/period_tables.js";
 import { buildDecadeCompletionAchievements } from "./achievements/decade_completion.js";
 import { buildCategoryCompletionAchievements } from "./achievements/category_completion.js";
 import { buildSessionMilestoneAchievements } from "./achievements/session_milestones.js";
@@ -30,7 +30,7 @@ function getAllAchievements() {
         ...buildManufacturerCompletionAchievements(),
         ...buildCollectionCompletionAchievements(),
         ...buildPlayTimeTotalAchievements(),
-        ...buildPeriodTableStreakAchievements(),
+        ...buildPeriodTableAchievements(),
         ...buildDecadeCompletionAchievements(),
         ...buildCategoryCompletionAchievements(),
         ...buildSessionMilestoneAchievements(),

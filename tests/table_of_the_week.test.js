@@ -177,3 +177,36 @@ test("reads and extends a week Streak stored before", () => {
     assert.equal(fake.storedSettings()["custom.streaks.tableOfTheWeek.longestStreak"], "12");
     assert.equal(fake.storedSettings()["custom.streaks.tableOfTheWeek.lastPeriod"], "2026-09-21");
 });
+
+test("counts non-consecutive weeks once each in Periods Played", () => {
+    const { fake, tableOfTheWeek } = createTableOfTheWeek();
+
+    tableOfTheWeek.launch();
+    playLastLaunch(fake);
+    tableOfTheWeek.launch();
+    playLastLaunch(fake);
+    fake.advanceTime(2 * WEEK_MS);
+    tableOfTheWeek.launch();
+    playLastLaunch(fake);
+
+    assert.equal(tableOfTheWeek.getPeriodsPlayed(), 2);
+    assert.equal(tableOfTheWeek.getLongestStreak(), 1);
+});
+
+test("starts week Periods Played at the longest Streak stored before, and adds the next week to it", () => {
+    const { fake, tableOfTheWeek } = createTableOfTheWeek({
+        settings: {
+            "custom.streaks.tableOfTheWeek.lastPeriod": "2026-08-03",
+            "custom.streaks.tableOfTheWeek.currentStreak": 5,
+            "custom.streaks.tableOfTheWeek.longestStreak": 5,
+            "custom.streaks.tableOfTheWeek.periodsPlayed": 3,
+        },
+    });
+    assert.equal(tableOfTheWeek.getPeriodsPlayed(), 5, "never lower than the longest Streak");
+
+    tableOfTheWeek.launch();
+    playLastLaunch(fake);
+
+    assert.equal(tableOfTheWeek.getPeriodsPlayed(), 6);
+    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheWeek.periodsPlayed"], "6");
+});

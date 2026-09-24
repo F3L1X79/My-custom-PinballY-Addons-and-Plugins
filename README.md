@@ -1,5 +1,7 @@
 # My custom PinballY add-ons
 
+*[Version française](README.fr.md)*
+
 A set of JavaScript add-ons for [PinballY](https://mjrnet.org/pinscape/PinballY.php), the virtual pinball front end. They make your cabinet feel more like an arcade machine:
 - a table of the day and a table of the week;
 - a random table picked by a "wheel of fortune" animation;
@@ -19,13 +21,13 @@ Everything is plain JavaScript run by PinballY itself: no build step, no depende
 - **Main menu entries.** "Achievement List" (with the achievements add-on), a shortcut to "Table Setup", "Start Random Game", "Launch Table of the Day" and "Launch Table of the Week" are added right after "Play", in that order.
 - **"Original Tables" filter.** Added to the "Filter by Manufacturer" menu. It lists every table except the community-made ones (see `communityTablesManufacturer` in the configuration below).
 
-**Achievements.** A congratulations dialog appears when you're back at the wheel. Each achievement is shown only once. The "Achievement List" entry of the main menu shows every achievement by family (collection, play time, streaks, sessions, manufacturers, decades, categories), with the unlocked ones checked at the top. Selecting an achievement shows its card: what it asks for and whether it is unlocked.
+**Achievements.** A congratulations dialog appears when you're back at the wheel. Each achievement is shown only once. The "Achievement List" entry of the main menu shows every achievement by family (collection, play time, tables of the day and week, sessions, manufacturers, decades, categories), with the unlocked ones checked at the top. Selecting an achievement shows its card: what it asks for and whether it is unlocked.
 - **First table.** Your very first table played.
 - **Collection.** 10, 25, 50, 75 and 100 % of your collection played.
 - **Completion.** All the tables of a manufacturer, of a decade or of a category played.
 - **Total play time.** 1, 5, 10, 50 and 100 hours.
-- **Streaks.** The table of the day played 3, 7 or 30 days in a row; the table of the week played 4 or 12 weeks in a row. A day or week counts as soon as you play its table, whether you launched it from the menus or picked it yourself on the wheel.
-- **Session milestones.** A 30 or 60 minute marathon, a rage quit (30 seconds or less), and a grand comeback on a table untouched for a year.
+- **Tables of the day and week.** The first time you play the table of the day, and the table of the week. The table of the day played on 10, 50 or 100 days in total, and the table of the week in 10, 26 or 52 weeks in total, consecutive or not. Streaks: the table of the day played 3, 7 or 30 days in a row; the table of the week played 4 or 12 weeks in a row. A day or week counts once, as soon as you play its table, whether you launched it from the menus or picked it yourself on the wheel.
+- **Session milestones.** A 30 or 60 minute marathon, a rage quit (30 seconds or less), and a grand comeback on a table untouched for 31 days or more.
 
 **Interface**
 - **Translation.** PinballY's own menus and launch messages are translated into French, German, Spanish, Italian or Portuguese. English is the default.
@@ -147,7 +149,7 @@ To add an add-on, create its file at the root, then register it in `main.js` (`i
 
 Four shared modules carry most of the logic:
 - **PinballY host** (`common/pinbally_host.js`). Everything the Period Table and wheel dialog modules take from PinballY: settings, clock, visible tables, main window menus, UI mode and events, commands, table launch. It passes straight through to PinballY; the tests replace it with an in-memory fake. The other add-ons and helpers still use PinballY's globals directly.
-- **Period Table** (`common/period_table.js`). One module for both the table of the day and the table of the week: it picks the table once per period and keeps it, launches it, and keeps its streak. A period counts in the streak when its table actually starts playing. Add-ons share one instance of each through `getTableOfTheDay()` and `getTableOfTheWeek()`.
+- **Period Table** (`common/period_table.js`). One module for both the table of the day and the table of the week: it picks the table once per period and keeps it, launches it, and keeps its streak and its total of periods played (never lower than the longest streak). A period counts in both when its table actually starts playing. Add-ons share one instance of each through `getTableOfTheDay()` and `getTableOfTheWeek()`.
 - **Wheel dialog** (`common/wheel_dialog.js`). Add-ons `submit()` a dialog description (message, buttons with their actions, priority) to the queue returned by `getWheelDialogs()`. It shows the dialogs one at a time, only when the wheel is free, in a fixed priority order (startup prompt, then achievements, then rating prompt), and moves on as soon as one closes. The order of add-ons in `main.js` never decides which dialog comes first.
 - **Main menu** (`common/main_menu.js`). Add-ons `add()` their main menu entries (label, action, position) to the module returned by `getMainMenu()`. It places them right after "Play" in a fixed position order, so the order of add-ons in `main.js` never decides where an entry lands.
 
