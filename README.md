@@ -54,28 +54,37 @@ PinballY\
     ├── System\            ← from your PinballY install, leave it alone
     ├── main.js            ← entry point PinballY loads at startup
     ├── *.js               ← one file per add-on
+    ├── .env.example       ← every setting, with its default
+    ├── .env.local         ← your settings (you create it in step 3)
     ├── common\            ← shared code
-    │   └── config.js      ← the only file you need to edit
     ├── achievements\
     └── lang\
 ```
 
-**3. Edit `common\config.js`.** Three settings depend on your machine and your preferences:
+**3. Create your settings file.** Copy `.env.example` to `.env.local` in the same folder, open `.env.local` in a text editor, and set the three lines under "Set these for your setup":
 
 | Setting | Default | What to set |
 |---|---|---|
-| `language` | `"fr"` | Your language: `"en"`, `"fr"`, `"de"`, `"es"`, `"it"` or `"pt"`. |
-| `launchSoundFile` | the author's file | The **absolute** path to your own sound file, with doubled backslashes, e.g. `"C:\\PinballY\\Media\\Sounds\\launch.mp3"`. Use `""` for no sound. |
-| `communityTablesManufacturer` | `"VPX Community"` | The manufacturer name you gave community-made tables in PinballY. It's used by the status line and the "Original Tables" filter. |
+| `LANGUAGE` | `en` | Your language: `en`, `fr`, `de`, `es`, `it` or `pt`. |
+| `LAUNCH_SOUND_FILE` | empty (no sound) | The full path to your sound file, written normally, e.g. `C:\PinballY\Media\Sounds\launch.mp3`. Leave it empty for no sound. |
+| `COMMUNITY_TABLES_MANUFACTURER` | `VPX Community` | The manufacturer name you gave community-made tables in PinballY. It's used by the status line and the "Original Tables" filter. |
 
-For example, for an English setup with no launch sound:
+For example, for a French setup with a launch sound:
 
-```js
-language: "en",
-launchSoundFile: "",
+```text
+LANGUAGE=fr
+LAUNCH_SOUND_FILE=C:\PinballY\Media\Sounds\launch.mp3
 ```
 
-**4. Restart PinballY**, then open `PinballY.log` in the PinballY folder. Every add-on writes a line like this:
+You can delete every line you don't change: missing settings keep their default. Save the file as **UTF-8**. `.env.local` is ignored by git, so updating the project never touches it. Without a `.env.local`, everything runs with the defaults (English, no launch sound).
+
+**4. Restart PinballY**, then open `PinballY.log` in the PinballY folder. It lists the settings your `.env.local` changed:
+
+```text
+[Script] [Config] .env.local overrides: LANGUAGE, LAUNCH_SOUND_FILE.
+```
+
+A mistyped setting or an invalid value is logged with its line number, then ignored. Every add-on also writes a line like this:
 
 ```text
 [Script] [Startup] "achievements" initialized in 4 ms.
@@ -85,19 +94,21 @@ A line containing `ERROR` names the add-on at fault. The other add-ons keep work
 
 ## Configuration
 
-Every setting lives in `common\config.js`, and each one has a comment there:
+Every setting is listed in `.env.example`, with a comment and its default. Set the ones you want to change in `.env.local`, one `KEY=value` per line. Quotes around values are optional, and lines starting with `#` are comments.
 
 | Setting | What it controls |
 |---|---|
 | **Set these for your setup** | |
-| `language` | Interface language. `"en"` for English. |
-| `launchSoundFile` | Sound played when a table launches. `""` for no sound. |
-| `communityTablesManufacturer` | Name used for community-made tables. |
+| `LANGUAGE` | Interface language. `en` for English. |
+| `LAUNCH_SOUND_FILE` | Sound played when a table launches. Empty for no sound. |
+| `COMMUNITY_TABLES_MANUFACTURER` | Name used for community-made tables. |
 | **Optional preferences** | |
-| `skipRandomGameAnimation` | Jump straight to the random table, without the wheel animation. |
-| `askToRateAfterMinutesPlayed` | Total play time on a table before you're asked to rate it. |
+| `SKIP_RANDOM_GAME_ANIMATION` | `true` jumps straight to the random table, without the wheel animation. |
+| `ASK_TO_RATE_AFTER_MINUTES_PLAYED` | Total play time on a table before you're asked to rate it. |
 | **Add-ons** | |
-| `addOns` | Turn any add-on off by setting it to `false`, for example `forceBackglass: false` if you have no backglass screen. |
+| `ADD_ON_<NAME>` | `false` turns an add-on off, for example `ADD_ON_FORCE_BACKGLASS=false` if you have no backglass screen. |
+
+**Already using an older version?** If you had edited `common\config.js`, move your values into `.env.local`, then undo your edits with `git checkout common/config.js` before pulling; otherwise git reports a conflict on that file.
 
 ## Where your progress is stored
 
@@ -113,7 +124,7 @@ Translations live in `lang\<code>.js`. English (`en.js`) is the fallback languag
 - **To add a language:**
   1. Copy an existing translation such as `fr.js` (not `en.js`: its PinballY menu tables are empty, since PinballY's own texts are already in English) to a new file, for example `nl.js`, and translate it. Keep the keys, the `[Game.Xxx]` placeholders and the `${...}` parameters as they are.
   2. Register it in `common\i18n.js`: add an `import` and an entry in `AVAILABLE_LANGUAGES`.
-  3. Select it with `language`.
+  3. Select it with `LANGUAGE` in `.env.local`.
 
 If a text is missing from a language, the English text is shown instead, and the missing keys are listed once in `PinballY.log` at startup. Save language files as **UTF-8** so accented characters display correctly.
 

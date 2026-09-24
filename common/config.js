@@ -1,17 +1,19 @@
 ﻿// ============================================================
-// Player settings for the PinballY scripts in this project.
-// Edit values here rather than inside individual script files.
+// Player settings for the PinballY scripts in this project, with neutral
+// defaults. Each player overrides them in a git-ignored .env.local at the
+// project root (copy .env.example), read synchronously at load time; the
+// overridden keys and any invalid line are written to the PinballY log.
 // ============================================================
 
-export default {
+import { applyEnvOverrides } from "./env_overrides.js";
+
+const DEFAULTS = {
     // --- Set these for your setup ---
 
     // Interface language: "en", "fr", "de", "es", "it" or "pt".
-    language: "fr",
-    // ABSOLUTE path to the sound played when a table launches, with doubled
-    // backslashes, e.g. "C:\\PinballY\\Media\\Sounds\\launch.mp3".
-    // Leave empty ("") for no sound.
-    launchSoundFile: "C:\\vPinball\\PinballY\\Media\\Sounds\\super-mario-64-voice-clip-here-we-go.mp3",
+    language: "en",
+    // ABSOLUTE path to the sound played when a table launches. Empty = no sound.
+    launchSoundFile: "",
     // Manufacturer name you gave fictional/community VPX tables in PinballY.
     // Used by the status line and the "Original Tables" filter.
     communityTablesManufacturer: "VPX Community",
@@ -40,3 +42,55 @@ export default {
         ratingPrompt: true,
     },
 };
+
+const LOG_PREFIX = "[Config]";
+const ADODB_TEXT_TYPE = 2;
+const ADODB_READ_ALL = -1;
+
+// Returns the text of .env.local, or null when there is none. Read through
+// COM (not an async API) because modules read the configuration while they
+// load; ADODB.Stream decodes UTF-8, so accented paths survive.
+function readEnvLocal() {
+    const folder = systemInfo.programDir.replace(/\\+$/, "");
+    const path = `${folder}\\Scripts\\.env.local`;
+
+    const fileSystem = createAutomationObject("Scripting.FileSystemObject");
+    if (!fileSystem.FileExists(path)) return null;
+
+    const stream = createAutomationObject("ADODB.Stream");
+    stream.Type = ADODB_TEXT_TYPE;
+    stream.Charset = "utf-8";
+    stream.Open();
+    try {
+        stream.LoadFromFile(path);
+        return stream.ReadText(ADODB_READ_ALL);
+    } finally {
+        stream.Close();
+    }
+}
+
+function loadConfig() {
+    // Under Node (tests) there is no COM: the defaults apply.
+    if (typeof createAutomationObject !== "function") return DEFAULTS;
+
+    let text;
+    try {
+        text = readEnvLocal();
+    } catch (error) {
+        logfile.log(`${LOG_PREFIX} ERROR reading .env.local, using defaults: ${error.message}`);
+        return DEFAULTS;
+    }
+    if (text === null) {
+        logfile.log(`${LOG_PREFIX} No .env.local found; using defaults.`);
+        return DEFAULTS;
+    }
+
+    const { config, overridden, problems } = applyEnvOverrides(DEFAULTS, text);
+    logfile.log(`${LOG_PREFIX} .env.local overrides: ${overridden.length > 0 ? overridden.join(", ") : "none"}.`);
+    for (const problem of problems) {
+        logfile.log(`${LOG_PREFIX} .env.local ${problem}; ignored.`);
+    }
+    return config;
+}
+
+export default loadConfig();

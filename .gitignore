@@ -9,3 +9,6 @@ CONTEXT.md
 CONTEXT-MAP.md
 .scratch
 System/
+
+# Player settings (see .env.example)
+.env.local
