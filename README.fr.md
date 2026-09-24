@@ -1,8 +1,8 @@
-# Mes add-ons PinballY
+# PinballY Arcade Add-ons
 
 *[English version](README.md)*
 
-Des add-ons JavaScript pour [PinballY](http://mjrnet.org/pinscape/PinballY.php) qui donnent à une borne de flipper virtuel un air de machine d'arcade. Du JavaScript exécuté tel quel par PinballY : aucune étape de build, aucune dépendance.
+Une sélection soignée d'add-ons JavaScript pour [PinballY](http://mjrnet.org/pinscape/PinballY.php) qui donnent à une borne de flipper virtuel un air de machine d'arcade. Du JavaScript exécuté tel quel par PinballY : aucune étape de build, aucune dépendance.
 
 ## Fonctionnalités
 
@@ -60,7 +60,7 @@ Les traductions sont dans `lang\<code>.js` ; l'anglais sert de secours, et les c
 - Conventions : code et commentaires en anglais, un bloc d'en-tête par fichier, pas de JSDoc, pas de globales, chaque texte affiché dans les 6 langues, gestionnaires d'événements enveloppés dans `safeHandler`. Détails dans `.claude/rules/`.
 - Tests : `node --test` (Node.js 22+). `tests/persisted_data_pinning.test.js` fige les clés enregistrées et les ID des succès.
 
-Référence du scripting PinballY : `PinballY\Help\Javascript.html` ([en ligne](https://mjrnet.org/pinscape/downloads/PinballY/Help/PinballY.html)) ; exemples dans [PinballY-Addons-and-Examples](https://github.com/PinballY/PinballY-Addons-and-Examples). Bugs et idées : [issues GitHub](https://github.com/F3L1X79/My-custom-PinballY-Addons-and-Plugins/issues).
+Référence du scripting PinballY : `PinballY\Help\Javascript.html` ([en ligne](https://mjrnet.org/pinscape/downloads/PinballY/Help/PinballY.html)) ; exemples dans [PinballY-Addons-and-Examples](https://github.com/PinballY/PinballY-Addons-and-Examples). Bugs et idées : [issues GitHub](https://github.com/F3L1X79/PinballY-Arcade-Addons/issues).
 
 ## Licence
 

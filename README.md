@@ -1,8 +1,8 @@
-# My custom PinballY add-ons
+# PinballY Arcade Add-ons
 
 *[Version française](README.fr.md)*
 
-JavaScript add-ons for [PinballY](http://mjrnet.org/pinscape/PinballY.php) that make a virtual pinball cabinet feel more like an arcade machine. Plain JavaScript run by PinballY itself: no build step, no dependencies.
+A curated list of JavaScript add-ons for [PinballY](http://mjrnet.org/pinscape/PinballY.php) that make a virtual pinball cabinet feel more like an arcade machine. Plain JavaScript run by PinballY itself: no build step, no dependencies.
 
 ## Features
 
@@ -60,7 +60,7 @@ Translations live in `lang\<code>.js`; English is the fallback, and missing keys
 - Conventions: English code and comments, a header block per file, no JSDoc, no globals, every displayed text in all 6 languages, event handlers wrapped in `safeHandler`. Details in `.claude/rules/`.
 - Tests: `node --test` (Node.js 22+). `tests/persisted_data_pinning.test.js` locks saved keys and achievement IDs.
 
-PinballY scripting reference: `PinballY\Help\Javascript.html` ([online](https://mjrnet.org/pinscape/downloads/PinballY/Help/PinballY.html)); examples in [PinballY-Addons-and-Examples](https://github.com/PinballY/PinballY-Addons-and-Examples). Bugs and ideas: [GitHub issues](https://github.com/F3L1X79/My-custom-PinballY-Addons-and-Plugins/issues).
+PinballY scripting reference: `PinballY\Help\Javascript.html` ([online](https://mjrnet.org/pinscape/downloads/PinballY/Help/PinballY.html)); examples in [PinballY-Addons-and-Examples](https://github.com/PinballY/PinballY-Addons-and-Examples). Bugs and ideas: [GitHub issues](https://github.com/F3L1X79/PinballY-Arcade-Addons/issues).
 
 ## License
 
