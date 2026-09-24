@@ -6,7 +6,7 @@
 // startup, whatever the add-on order in main.js.
 // ============================================================
 
-import { launchRandomGame } from "./common/random_game.js";
+import { getRandomGame } from "./common/random_game.js";
 import { getTableOfTheDay, getTableOfTheWeek } from "./common/period_table.js";
 import { getWheelDialogs, DIALOG_PRIORITY } from "./common/wheel_dialog.js";
 import lang from "./common/i18n.js";
@@ -20,6 +20,7 @@ export default function init() {
     const { startupPrompt: STARTUP_PROMPT_TEXT } = lang;
     const tableOfTheDay = getTableOfTheDay();
     const tableOfTheWeek = getTableOfTheWeek();
+    const randomGame = getRandomGame();
 
     const dayGame = tableOfTheDay.getTable();
     const weekGame = tableOfTheWeek.getTable();
@@ -35,7 +36,7 @@ export default function init() {
             { label: STARTUP_PROMPT_TEXT.stayOnLastPlayed },
             { label: STARTUP_PROMPT_TEXT.tableOfTheDay, action: tableOfTheDay.launch },
             { label: STARTUP_PROMPT_TEXT.tableOfTheWeek, action: tableOfTheWeek.launch },
-            { label: STARTUP_PROMPT_TEXT.randomTable, action: launchRandomGame },
+            { label: STARTUP_PROMPT_TEXT.randomTable, action: randomGame.launch },
         ],
         priority: DIALOG_PRIORITY.STARTUP_PROMPT,
     });

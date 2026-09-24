@@ -1,9 +1,10 @@
 ﻿// ============================================================
 // Production PinballY host: the single seam through which the deepened
-// modules reach PinballY (settings, clock, visible tables, main window
-// menus / UI mode / events, commands, table launch). Every call passes
-// straight through to PinballY's globals; tests use the in-memory fake
-// host from tests/fake_pinbally_host.js instead. No side effects on import.
+// modules reach PinballY (settings, clock, visible tables, wheel
+// selection, main window menus / UI mode / events, commands, table launch).
+// Every call passes straight through to PinballY's globals; tests use the
+// in-memory fake host from tests/fake_pinbally_host.js instead. No side
+// effects on import.
 // ============================================================
 
 export function createPinballYHost() {
@@ -19,6 +20,8 @@ export function createPinballYHost() {
         now: () => new Date(),
 
         getVisibleTables: () => gameList.getAllGames().filter(game => !game.isHidden),
+        // The current wheel selection in wheel order: index 0 is the current table.
+        getWheelTables: () => gameList.getAllWheelGames(),
         getGameInfo: (configId) => gameList.getGameInfo(configId),
 
         // Only the mode name ("wheel", "menu", "popup", "running", "attract").

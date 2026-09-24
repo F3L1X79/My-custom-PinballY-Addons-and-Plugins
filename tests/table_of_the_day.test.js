@@ -56,6 +56,25 @@ test("picks a new Table of the Day after midnight, never the previous day's tabl
     }
 });
 
+test("offers the previous day's table again when it is the only visible table, and counts it in the Streak", () => {
+    const onlyTable = PLAYED_TABLES[0];
+    const { fake, tableOfTheDay } = createTableOfTheDay({
+        tables: [onlyTable],
+        settings: {
+            "custom.tableOfTheDay.period": "2026-09-22",
+            "custom.tableOfTheDay.configId": onlyTable.configId,
+            "custom.streaks.tableOfTheDay.lastPeriod": "2026-09-22",
+            "custom.streaks.tableOfTheDay.currentStreak": 1,
+        },
+    });
+
+    tableOfTheDay.launch();
+    fake.gameStarted(fake.launches()[0]);
+
+    assert.deepEqual(fake.launches().map(game => game.configId), [onlyTable.configId]);
+    assert.equal(tableOfTheDay.getStreak(), 2);
+});
+
 test("never picks a hidden table", () => {
     const hiddenTable = { id: 9, configId: "Hidden Table (Gottlieb 1978)", title: "Hidden Table", lastPlayed: null, isHidden: true };
     const { tableOfTheDay } = createTableOfTheDay({ tables: [hiddenTable, PLAYED_TABLES[2]] });

@@ -83,11 +83,13 @@ export function createPeriodTable(host, definition) {
             if (lockedGame && !lockedGame.isHidden) return lockedGame;
         }
 
-        // A new Period never repeats the previous Period's table.
+        // A new Period never repeats the previous Period's table, unless it
+        // is the only visible one.
         const excludeConfigId = lockedPeriod !== currentPeriod ? lockedConfigId : "";
-        const candidates = host.getVisibleTables().filter(game => game.configId !== excludeConfigId);
-        if (candidates.length === 0) return null;
-        const newPick = pickTable(candidates);
+        const visibleTables = host.getVisibleTables();
+        if (visibleTables.length === 0) return null;
+        const otherTables = visibleTables.filter(game => game.configId !== excludeConfigId);
+        const newPick = pickTable(otherTables.length > 0 ? otherTables : visibleTables);
 
         host.settings.set(lockedPeriodKey, currentPeriod);
         host.settings.set(lockedConfigIdKey, newPick.configId);

@@ -136,23 +136,13 @@ export function computeNavigationPlan(targetIndex, games) {
     };
 }
 
-/**
- * Animates the wheel from its current position to `targetIndex` within
- * `games`, then returns the index actually reached (which can be one
- * less than `targetIndex` if the final step was randomly skipped —
- * see `skipFinalStepProbability`).
- *
- * @param {object[]} games Ordered game list, as returned by gameList.getAllWheelGames().
- * @param {number} targetIndex Target index within `games`.
- * @param {object} [options]
- * @param {number} [options.baseSpeedMs] Base speed (ms) for the acceleration curve.
- * @param {number} [options.skipFinalStepProbability] Probability (0-1) of skipping the very last "Next" press.
- * @param {boolean} [options.usePageJumpOptimization] Use NextPage-based letter jumps for long distances.
- * @returns {Promise<number>} The index actually reached.
- */
+// Animates the wheel from its current position (index 0 of `games`, as
+// returned by gameList.getAllWheelGames()) to exactly `targetIndex`.
+// Options: baseSpeedMs (timing curve), usePageJumpOptimization (NextPage
+// jumps for long distances).
 export async function animateWheelTo(games, targetIndex, options = {}) {
     const safeGames = Array.isArray(games) ? games : [];
-    if (safeGames.length === 0) return 0;
+    if (safeGames.length === 0) return;
 
     const maxIndex = safeGames.length - 1;
     const safeTargetIndex = Math.max(0, Math.min(
@@ -160,12 +150,8 @@ export async function animateWheelTo(games, targetIndex, options = {}) {
         Math.floor(Number(targetIndex) || 0)
     ));
 
-    if (safeTargetIndex === 0) return 0;
+    if (safeTargetIndex === 0) return;
 
-    const skipFinalStepProbability = Math.max(0, Math.min(
-        1,
-        Number(options.skipFinalStepProbability ?? 0) || 0
-    ));
     const usePageJumpOptimization = options.usePageJumpOptimization ?? false;
     const delayOptions = { baseSpeedMs: options.baseSpeedMs };
 
@@ -190,21 +176,11 @@ export async function animateWheelTo(games, targetIndex, options = {}) {
         );
     }
 
-    let actualItemJumps = itemJumpCount;
-    let finalIndex = safeTargetIndex;
-
-    if (itemJumpCount > 0 && Math.random() < skipFinalStepProbability) {
-        actualItemJumps--;
-        finalIndex--;
-    }
-
     await pressButtonRepeatedly(
         "Next",
-        actualItemJumps,
+        itemJumpCount,
         pageJumpCount,
         totalSteps,
         delayOptions
     );
-
-    return Math.max(0, finalIndex);
 }

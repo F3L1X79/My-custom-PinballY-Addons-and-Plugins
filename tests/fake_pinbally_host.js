@@ -1,10 +1,11 @@
 ﻿// ============================================================
 // In-memory fake PinballY host for the node tests. Offers the same
 // interface as common/pinbally_host.js, plus controls for the tests: set
-// the date and the table list, seed settings, fire PinballY events, pick
-// menu items, play launched games, and inspect shown menus, launches and
-// written settings keys. installGlobals() also exposes it as PinballY's
-// globals (and the global Date), so code not yet on the host runs too.
+// the date, the table list and the wheel selection, seed settings, fire
+// PinballY events, pick menu items, play launched games, and inspect shown
+// menus, launches and written settings keys. installGlobals() also
+// exposes it as PinballY's globals (and the global Date), so code not yet
+// on the host runs too.
 // Never loaded by PinballY.
 // ============================================================
 
@@ -25,6 +26,8 @@ function toStoredString(value) {
 export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {}) {
     let nowMs = now.getTime();
     let allTables = tables.map(table => ({ ...table }));
+    // null = the wheel shows every visible table, in collection order.
+    let wheelConfigIds = null;
     const storedSettings = new Map();
     const writtenKeys = new Set();
     const handlers = new Map();
@@ -96,6 +99,9 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
         settings,
         now: () => new RealDate(nowMs),
         getVisibleTables: () => allTables.filter(table => !table.isHidden),
+        getWheelTables: () => (wheelConfigIds === null
+            ? host.getVisibleTables()
+            : wheelConfigIds.map(getGameInfo)),
         getGameInfo,
         getUIMode: () => uiMode,
         showMenu,
@@ -110,6 +116,12 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
         setNow(date) { nowMs = date.getTime(); },
         advanceTime(ms) { nowMs += ms; },
         setTables(newTables) { allTables = newTables.map(table => ({ ...table })); },
+        // The current wheel selection, in wheel order (index 0 is the current table).
+        setWheelTables(configIds) {
+            const unknown = configIds.filter(configId => !getGameInfo(configId));
+            if (unknown.length > 0) throw new Error(`Unknown tables in the wheel: ${unknown.join(", ")}`);
+            wheelConfigIds = [...configIds];
+        },
         seedSettings(values) {
             for (const [key, value] of Object.entries(values)) storedSettings.set(key, toStoredString(value));
         },
@@ -199,7 +211,7 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
                 },
                 gameList: {
                     getAllGames: () => [...allTables],
-                    getAllWheelGames: () => host.getVisibleTables(),
+                    getAllWheelGames: () => host.getWheelTables(),
                     getGameInfo,
                 },
                 mainWindow: {

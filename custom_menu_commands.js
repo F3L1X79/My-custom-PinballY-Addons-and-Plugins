@@ -6,7 +6,7 @@
 // Listens to "menuopen" and "command" on the main window.
 // ============================================================
 
-import { launchRandomGame } from "./common/random_game.js";
+import { getRandomGame } from "./common/random_game.js";
 import { getTableOfTheDay, getTableOfTheWeek } from "./common/period_table.js";
 import lang from "./common/i18n.js";
 import { safeHandler } from "./common/safe_handler.js";
@@ -17,6 +17,7 @@ export default function init() {
     const { customMenuLabels: MENU_LABELS } = lang;
     const tableOfTheDay = getTableOfTheDay();
     const tableOfTheWeek = getTableOfTheWeek();
+    const randomGame = getRandomGame();
 
     // Listed in the order they appear in the menu, top to bottom.
     const MENU_COMMANDS = [
@@ -25,7 +26,7 @@ export default function init() {
             label: MENU_LABELS.tableSetup,
             action: () => { mainWindow.doCommand(command.ShowGameSetupMenu); },
         },
-        { name: "RandomGameStart", label: MENU_LABELS.randomGame, action: launchRandomGame },
+        { name: "RandomGameStart", label: MENU_LABELS.randomGame, action: randomGame.launch },
         { name: "tableOfTheDay", label: MENU_LABELS.tableOfTheDay, action: tableOfTheDay.launch },
         { name: "tableOfTheWeek", label: MENU_LABELS.tableOfTheWeek, action: tableOfTheWeek.launch },
     ];

@@ -84,6 +84,16 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
             assert.deepEqual(host.getVisibleTables().map(game => game.title), ["Theatre of Magic"]);
         });
 
+        test("offers the wheel selection in wheel order, every visible table by default", () => {
+            assert.deepEqual(host.getWheelTables().map(game => game.configId), [
+                "Medieval Madness (Williams 1997)",
+                "Attack from Mars (Bally 1995)",
+            ]);
+
+            fake.setWheelTables(["Attack from Mars (Bally 1995)", "Medieval Madness (Williams 1997)"]);
+            assert.deepEqual(host.getWheelTables().map(game => game.title), ["Attack from Mars", "Medieval Madness"]);
+        });
+
         test("allocates a distinct command ID per name", () => {
             const first = host.allocateCommand("first");
             const second = host.allocateCommand("second");

@@ -66,6 +66,25 @@ test("picks a new Table of the Week after the Sunday-to-Monday rollover, never t
     }
 });
 
+test("offers the previous week's table again when it is the only visible table, and counts it in the Streak", () => {
+    const onlyTable = TABLES[0];
+    const { fake, tableOfTheWeek } = createTableOfTheWeek({
+        tables: [onlyTable],
+        settings: {
+            "custom.tableOfTheWeek.period": "2026-09-14",
+            "custom.tableOfTheWeek.configId": onlyTable.configId,
+            "custom.streaks.tableOfTheWeek.lastPeriod": "2026-09-14",
+            "custom.streaks.tableOfTheWeek.currentStreak": 1,
+        },
+    });
+
+    tableOfTheWeek.launch();
+    playLastLaunch(fake);
+
+    assert.deepEqual(fake.launches().map(game => game.configId), [onlyTable.configId]);
+    assert.equal(tableOfTheWeek.getStreak(), 2);
+});
+
 test("keeps a Table of the Week stored earlier this week", () => {
     const { tableOfTheWeek } = createTableOfTheWeek({
         now: SUNDAY_NIGHT,
