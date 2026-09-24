@@ -24,7 +24,7 @@ Everything is plain JavaScript run by PinballY itself: no build step, no depende
 - **Collection.** 10, 25, 50, 75 and 100 % of your collection played.
 - **Completion.** All the tables of a manufacturer, of a decade or of a category played.
 - **Total play time.** 1, 5, 10, 50 and 100 hours.
-- **Streaks.** The table of the day launched 3, 7 or 30 days in a row; the table of the week launched 4 or 12 weeks in a row.
+- **Streaks.** The table of the day played 3, 7 or 30 days in a row; the table of the week played 4 or 12 weeks in a row. A day or week counts as soon as you play its table, whether you launched it from the menus or picked it yourself on the wheel.
 - **Session milestones.** A 30 or 60 minute marathon, a rage quit (30 seconds or less), and a grand comeback on a table untouched for a year.
 
 **Interface**
@@ -53,10 +53,11 @@ PinballY\
 └── Scripts\
     ├── System\            ← from your PinballY install, leave it alone
     ├── main.js            ← entry point PinballY loads at startup
-    ├── common\config.js   ← the only file you need to edit
-    ├── lang\
+    ├── *.js               ← one file per add-on
+    ├── common\            ← shared code
+    │   └── config.js      ← the only file you need to edit
     ├── achievements\
-    └── *.js
+    └── lang\
 ```
 
 **3. Edit `common\config.js`.** Three settings depend on your machine and your preferences:
@@ -129,15 +130,21 @@ If a text is missing from a language, the English text is shown instead, and the
 
 ```text
 main.js                  entry point and add-on list
-*.js                     one file per add-on (ui_translation, rating_prompt, ...),
-                         plus the table of the day / week pickers
+*.js                     one file per add-on registered in main.js, and nothing else
+                         (ui_translation, session_stats_tracker, rating_prompt, ...)
+common\                  shared code, never an add-on: config, i18n, safe_handler,
+                         pinbally_host, period_table, wheel_dialog, random_game...
 achievements\            achievement definitions
-common\                  shared code: config, i18n, safe_handler, pickers, trackers...
 lang\                    translations
 tests\                   node tests (never loaded by PinballY)
 ```
 
-To add an add-on, create its file, then register it in `main.js` (`import` and `SCRIPTS`) and in `config.scripts.enabled`.
+To add an add-on, create its file at the root, then register it in `main.js` (`import` and `SCRIPTS`) and in `config.scripts.enabled`. Code shared by several add-ons goes in `common\`.
+
+Three shared modules carry most of the logic:
+- **PinballY host** (`common/pinbally_host.js`). Everything the Period Table and wheel dialog modules take from PinballY: settings, clock, visible tables, main window menus, UI mode and events, commands, table launch. It passes straight through to PinballY; the tests replace it with an in-memory fake. The other add-ons and helpers still use PinballY's globals directly.
+- **Period Table** (`common/period_table.js`). One module for both the table of the day and the table of the week: it picks the table once per period and keeps it, launches it, and keeps its streak. A period counts in the streak when its table actually starts playing. Add-ons share one instance of each through `getTableOfTheDay()` and `getTableOfTheWeek()`.
+- **Wheel dialog** (`common/wheel_dialog.js`). Add-ons `submit()` a dialog description (message, buttons with their actions, priority) to the queue returned by `getWheelDialogs()`. It shows the dialogs one at a time, only when the wheel is free, in a fixed priority order (startup prompt, then achievements, then rating prompt), and moves on as soon as one closes. The order of add-ons in `main.js` never decides which dialog comes first.
 
 The conventions, enforced in review:
 - **Language.** Code, comments and log messages are in English.
@@ -148,7 +155,7 @@ The conventions, enforced in review:
 - **Settings.**
   - Read typed values with `optionSettings.getInt` / `getFloat` / `getBool`, because `get()` always returns a string.
   - Don't call `optionSettings.save()`: PinballY saves on its own.
-- **Dialogs.** Only open a dialog when `mainWindow.getUIMode().mode === "wheel"`. Otherwise, wait for the `wheelmode` event.
+- **Dialogs.** Submit them to the wheel dialog module, which waits for the wheel to be free. A menu opened directly must only open when `mainWindow.getUIMode().mode === "wheel"`; otherwise, wait for the `wheelmode` event.
 - **Menu separators** are written `{ cmd: -1 }`.
 
 **Tests.** From the project folder, run `node --test` (Node.js 22 or later, nothing to install). The tests run the add-ons on an in-memory fake PinballY (`tests/fake_pinbally_host.js`), the test twin of `common/pinbally_host.js`. `tests/persisted_data_pinning.test.js` locks the saved settings keys and Achievement IDs: if it fails, a change would lose players' progress.

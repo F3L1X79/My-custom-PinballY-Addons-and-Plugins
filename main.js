@@ -14,7 +14,7 @@ import * as customFilter from "./custom_filter.js";
 import * as seamlessLaunchOverlay from "./seamless_launch_overlay.js";
 import * as forceBackglass from "./force_backglass.js";
 import * as playLaunchSound from "./play_launch_sound.js";
-import * as sessionStatsTracker from "./common/session_stats_tracker.js";
+import * as sessionStatsTracker from "./session_stats_tracker.js";
 import * as achievementsEngine from "./achievements_engine.js";
 import * as ratingPrompt from "./rating_prompt.js";
 import * as startupChoicePrompt from "./startup_choice_prompt.js";

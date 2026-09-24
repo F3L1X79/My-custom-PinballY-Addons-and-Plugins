@@ -2,12 +2,12 @@
 // Achievements based on session stats: "marathon" (longest single session),
 // "rage quit" (shortest session) and "grand return" (a table replayed after
 // a long break). Reads the optionSettings values written by
-// common/session_stats_tracker.js; writes nothing.
+// session_stats_tracker.js; writes nothing.
 // ============================================================
 
 import config from "../common/config.js";
 import lang from "../common/i18n.js";
-import { LONGEST_SESSION_KEY, SHORTEST_SESSION_KEY, GRAND_RETURN_FLAG_KEY } from "../common/session_stats_tracker.js";
+import { LONGEST_SESSION_KEY, SHORTEST_SESSION_KEY, GRAND_RETURN_FLAG_KEY } from "../session_stats_tracker.js";
 
 export function buildSessionMilestoneAchievements() {
     const { achievements: TEXT } = lang;

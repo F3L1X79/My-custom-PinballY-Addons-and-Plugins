@@ -29,7 +29,7 @@ const TABLES = [
 ];
 
 const MODULE_PATHS = {
-    sessionStatsTracker: "../common/session_stats_tracker.js",
+    sessionStatsTracker: "../session_stats_tracker.js",
     achievements: "../achievements_engine.js",
     ratingPrompt: "../rating_prompt.js",
     startupChoicePrompt: "../startup_choice_prompt.js",

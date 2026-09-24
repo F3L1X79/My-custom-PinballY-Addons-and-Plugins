@@ -6,8 +6,8 @@
 // achievements_engine's check, which is deferred with setTimeout(fn, 0).
 // ============================================================
 
-import config from "./config.js";
-import { safeHandler } from "./safe_handler.js";
+import config from "./common/config.js";
+import { safeHandler } from "./common/safe_handler.js";
 
 // Exported so the achievement readers (achievements/session_milestones.js)
 // use the exact keys this tracker writes. The strings must never change,
