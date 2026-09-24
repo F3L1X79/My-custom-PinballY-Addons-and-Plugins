@@ -146,7 +146,7 @@ export default {
         },
         marathonDescription: (minutes) => `You played a single session lasting over ${minutes} minutes!`,
         rageQuitTitle: () => "Rage Quit?!",
-        rageQuitDescription: (seconds) => `You quit a table in under ${seconds} seconds...`,
+        rageQuitDescription: (minSeconds, maxSeconds) => `You quit a table after only ${minSeconds} to ${maxSeconds} seconds...`,
         grandReturnTitle: () => "The Grand Comeback",
         grandReturnDescription: (days) => `You replayed a table after ${days} or more days away!`,
         randomGamesTitles: {

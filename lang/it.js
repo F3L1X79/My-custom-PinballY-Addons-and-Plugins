@@ -231,7 +231,7 @@ export default {
         },
         marathonDescription: (minutes) => `Hai giocato una singola sessione di oltre ${minutes} minuti!`,
         rageQuitTitle: () => "Abbandono per rabbia?!",
-        rageQuitDescription: (seconds) => `Hai lasciato un tavolo in meno di ${seconds} secondi...`,
+        rageQuitDescription: (minSeconds, maxSeconds) => `Hai lasciato un tavolo dopo appena ${minSeconds}-${maxSeconds} secondi...`,
         grandReturnTitle: () => "Il grande ritorno",
         grandReturnDescription: (days) => `Hai rigiocato un tavolo dopo ${days} o più giorni di assenza!`,
         randomGamesTitles: {

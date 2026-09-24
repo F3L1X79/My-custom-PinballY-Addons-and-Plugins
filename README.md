@@ -15,7 +15,7 @@ JavaScript add-ons for [PinballY](http://mjrnet.org/pinscape/PinballY.php) that 
   - collection: first table, then 10 to 100 % of your collection played;
   - play time: 1 to 100 hours;
   - tables of the day and week: first play, total days or weeks played, streaks;
-  - sessions: 30 or 60 minute marathon, rage quit (5 seconds or less), grand comeback after 31 days;
+  - sessions: 30 or 60 minute marathon, rage quit (a session of 30 seconds to under a minute), grand comeback after 31 days;
   - random game: 10, 50 and 100 random tables played;
   - manufacturers: 3, 5 or 8 different manufacturers played the same day, completion of a manufacturer;
   - completion of a decade or a category.

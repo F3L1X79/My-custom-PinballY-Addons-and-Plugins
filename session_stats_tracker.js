@@ -1,9 +1,9 @@
 ﻿// ============================================================
 // Records session stats in optionSettings ("custom.sessionStats.*") for the
-// session achievements: longest / shortest session, a "grand return" flag
-// for a table replayed after a long break, and the Day's Manufacturers with
-// their one-day record. Listens to "gamestarted" and
-// "gameover"; these handlers are synchronous, so they always finish before
+// session achievements: longest / shortest session, a "rage quit" flag for
+// a short session given up, a "grand return" flag for a table replayed
+// after a long break, and the Day's Manufacturers with their one-day
+// record. Listens to "gamestarted" and "gameover"; these handlers are synchronous, so they always finish before
 // achievements_engine's check, which is deferred with setTimeout(fn, 0).
 // ============================================================
 
@@ -14,8 +14,15 @@ import { TABLE_OF_THE_DAY } from "./common/period_table.js";
 // use the exact keys this tracker writes. The strings must never change,
 // or previously saved stats would be lost.
 export const LONGEST_SESSION_KEY = "custom.sessionStats.longestSeconds";
-export const SHORTEST_SESSION_KEY = "custom.sessionStats.shortestSeconds";
+// No Achievement reads it any more, but it stays a recorded stat.
+const SHORTEST_SESSION_KEY = "custom.sessionStats.shortestSeconds";
 export const GRAND_RETURN_FLAG_KEY = "custom.sessionStats.grandReturnUnlocked";
+export const RAGE_QUIT_FLAG_KEY = "custom.sessionStats.rageQuitUnlocked";
+// A session from RAGE_QUIT_MIN_SECONDS to under RAGE_QUIT_MAX_SECONDS sets
+// the "rage quit" flag: long enough to have really played, short enough to
+// have given up. Exported so the Achievement description shows the same values.
+export const RAGE_QUIT_MIN_SECONDS = 30;
+export const RAGE_QUIT_MAX_SECONDS = 60;
 // Break (in days) after which replaying a table sets the "grand return" flag.
 // Exported so the Achievement description shows the same value.
 export const GRAND_RETURN_THRESHOLD_DAYS = 31;
@@ -73,7 +80,8 @@ export default function init() {
         recordDayManufacturer(ev.game.manufacturer);
     }));
 
-    // Fires on table exit: stores the session duration and previous-play date.
+    // Fires on table exit: stores the session duration and previous-play
+    // date, and flags a "rage quit".
     mainWindow.on("gameover", safeHandler(SCRIPT_NAME, ev => {
         const configId = ev.game.configId;
         const startTime = sessionStartTimes.get(configId);
@@ -89,6 +97,10 @@ export default function init() {
 
             const shortest = optionSettings.getFloat(SHORTEST_SESSION_KEY, -1);
             if (shortest < 0 || durationSeconds < shortest) optionSettings.set(SHORTEST_SESSION_KEY, durationSeconds);
+
+            if (durationSeconds >= RAGE_QUIT_MIN_SECONDS && durationSeconds < RAGE_QUIT_MAX_SECONDS) {
+                optionSettings.set(RAGE_QUIT_FLAG_KEY, true);
+            }
         }
     }));
 }

@@ -15,7 +15,7 @@ Des add-ons JavaScript pour [PinballY](http://mjrnet.org/pinscape/PinballY.php) 
   - collection : première table, puis de 10 à 100 % de la collection jouée ;
   - temps de jeu : de 1 à 100 heures ;
   - tables du jour et de la semaine : première partie, total de jours ou de semaines joués, séries ;
-  - sessions : marathon de 30 ou 60 minutes, rage quit (5 secondes ou moins), grand retour après 31 jours ;
+  - sessions : marathon de 30 ou 60 minutes, rage quit (une session de 30 secondes à moins d'une minute), grand retour après 31 jours ;
   - table au hasard : 10, 50 et 100 tables au hasard jouées ;
   - fabricants : 3, 5 ou 8 fabricants différents joués le même jour, complétion d'un fabricant ;
   - complétion d'une décennie ou d'une catégorie.

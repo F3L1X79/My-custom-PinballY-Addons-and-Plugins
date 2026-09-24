@@ -97,6 +97,7 @@ const EXPECTED_FIXED_KEYS = [
     "custom.sessionStats.grandReturnUnlocked",
     "custom.sessionStats.longestSeconds",
     "custom.sessionStats.mostManufacturersInADay",
+    "custom.sessionStats.rageQuitUnlocked",
     "custom.sessionStats.shortestSeconds",
     "custom.streaks.tableOfTheDay.currentStreak",
     "custom.streaks.tableOfTheDay.lastPeriod",
@@ -191,11 +192,11 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
     const dayTable = await playLastLaunch(fake, 61 * 60);
     await closeEveryDialog(fake);
 
-    // Main menu: launch the Table of the Week and play a very short session.
+    // Main menu: launch the Table of the Week and give up after 45 seconds.
     fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }]);
     fake.selectMenuItem(lang.customMenuLabels.tableOfTheWeek);
     await settle();
-    const weekTable = await playLastLaunch(fake, 3);
+    const weekTable = await playLastLaunch(fake, 45);
     await closeEveryDialog(fake);
 
     // Main menu again: a Random Game.

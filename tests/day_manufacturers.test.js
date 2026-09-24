@@ -67,7 +67,7 @@ test("three manufacturers in one calendar day unlock the first multi-manufacture
     const announcements = () => fake.drawings().map(drawing => drawing.texts);
 
     // Returns the titles of the multi-manufacturer Achievements announced
-    // for this play; a very short session may announce others (rage quit).
+    // for this play; it may announce others too.
     async function play(game, sessionMs = SESSION_MS) {
         const before = announcements().length;
         fake.gameStarted(game);
