@@ -105,10 +105,10 @@ const ADD_ONS_UNDER_TEST = ["customMenuCommands", "sessionStatsTracker", "achiev
 // changing the shared config object is safe since each test file runs in
 // its own process.
 function useFixtureConfig() {
-    for (const key of Object.keys(config.scripts.enabled)) {
-        config.scripts.enabled[key] = ADD_ONS_UNDER_TEST.includes(key);
+    for (const key of Object.keys(config.addOns)) {
+        config.addOns[key] = ADD_ONS_UNDER_TEST.includes(key);
     }
-    config.translation.enabled = false;
+    config.language = "en";
 }
 
 async function playLastLaunch(fake, durationSeconds) {

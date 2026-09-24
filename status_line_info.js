@@ -13,7 +13,7 @@ const SCRIPT_NAME = "StatusLineInfo";
 
 export default function init() {
     const STATUS_LINE_TEXT = lang.tableInfoStatusLines;
-    const COMMUNITY_MANUFACTURER_NAME = config.tableMetadata.communityManufacturerName;
+    const COMMUNITY_MANUFACTURER_NAME = config.communityTablesManufacturer;
 
     const STATUS_LINE_BUILDERS = [
         position => STATUS_LINE_TEXT.year(position),

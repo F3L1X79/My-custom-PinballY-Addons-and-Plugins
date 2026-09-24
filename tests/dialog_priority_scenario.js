@@ -42,8 +42,8 @@ export async function runDialogPriorityScenario(initOrder) {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
-    config.translation.enabled = false;
-    config.ratingPrompt.thresholdMinutes = 60;
+    config.language = "en";
+    config.askToRateAfterMinutesPlayed = 60;
 
     const { default: lang } = await import("../common/i18n.js");
     for (const key of initOrder) {

@@ -26,10 +26,10 @@ test("the startup prompt and the main menu show and launch the same Table of the
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
-    for (const key of Object.keys(config.scripts.enabled)) {
-        config.scripts.enabled[key] = ADD_ONS_UNDER_TEST.includes(key);
+    for (const key of Object.keys(config.addOns)) {
+        config.addOns[key] = ADD_ONS_UNDER_TEST.includes(key);
     }
-    config.translation.enabled = false;
+    config.language = "en";
 
     const { default: lang } = await import("../common/i18n.js");
     const { getTableOfTheDay } = await import("../common/period_table.js");

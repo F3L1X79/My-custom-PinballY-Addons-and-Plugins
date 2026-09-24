@@ -3,7 +3,7 @@
 // on "gameover", using the Windows Media Player COM component (WMPlayer.OCX)
 // via OLE automation, which requires the "Windows Media Player" optional
 // Windows feature. Does nothing (one log line at startup) when
-// config.launchSound.absoluteFilePath is empty.
+// config.launchSoundFile is empty.
 // ============================================================
 
 import config from "./common/config.js";
@@ -31,9 +31,9 @@ function initializeMediaPlayer() {
 const SCRIPT_NAME = "LaunchSound";
 
 export default function init() {
-    const filePath = config.launchSound.absoluteFilePath;
+    const filePath = config.launchSoundFile;
     if (typeof filePath !== "string" || filePath.length === 0) {
-        logfile.log("[LaunchSound] launchSound.absoluteFilePath is not set in common/config.js; launch sound disabled.");
+        logfile.log("[LaunchSound] launchSoundFile is not set in common/config.js; launch sound disabled.");
         return;
     }
 

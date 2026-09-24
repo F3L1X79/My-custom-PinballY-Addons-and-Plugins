@@ -46,8 +46,7 @@ export function withFallback(language, fallback, missingKeys = [], pathPrefix = 
     return merged;
 }
 
-const configuredLanguage = String(config.translation.language || DEFAULT_LANGUAGE_CODE).toLowerCase();
-const activeLanguageCode = config.translation.enabled ? configuredLanguage : DEFAULT_LANGUAGE_CODE;
+const activeLanguageCode = String(config.language || DEFAULT_LANGUAGE_CODE).toLowerCase();
 
 const activeLanguageCodeResolved = AVAILABLE_LANGUAGES[activeLanguageCode]
     ? activeLanguageCode

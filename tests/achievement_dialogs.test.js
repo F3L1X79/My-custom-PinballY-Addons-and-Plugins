@@ -46,10 +46,10 @@ test("Achievement dialogs wait for the end of the game, follow each other and su
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
-    for (const key of Object.keys(config.scripts.enabled)) {
-        config.scripts.enabled[key] = key === "achievements";
+    for (const key of Object.keys(config.addOns)) {
+        config.addOns[key] = key === "achievements";
     }
-    config.translation.enabled = false;
+    config.language = "en";
 
     const { default: lang } = await import("../common/i18n.js");
     // A game is already running when the startup check runs.

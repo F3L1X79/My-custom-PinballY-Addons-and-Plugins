@@ -1,6 +1,6 @@
 ﻿// ============================================================
 // After a play session, if the table's CUMULATIVE play time has just
-// crossed config.ratingPrompt.thresholdMinutes and the table isn't rated
+// crossed config.askToRateAfterMinutesPlayed and the table isn't rated
 // yet, hands the wheel dialog module a dialog offering to open PinballY's
 // native rating dialog once back at the wheel. Its priority makes it wait
 // until every Achievement dialog is closed. Listens to "gamestarted",
@@ -16,7 +16,7 @@ const SCRIPT_NAME = "RatingPrompt";
 
 export default function init() {
     const { ratingPrompt: RATING_PROMPT_TEXT } = lang;
-    const { thresholdMinutes: THRESHOLD_MINUTES } = config.ratingPrompt;
+    const THRESHOLD_MINUTES = config.askToRateAfterMinutesPlayed;
     const THRESHOLD_SECONDS = THRESHOLD_MINUTES * 60;
     const wheelDialogs = getWheelDialogs();
 

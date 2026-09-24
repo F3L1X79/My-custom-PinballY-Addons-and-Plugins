@@ -8,7 +8,7 @@
 import { animateWheelTo, sleep } from "./wheel_navigator.js";
 import config from "./config.js";
 
-const { skipAnimation: SKIP_ANIMATION } = config.randomGameCommand;
+const SKIP_ANIMATION = config.skipRandomGameAnimation;
 
 // Base speed (ms) of the "wheel of fortune" animation.
 const ANIMATION_BASE_SPEED_MS = 200;

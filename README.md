@@ -17,7 +17,7 @@ Everything is plain JavaScript run by PinballY itself: no build step, no depende
 - **Table of the week.** One purely random pick per week, Monday to Sunday.
 - **Random table.** The wheel spins to a random table with a "wheel of fortune" animation (fast start, slow finish), then launches it.
 - **Main menu entries.** "Launch Table of the Day", "Launch Table of the Week", "Start Random Game" and a shortcut to "Table Setup" are added right after "Play".
-- **"Original Tables" filter.** Added to the "Filter by Manufacturer" menu. It lists every table except the community-made ones (see `tableMetadata` in the configuration below).
+- **"Original Tables" filter.** Added to the "Filter by Manufacturer" menu. It lists every table except the community-made ones (see `communityTablesManufacturer` in the configuration below).
 
 **Achievements.** A congratulations dialog appears when you're back at the wheel. Each achievement is shown only once.
 - **First table.** Your very first table played.
@@ -64,21 +64,15 @@ PinballY\
 
 | Setting | Default | What to set |
 |---|---|---|
-| `translation.language` | `"fr"` | Your language: `"en"`, `"fr"`, `"de"`, `"es"`, `"it"` or `"pt"`. |
-| `launchSound.absoluteFilePath` | the author's file | The **absolute** path to your own sound file, with doubled backslashes, e.g. `"C:\\PinballY\\Media\\Sounds\\launch.mp3"`. Use `""` for no sound. |
-| `tableMetadata.communityManufacturerName` | `"VPX Community"` | The manufacturer name you gave community-made tables in PinballY. It's used by the status line and the "Original Tables" filter. |
+| `language` | `"fr"` | Your language: `"en"`, `"fr"`, `"de"`, `"es"`, `"it"` or `"pt"`. |
+| `launchSoundFile` | the author's file | The **absolute** path to your own sound file, with doubled backslashes, e.g. `"C:\\PinballY\\Media\\Sounds\\launch.mp3"`. Use `""` for no sound. |
+| `communityTablesManufacturer` | `"VPX Community"` | The manufacturer name you gave community-made tables in PinballY. It's used by the status line and the "Original Tables" filter. |
 
 For example, for an English setup with no launch sound:
 
 ```js
-translation: {
-    enabled: true,
-    language: "en",
-},
-// ...
-launchSound: {
-    absoluteFilePath: "",
-},
+language: "en",
+launchSoundFile: "",
 ```
 
 **4. Restart PinballY**, then open `PinballY.log` in the PinballY folder. Every add-on writes a line like this:
@@ -91,16 +85,19 @@ A line containing `ERROR` names the add-on at fault. The other add-ons keep work
 
 ## Configuration
 
-Every setting lives in `common\config.js`, and each one has a comment there. The main sections:
+Every setting lives in `common\config.js`, and each one has a comment there:
 
-| Section | What it controls |
+| Setting | What it controls |
 |---|---|
-| `scripts.enabled` | Turn any add-on off by setting it to `false`, for example `forceBackglass: false` if you have no backglass screen. |
-| `translation` | Language. `enabled: false` forces English. |
-| `randomGameCommand.skipAnimation` | Jump straight to the random table, without the wheel animation. |
-| `ratingPrompt.thresholdMinutes` | Total play time before you're asked to rate a table. |
-| `launchSound` | Sound file. |
-| `tableMetadata` | Name used for community-made tables. |
+| **Set these for your setup** | |
+| `language` | Interface language. `"en"` for English. |
+| `launchSoundFile` | Sound played when a table launches. `""` for no sound. |
+| `communityTablesManufacturer` | Name used for community-made tables. |
+| **Optional preferences** | |
+| `skipRandomGameAnimation` | Jump straight to the random table, without the wheel animation. |
+| `askToRateAfterMinutesPlayed` | Total play time on a table before you're asked to rate it. |
+| **Add-ons** | |
+| `addOns` | Turn any add-on off by setting it to `false`, for example `forceBackglass: false` if you have no backglass screen. |
 
 ## Where your progress is stored
 
@@ -116,7 +113,7 @@ Translations live in `lang\<code>.js`. English (`en.js`) is the fallback languag
 - **To add a language:**
   1. Copy an existing translation such as `fr.js` (not `en.js`: its PinballY menu tables are empty, since PinballY's own texts are already in English) to a new file, for example `nl.js`, and translate it. Keep the keys, the `[Game.Xxx]` placeholders and the `${...}` parameters as they are.
   2. Register it in `common\i18n.js`: add an `import` and an entry in `AVAILABLE_LANGUAGES`.
-  3. Select it with `translation.language`.
+  3. Select it with `language`.
 
 If a text is missing from a language, the English text is shown instead, and the missing keys are listed once in `PinballY.log` at startup. Save language files as **UTF-8** so accented characters display correctly.
 
@@ -135,7 +132,7 @@ lang\                    translations
 tests\                   node tests (never loaded by PinballY)
 ```
 
-To add an add-on, create its file at the root, then register it in `main.js` (`import` and `SCRIPTS`) and in `config.scripts.enabled`. Code shared by several add-ons goes in `common\`.
+To add an add-on, create its file at the root, then register it in `main.js` (`import` and `SCRIPTS`) and in `addOns` in `common\config.js`. Code shared by several add-ons goes in `common\`.
 
 Three shared modules carry most of the logic:
 - **PinballY host** (`common/pinbally_host.js`). Everything the Period Table and wheel dialog modules take from PinballY: settings, clock, visible tables, main window menus, UI mode and events, commands, table launch. It passes straight through to PinballY; the tests replace it with an in-memory fake. The other add-ons and helpers still use PinballY's globals directly.
