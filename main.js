@@ -23,14 +23,14 @@ import * as startupChoicePrompt from "./startup_choice_prompt.js";
 // listeners are registered in, and listeners for the same event run in that
 // order too:
 // - uiTranslation must come first, so its "menuopen" hook is in place before
-//   any menu opens (including the startup prompt, shown during init).
-// - achievements comes before ratingPrompt: both open a dialog on "wheelmode"
-//   when the wheel is free, so an unlock is shown first and the rating prompt
-//   waits for it to be closed.
+//   any menu opens.
 // - sessionStatsTracker is kept before achievements as a safety margin; the
-//   achievement checks are deferred by one tick, so the stats are recorded
-//   first either way.
-// The other scripts don't depend on each other's order.
+//   achievement checks after a game are deferred by one tick, so the stats
+//   are recorded first either way (the startup check needs no stats from
+//   this session).
+// The other scripts don't depend on each other's order. In particular, the
+// startup prompt, Achievement and rating dialogs go through the wheel dialog
+// module, which shows them in a fixed priority order.
 const SCRIPTS = [
     // Interface: translations, status line, menus, filters, launch overlay.
     { key: "uiTranslation", module: uiTranslation },
@@ -46,7 +46,7 @@ const SCRIPTS = [
     { key: "achievements", module: achievementsEngine },
     { key: "ratingPrompt", module: ratingPrompt },
 
-    // Startup dialog: shown once every other script is ready.
+    // Startup dialog.
     { key: "startupChoicePrompt", module: startupChoicePrompt },
 ];
 

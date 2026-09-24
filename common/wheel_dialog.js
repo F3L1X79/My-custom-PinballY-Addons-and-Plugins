@@ -1,0 +1,111 @@
+﻿// ============================================================
+// Wheel dialog module: add-ons submit a dialog description (menu id,
+// message, buttons with optional actions, priority) and it shows them one
+// at a time, only when the wheel is free, highest priority first, so the
+// add-on order in main.js never decides which dialog comes first. It owns
+// the dialog layout, the button commands and their dispatch, and advances
+// the queue on "menuclose", whether the dialog was acknowledged or
+// dismissed. Listens to "command", "menuclose" and "wheelmode".
+// ============================================================
+
+import { safeHandler } from "./safe_handler.js";
+import { createPinballYHost } from "./pinbally_host.js";
+
+const SCRIPT_NAME = "WheelDialog";
+
+// Lower is shown first.
+export const DIALOG_PRIORITY = Object.freeze({
+    STARTUP_PROMPT: 0,
+    ACHIEVEMENT: 1,
+    RATING_PROMPT: 2,
+});
+
+export function createWheelDialogs(host) {
+    // Waiting dialogs, sorted by priority, then submission order.
+    const queue = [];
+    // Dialog on screen, with the command of each of its buttons.
+    let shown = null;
+    // Only one dialog is on screen at a time, so button commands are reused
+    // from dialog to dialog; the pool only grows when a dialog needs more
+    // buttons than any before it, since command IDs are finite.
+    const buttonCommands = [];
+
+    function getButtonCommand(index) {
+        while (buttonCommands.length <= index) {
+            buttonCommands.push(host.allocateCommand(`wheelDialogButton${buttonCommands.length}`));
+        }
+        return buttonCommands[index];
+    }
+
+    let showScheduled = false;
+
+    function showNext() {
+        showScheduled = false;
+        if (shown || queue.length === 0) return;
+        // A dialog opened while a game is exiting would sit under the launch
+        // overlay, and one opened over another menu would replace it.
+        if (host.getUIMode() !== "wheel") return;
+
+        const dialog = queue.shift();
+        const buttons = dialog.buttons.map((button, index) => ({ ...button, cmd: getButtonCommand(index) }));
+        shown = { dialog, buttons };
+
+        host.showMenu(
+            dialog.id,
+            [
+                { title: dialog.message, cmd: -1 },
+                { cmd: -1 },
+                ...buttons.map(({ label, cmd }) => ({ title: label, cmd })),
+            ],
+            { dialogStyle: true }
+        );
+        if (dialog.onShown) dialog.onShown();
+    }
+
+    // Shows the next dialog one tick later, so every dialog submitted in the
+    // meantime competes on priority: those of all the add-ons' init at
+    // startup, and the Achievements of a session, whose check is itself
+    // deferred by one tick after "gameover", before the rating prompt
+    // submitted on the following "wheelmode".
+    function scheduleShowNext() {
+        if (showScheduled) return;
+        showScheduled = true;
+        setTimeout(safeHandler(SCRIPT_NAME, showNext), 0);
+    }
+
+    function submit(dialog) {
+        const insertAt = queue.findIndex(queued => queued.priority > dialog.priority);
+        if (insertAt === -1) queue.push(dialog);
+        else queue.splice(insertAt, 0, dialog);
+        scheduleShowNext();
+    }
+
+    // Fires on every command. PinballY closes the menu after the command,
+    // so the queue advances on "menuclose", not here. Async because an
+    // action may animate the wheel, so its rejections are logged too.
+    host.on("command", safeHandler(SCRIPT_NAME, async ev => {
+        if (!shown) return;
+        const button = shown.buttons.find(item => item.cmd === ev.id);
+        if (button && button.action) await button.action();
+    }));
+
+    // Fires after any menu closes; the button and Escape both close the dialog.
+    host.on("menuclose", safeHandler(SCRIPT_NAME, ev => {
+        if (!shown || ev.id !== shown.dialog.id) return;
+        shown = null;
+        scheduleShowNext();
+    }));
+
+    // Fires on every return to the wheel (from a game, a menu or a popup).
+    host.on("wheelmode", safeHandler(SCRIPT_NAME, scheduleShowNext));
+
+    return { submit };
+}
+
+let sharedWheelDialogs = null;
+
+// One queue for every add-on, so their dialogs never replace each other.
+export function getWheelDialogs() {
+    if (!sharedWheelDialogs) sharedWheelDialogs = createWheelDialogs(createPinballYHost());
+    return sharedWheelDialogs;
+}

@@ -1,9 +1,9 @@
 ﻿// ============================================================
 // Checks all registered achievements at startup and after every
-// "gamestarted" and "gameover" event, and shows a congratulations dialog
-// for each newly unlocked one, once back at the free wheel ("wheelmode").
-// Simultaneous unlocks are queued and shown one at a time; the queue
-// advances on "menuclose", whether the dialog was acknowledged or dismissed.
+// "gamestarted" and "gameover" event, and hands each newly unlocked one to
+// the wheel dialog module as a congratulations dialog. That module shows
+// them one at a time once the wheel is free; an Achievement becomes
+// Notified when its dialog is shown, acknowledged or dismissed.
 // ============================================================
 
 import { evaluateAchievements, markNotified } from "./common/achievements.js";
@@ -14,10 +14,12 @@ import { buildPeriodTableStreakAchievements } from "./achievements/period_table_
 import { buildDecadeCompletionAchievements } from "./achievements/decade_completion.js";
 import { buildCategoryCompletionAchievements } from "./achievements/category_completion.js";
 import { buildSessionMilestoneAchievements } from "./achievements/session_milestones.js";
+import { getWheelDialogs, DIALOG_PRIORITY } from "./common/wheel_dialog.js";
 import lang from "./common/i18n.js";
 import { safeHandler } from "./common/safe_handler.js";
 
 const SCRIPT_NAME = "AchievementsEngine";
+const DIALOG_ID = "achievementUnlocked";
 
 function getAllAchievements() {
     return [
@@ -33,68 +35,24 @@ function getAllAchievements() {
 
 export default function init() {
     const { achievements: TEXT } = lang;
-    const ACKNOWLEDGE_COMMAND = command.allocate("acknowledgeAchievement");
-    const DIALOG_ID = "achievementUnlocked";
-
-    // Unlocked achievements not shown yet; the head is the one on screen
-    // while dialogIsOpen is true.
-    const pendingQueue = [];
-    let dialogIsOpen = false;
-    // True when an unlock is waiting for the wheel to be free (game running,
-    // or another dialog such as the startup prompt still open).
-    let displayPending = false;
-
-    function showNextInQueue() {
-        if (pendingQueue.length === 0 || dialogIsOpen) return;
-        const achievement = pendingQueue[0];
-
-        mainWindow.showMenu(
-            DIALOG_ID,
-            [
-                { title: TEXT.unlockedIntro(achievement.getTitle(), achievement.getDescription()), cmd: -1 },
-                { cmd: -1 },
-                { title: TEXT.acknowledge, cmd: ACKNOWLEDGE_COMMAND },
-            ],
-            { dialogStyle: true }
-        );
-        dialogIsOpen = true;
-        markNotified(achievement.id);
-    }
-
-    // A dialog opened while a game is exiting would sit under the launch
-    // overlay, and one opened over another menu would replace it.
-    function showWhenWheelIsFree() {
-        if (mainWindow.getUIMode().mode === "wheel") {
-            displayPending = false;
-            showNextInQueue();
-        } else {
-            displayPending = true;
-        }
-    }
-
-    // Fires after any menu closes. The acknowledge button and Escape both
-    // close the dialog, so the queue advances here rather than on the command.
-    mainWindow.on("menuclose", safeHandler(SCRIPT_NAME, ev => {
-        if (ev.id !== DIALOG_ID || !dialogIsOpen) return;
-        dialogIsOpen = false;
-        pendingQueue.shift();
-        showWhenWheelIsFree();
-    }));
+    const wheelDialogs = getWheelDialogs();
+    // Achievements handed to the wheel dialog module. They are not Notified
+    // until shown, so later checks find the waiting ones again.
+    const submittedIds = new Set();
 
     function checkForNewAchievements() {
         evaluateAchievements(getAllAchievements(), (achievement) => {
-            // Not Notified until shown, so later checks find it again.
-            if (pendingQueue.some(queued => queued.id === achievement.id)) return;
-            pendingQueue.push(achievement);
-            if (!dialogIsOpen) showWhenWheelIsFree();
+            if (submittedIds.has(achievement.id)) return;
+            submittedIds.add(achievement.id);
+            wheelDialogs.submit({
+                id: DIALOG_ID,
+                message: TEXT.unlockedIntro(achievement.getTitle(), achievement.getDescription()),
+                buttons: [{ label: TEXT.acknowledge }],
+                priority: DIALOG_PRIORITY.ACHIEVEMENT,
+                onShown: () => markNotified(achievement.id),
+            });
         });
     }
-
-    // Fires on every return to the wheel (from a game, a menu or a popup):
-    // shows the unlocks that were waiting.
-    mainWindow.on("wheelmode", safeHandler(SCRIPT_NAME, () => {
-        if (displayPending) showWhenWheelIsFree();
-    }));
 
     // The timer callback runs outside the event handler's call stack, so it
     // needs its own guard.
@@ -111,8 +69,7 @@ export default function init() {
         setTimeout(safeCheckForNewAchievements, 0);
     }));
 
-    // Deferred until every script has initialized, so a dialog opened at
-    // startup (e.g. the startup prompt) is already showing and the unlock
-    // waits for it instead of being replaced by it, whatever the order in main.js.
-    setTimeout(safeCheckForNewAchievements, 0);
+    // Startup check. The wheel dialog module puts the startup prompt first,
+    // whatever the order in main.js.
+    checkForNewAchievements();
 }
