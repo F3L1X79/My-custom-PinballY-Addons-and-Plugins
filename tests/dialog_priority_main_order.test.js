@@ -1,6 +1,6 @@
 ﻿// ============================================================
-// Dialog priority with the add-ons started in main.js's order: startup
-// prompt, then Achievements, then rating prompt.
+// Dialog priority with the add-ons started in main.js's order: the startup
+// and rating prompts stay dialogs, the Achievements come as toasts.
 // ============================================================
 
 import { test } from "node:test";

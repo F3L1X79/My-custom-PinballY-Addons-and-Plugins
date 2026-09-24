@@ -6,7 +6,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 
 const NOW = new Date(2026, 8, 23, 10, 0, 0);
@@ -18,9 +18,6 @@ const TABLES = [
 ];
 
 const ADD_ONS_UNDER_TEST = ["customMenuCommands", "startupChoicePrompt"];
-
-// Lets the wheel dialog module show the startup prompt (setTimeout 0).
-const settle = () => new Promise(resolve => setTimeout(resolve, 10));
 
 test("the startup prompt and the main menu show and launch the same Table of the Day", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });

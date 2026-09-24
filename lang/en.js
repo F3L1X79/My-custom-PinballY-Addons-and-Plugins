@@ -161,8 +161,8 @@ export default {
             8: "Serial Unfaithful",
         },
         dayManufacturersDescription: (count) => `You've played tables from ${count} different manufacturers on the same day!`,
-        unlockedIntro: (title, description) => `[Achievement Unlocked]\n\n${title}\n${description}`,
-        acknowledge: "Awesome!",
+        // Header of the Achievement Toast card.
+        toastHeader: "Achievement unlocked",
     },
 
     // The Achievement List screen (see common/achievement_list.js).

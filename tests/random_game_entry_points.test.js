@@ -8,7 +8,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 import { getRandomGame } from "../common/random_game.js";
 
@@ -24,9 +24,6 @@ const TABLES = [
 const LAST_PLAYED_CONFIG_ID = "Theatre of Magic (Bally 1995)";
 
 const ADD_ONS_UNDER_TEST = ["customMenuCommands", "startupChoicePrompt"];
-
-// Lets the wheel dialog module show the startup prompt (setTimeout 0).
-const settle = () => new Promise(resolve => setTimeout(resolve, 10));
 
 function playAndReturnToWheel(fake, game) {
     fake.gameStarted(game);

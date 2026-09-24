@@ -2,8 +2,7 @@
 // After a play session, if the table's CUMULATIVE play time has just
 // crossed config.askToRateAfterMinutesPlayed and the table isn't rated
 // yet, hands the wheel dialog module a dialog offering to open PinballY's
-// native rating dialog once back at the wheel. Its priority makes it wait
-// until every Achievement dialog is closed. Listens to "gamestarted",
+// native rating dialog once back at the wheel. Listens to "gamestarted",
 // "gameover" and "wheelmode".
 // ============================================================
 
@@ -43,9 +42,7 @@ export default function init() {
         if (justCrossedThreshold) pendingGame = game;
     }));
 
-    // Fires on every return to the wheel. Submitted here rather than on
-    // "gameover" so the session's Achievements, checked one tick after
-    // "gameover", are already queued and shown first.
+    // Fires on every return to the wheel, where the dialog can show.
     mainWindow.on("wheelmode", safeHandler(SCRIPT_NAME, () => {
         if (!pendingGame) return;
         const game = pendingGame;

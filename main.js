@@ -32,8 +32,9 @@ import * as startupChoicePrompt from "./startup_choice_prompt.js";
 //   are recorded first either way (the startup check needs no stats from
 //   this session).
 // The other scripts don't depend on each other's order. In particular, the
-// startup prompt, Achievement and rating dialogs go through the wheel dialog
-// module, which shows them in a fixed priority order.
+// startup prompt and rating dialogs go through the wheel dialog module,
+// which shows them in a fixed priority order, and Achievements are announced
+// by non-blocking toasts.
 const SCRIPTS = [
     // Interface: translations, status line, menus, filters, launch overlay.
     { key: "uiTranslation", module: uiTranslation },

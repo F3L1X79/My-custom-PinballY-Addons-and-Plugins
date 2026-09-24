@@ -7,7 +7,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 
 const NOW = new Date(2026, 8, 23, 10, 0, 0);
@@ -20,9 +20,8 @@ const TABLE = {
     playCount: 0, playTime: 0, lastPlayed: null, rating: -1, isHidden: false,
 };
 
-const DIALOG_ID = "achievementUnlocked";
-
-const settle = () => new Promise(resolve => setTimeout(resolve, 10));
+// Longer than an Achievement Toast's whole life (rise, hold, fade).
+const TOAST_MS = 6000;
 
 test("a Streak recorded before the update announces the first play once", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: [TABLE] });
@@ -43,11 +42,10 @@ test("a Streak recorded before the update announces the first play once", async 
     await import("../main.js");
     await settle();
 
-    const dailyFirstPlay = TEXT.unlockedIntro(TEXT.dailyFirstPlayTitle(), TEXT.dailyFirstPlayDescription());
-    const announcements = () => fake.shownMenus().filter(menu => menu.id === DIALOG_ID).map(menu => menu.items[0].title);
-    assert.deepEqual(announcements(), [dailyFirstPlay]);
-    fake.selectMenuItem(TEXT.acknowledge);
-    await settle();
+    // Whether each Achievement Toast so far announced the daily first play.
+    const announcements = () => fake.drawings().map(drawing => drawing.texts.includes(TEXT.dailyFirstPlayTitle()));
+    assert.deepEqual(announcements(), [true]);
+    fake.advanceTime(TOAST_MS);
 
     // A play triggers the next checks, with the first play still Unlocked.
     // The only table is also the Table of the Week: that one is announced now.
@@ -57,6 +55,6 @@ test("a Streak recorded before the update announces the first play once", async 
     fake.gameOver(TABLE);
     await settle();
 
-    assert.equal(announcements().filter(title => title === dailyFirstPlay).length, 1, "announced only once");
+    assert.equal(announcements().filter(Boolean).length, 1, "announced only once");
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
 });

@@ -250,8 +250,8 @@ export default {
             8: "Infidèle en série",
         },
         dayManufacturersDescription: (count) => `Vous avez joué des tables de ${count} fabricants différents le même jour !`,
-        unlockedIntro: (title, description) => `[Succès débloqué]\n\n${title}\n${description}`,
-        acknowledge: "Youpi !",
+        // Header of the Achievement Toast card.
+        toastHeader: "Succès débloqué",
     },
 
     achievementList: {

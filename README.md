@@ -11,7 +11,7 @@ JavaScript add-ons for [PinballY](https://mjrnet.org/pinscape/PinballY.php) that
 - **Random table**: a "wheel of fortune" animation, never the last played table.
 - **Main menu entries** after "Play": Achievement List, Table Setup, Random Game, Table of the Day, Table of the Week.
 - **"Original Tables" filter** in "Filter by Manufacturer": every table except the community-made ones.
-- **Achievements**, announced once when you're back at the wheel and browsable by family in the "Achievement List":
+- **Achievements**, each announced once by a small card in the bottom-right corner of the playfield screen that disappears on its own (never during a game), and browsable by family in the "Achievement List":
   - collection: first table, then 10 to 100 % of your collection played;
   - play time: 1 to 100 hours;
   - tables of the day and week: first play, total days or weeks played, streaks;
@@ -53,7 +53,7 @@ Translations live in `lang\<code>.js`; English is the fallback, and missing keys
 ## Contributing
 
 - `main.js` starts the add-ons listed in `SCRIPTS`. The root holds one file per add-on; shared code goes in `common\`, achievement definitions in `achievements\`, translations in `lang\`, tests in `tests\`.
-- Shared modules: `pinbally_host` (the only way to PinballY for testable modules), `period_table`, `random_game`, `wheel_dialog` (spontaneous dialogs, shown one at a time when the wheel is free), `main_menu` (entries after "Play").
+- Shared modules: `pinbally_host` (the only way to PinballY for testable modules), `period_table`, `random_game`, `wheel_dialog` (spontaneous dialogs, shown one at a time when the wheel is free), `achievement_toast` (Achievement announcements drawn in the bottom-right corner, trophy image in `assets\`), `main_menu` (entries after "Play").
 - Conventions: English code and comments, a header block per file, no JSDoc, no globals, every displayed text in all 6 languages, event handlers wrapped in `safeHandler`. Details in `.claude/rules/`.
 - Tests: `node --test` (Node.js 22+). `tests/persisted_data_pinning.test.js` locks saved keys and achievement IDs.
 

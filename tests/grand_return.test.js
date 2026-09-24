@@ -7,7 +7,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 
 const NOW = new Date(2026, 8, 23, 10, 0, 0);
@@ -30,9 +30,6 @@ const THIRTY_ONE_DAYS_AGO = table(2, "Thirty-One Days Ago");
 const PERIOD_TABLE = table(3, "Period Table");
 
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
-const DIALOG_ID = "achievementUnlocked";
-
-const settle = () => new Promise(resolve => setTimeout(resolve, 10));
 
 test("the grand return needs a 31-day break and says so", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: [THIRTY_DAYS_AGO, THIRTY_ONE_DAYS_AGO, PERIOD_TABLE] });
@@ -62,14 +59,16 @@ test("the grand return needs a 31-day break and says so", async () => {
         fake.advanceTime(SESSION_MS);
         fake.gameOver(game);
         await settle();
-        return fake.shownMenus().filter(menu => menu.id === DIALOG_ID).map(menu => menu.items[0].title);
+        // The texts of every Achievement Toast so far.
+        return fake.drawings().map(drawing => drawing.texts);
     }
 
     assert.deepEqual(await play(THIRTY_DAYS_AGO), [], "no Achievement after a 30-day break");
 
-    assert.deepEqual(await play(THIRTY_ONE_DAYS_AGO), [
-        TEXT.unlockedIntro(TEXT.grandReturnTitle(), TEXT.grandReturnDescription(31)),
-    ]);
+    const [toast, ...others] = await play(THIRTY_ONE_DAYS_AGO);
+    assert.deepEqual(others, []);
+    assert.ok(toast.includes(TEXT.grandReturnTitle()), toast.join(" | "));
+    assert.ok(toast.includes(TEXT.grandReturnDescription(31)), toast.join(" | "));
     assert.match(TEXT.grandReturnDescription(31), /31/);
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
 });

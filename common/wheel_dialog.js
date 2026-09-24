@@ -16,8 +16,7 @@ const SCRIPT_NAME = "WheelDialog";
 // Lower is shown first.
 export const DIALOG_PRIORITY = Object.freeze({
     STARTUP_PROMPT: 0,
-    ACHIEVEMENT: 1,
-    RATING_PROMPT: 2,
+    RATING_PROMPT: 1,
 });
 
 export function createWheelDialogs(host) {
@@ -63,10 +62,8 @@ export function createWheelDialogs(host) {
     }
 
     // Shows the next dialog one tick later, so every dialog submitted in the
-    // meantime competes on priority: those of all the add-ons' init at
-    // startup, and the Achievements of a session, whose check is itself
-    // deferred by one tick after "gameover", before the rating prompt
-    // submitted on the following "wheelmode".
+    // meantime competes on priority, such as those of all the add-ons' init
+    // at startup.
     function scheduleShowNext() {
         if (showScheduled) return;
         showScheduled = true;

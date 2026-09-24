@@ -246,8 +246,8 @@ export default {
             8: "Infedele seriale",
         },
         dayManufacturersDescription: (count) => `Hai giocato tavoli di ${count} produttori diversi nello stesso giorno!`,
-        unlockedIntro: (title, description) => `[Obiettivo sbloccato]\n\n${title}\n${description}`,
-        acknowledge: "Fantastico!",
+        // Header of the Achievement Toast card.
+        toastHeader: "Obiettivo sbloccato",
     },
 
     achievementList: {

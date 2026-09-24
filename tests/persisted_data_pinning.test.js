@@ -9,7 +9,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 
 // Wednesday 23 September 2026, 10:00 local time: its week starts Monday 21.
@@ -114,9 +114,8 @@ const EXPECTED_FIXED_KEYS = [
 
 const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
-
-// Lets the deferred achievement checks (setTimeout 0) run.
-const settle = () => new Promise(resolve => setTimeout(resolve, 10));
+// Enough for every waiting Achievement Toast to show, one after the other.
+const TOASTS_MS = 60 * 60 * 1000;
 
 // The add-ons involved in persisted data; the others would need more
 // PinballY globals and write nothing that is pinned here.
@@ -145,9 +144,9 @@ async function playLastLaunch(fake, durationSeconds) {
     return game;
 }
 
-async function closeEveryDialog(fake, closeDialog) {
+async function closeEveryDialog(fake) {
     for (let guard = 0; fake.currentMenu() && guard < 100; guard++) {
-        closeDialog();
+        fake.closeMenu();
         await settle();
     }
     assert.equal(fake.currentMenu(), null, "dialogs kept opening");
@@ -186,30 +185,28 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
     await settle();
 
     // Startup prompt: launch the Table of the Day, play a long session, and
-    // acknowledge every Achievement dialog.
+    // close every dialog (the rating prompt).
     fake.selectMenuItem(lang.startupPrompt.tableOfTheDay);
     await settle();
     const dayTable = await playLastLaunch(fake, 61 * 60);
-    await closeEveryDialog(fake, () => {
-        const canAcknowledge = fake.currentMenu().items.some(item => item.title === lang.achievements.acknowledge);
-        if (canAcknowledge) fake.selectMenuItem(lang.achievements.acknowledge);
-        else fake.closeMenu();
-    });
+    await closeEveryDialog(fake);
 
-    // Main menu: launch the Table of the Week, play a very short session, and
-    // dismiss every Achievement dialog.
+    // Main menu: launch the Table of the Week and play a very short session.
     fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }]);
     fake.selectMenuItem(lang.customMenuLabels.tableOfTheWeek);
     await settle();
     const weekTable = await playLastLaunch(fake, 3);
-    await closeEveryDialog(fake, () => fake.closeMenu());
+    await closeEveryDialog(fake);
 
     // Main menu again: a Random Game.
     fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }]);
     fake.selectMenuItem(lang.customMenuLabels.randomGame);
     await settle();
     const randomTable = await playLastLaunch(fake, 3);
-    await closeEveryDialog(fake, () => fake.closeMenu());
+    await closeEveryDialog(fake);
+
+    // Achievements are Notified when their toast starts, one toast after the other.
+    fake.advanceTime(TOASTS_MS);
 
     const writtenKeys = [...fake.writtenSettingsKeys()];
 

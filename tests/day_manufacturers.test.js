@@ -9,7 +9,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 
 const NOW = new Date(2026, 8, 23, 10, 0, 0);
@@ -36,9 +36,8 @@ const DATA_EAST = table(7, "Data East Table", "Data East");
 // count as a Period Table play.
 const PERIOD_TABLE = table(8, "Period Table", "");
 
-const DIALOG_ID = "achievementUnlocked";
-
-const settle = () => new Promise(resolve => setTimeout(resolve, 10));
+// Longer than an Achievement Toast's whole life (rise, hold, fade).
+const TOAST_MS = 6000;
 
 test("three manufacturers in one calendar day unlock the first multi-manufacturer Achievement for good", async () => {
     const fake = createFakePinballYHost({
@@ -64,10 +63,11 @@ test("three manufacturers in one calendar day unlock the first multi-manufacture
     await settle();
 
     const dayManufacturersTitles = Object.values(TEXT.dayManufacturersTitles);
-    const announcements = () => fake.shownMenus().filter(menu => menu.id === DIALOG_ID).map(menu => menu.items[0].title);
+    // The texts of every Achievement Toast so far.
+    const announcements = () => fake.drawings().map(drawing => drawing.texts);
 
-    // Returns the multi-manufacturer Achievements announced for this play;
-    // a very short session may announce others (rage quit).
+    // Returns the titles of the multi-manufacturer Achievements announced
+    // for this play; a very short session may announce others (rage quit).
     async function play(game, sessionMs = SESSION_MS) {
         const before = announcements().length;
         fake.gameStarted(game);
@@ -75,12 +75,14 @@ test("three manufacturers in one calendar day unlock the first multi-manufacture
         fake.advanceTime(sessionMs);
         fake.gameOver(game);
         await settle();
-        const announced = announcements().slice(before);
-        while (fake.currentMenu()) {
-            fake.selectMenuItem(TEXT.acknowledge);
-            await settle();
+        // Toasts show one after the other: let every toast of this play show.
+        for (let guard = 0; guard < 100; guard++) {
+            const shownCount = announcements().length;
+            fake.advanceTime(TOAST_MS);
+            if (announcements().length === shownCount) break;
         }
-        return announced.filter(title => dayManufacturersTitles.some(dayTitle => title.includes(dayTitle)));
+        return announcements().slice(before)
+            .flatMap(texts => texts.filter(text => dayManufacturersTitles.includes(text)));
     }
 
     assert.deepEqual(await play(WILLIAMS), []);
@@ -88,7 +90,7 @@ test("three manufacturers in one calendar day unlock the first multi-manufacture
     assert.deepEqual(await play(HOMEBREW), [], "a table with no manufacturer doesn't count");
     assert.deepEqual(await play(BALLY), []);
     assert.deepEqual(await play(HIDDEN_STERN, VERY_SHORT_SESSION_MS), [
-        TEXT.unlockedIntro(TEXT.dayManufacturersTitles[3], TEXT.dayManufacturersDescription(3)),
+        TEXT.dayManufacturersTitles[3],
     ], "a hidden table counts, even for a very short session");
     assert.deepEqual(await play(GOTTLIEB), []);
 

@@ -198,7 +198,7 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
             assert.deepEqual(size, { width: 1080, height: 1920 });
             const [recorded] = fake.drawingLayers();
             assert.equal(recorded.zIndex, 6500);
-            assert.deepEqual(recorded.texts(), ["Achievement unlocked\nPlay 5 tables in one day."]);
+            assert.deepEqual(recorded.texts(), ["Achievement unlocked", "Play 5 tables in one day."]);
             assert.deepEqual(recorded.position(), { x: 0, y: 0.25 });
             assert.equal(recorded.alpha, 0.5);
         });

@@ -2,8 +2,8 @@
 // At startup, hands the wheel dialog module a dialog offering to stay on
 // the last played table or to launch today's table, this week's table or a
 // random one (picking the day / week tables here locks them in
-// optionSettings). Its priority puts it before any Achievement unlocked at
-// startup, whatever the add-on order in main.js.
+// optionSettings). Its priority puts it before any other dialog submitted
+// at startup, whatever the add-on order in main.js.
 // ============================================================
 
 import { getRandomGame } from "./common/random_game.js";

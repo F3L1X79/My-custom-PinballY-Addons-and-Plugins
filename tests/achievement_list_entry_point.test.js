@@ -7,7 +7,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 
 const NOW = new Date(2026, 8, 23, 10, 0, 0);
@@ -33,9 +33,6 @@ const TABLES = [
 
 const ADD_ONS_UNDER_TEST = ["customMenuCommands", "achievements"];
 
-// Lets the wheel dialog module show the startup Achievements (setTimeout 0).
-const settle = () => new Promise(resolve => setTimeout(resolve, 10));
-
 test("the Achievement List entry follows Play and lists the real Achievements by family", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
     // Never uninstalled: node --test runs each test file in its own process.
@@ -51,10 +48,6 @@ test("the Achievement List entry follows Play and lists the real Achievements by
     const MENU_LABELS = lang.customMenuLabels;
     await import("../main.js");
     await settle();
-    for (let guard = 0; fake.currentMenu() && guard < 100; guard++) {
-        fake.closeMenu();
-        await settle();
-    }
 
     fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }, { title: "Exit", cmd: 99 }]);
     assert.deepEqual(fake.currentMenu().items.map(item => item.title), [

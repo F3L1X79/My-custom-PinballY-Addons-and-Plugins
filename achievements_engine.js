@@ -1,9 +1,9 @@
 ﻿// ============================================================
 // Checks all registered achievements at startup and after every
 // "gamestarted" and "gameover" event, and hands each newly unlocked one to
-// the wheel dialog module as a congratulations dialog. That module shows
-// them one at a time once the wheel is free; an Achievement becomes
-// Notified when its dialog is shown, acknowledged or dismissed.
+// the Achievement Toast module, which announces it with a card in the
+// bottom-right corner once no game is running; an Achievement becomes
+// Notified when its toast starts.
 // Also adds the Achievement List entry to the main menu, right after "Play".
 // ============================================================
 
@@ -17,7 +17,7 @@ import { buildDecadeCompletionAchievements } from "./achievements/decade_complet
 import { buildCategoryCompletionAchievements } from "./achievements/category_completion.js";
 import { buildSessionMilestoneAchievements } from "./achievements/session_milestones.js";
 import { buildRandomGameFanAchievements } from "./achievements/random_game_fans.js";
-import { getWheelDialogs, DIALOG_PRIORITY } from "./common/wheel_dialog.js";
+import { getAchievementToasts } from "./common/achievement_toast.js";
 import { getMainMenu, MAIN_MENU_POSITION } from "./common/main_menu.js";
 import { createAchievementList } from "./common/achievement_list.js";
 import { createPinballYHost } from "./common/pinbally_host.js";
@@ -25,7 +25,6 @@ import lang from "./common/i18n.js";
 import { safeHandler } from "./common/safe_handler.js";
 
 const SCRIPT_NAME = "AchievementsEngine";
-const DIALOG_ID = "achievementUnlocked";
 
 function getAllAchievements() {
     return [
@@ -42,8 +41,7 @@ function getAllAchievements() {
 }
 
 export default function init() {
-    const { achievements: TEXT } = lang;
-    const wheelDialogs = getWheelDialogs();
+    const achievementToasts = getAchievementToasts();
 
     const achievementList = createAchievementList(createPinballYHost(), getAllAchievements);
     getMainMenu().add({
@@ -52,19 +50,18 @@ export default function init() {
         position: MAIN_MENU_POSITION.ACHIEVEMENT_LIST,
         action: achievementList.open,
     });
-    // Achievements handed to the wheel dialog module. They are not Notified
-    // until shown, so later checks find the waiting ones again.
+    // Achievements handed to the Achievement Toast module. They are not
+    // Notified until their toast starts, so later checks find the waiting
+    // ones again.
     const submittedIds = new Set();
 
     function checkForNewAchievements() {
         evaluateAchievements(getAllAchievements(), (achievement) => {
             if (submittedIds.has(achievement.id)) return;
             submittedIds.add(achievement.id);
-            wheelDialogs.submit({
-                id: DIALOG_ID,
-                message: TEXT.unlockedIntro(achievement.getTitle(), achievement.getDescription()),
-                buttons: [{ label: TEXT.acknowledge }],
-                priority: DIALOG_PRIORITY.ACHIEVEMENT,
+            achievementToasts.submit({
+                title: achievement.getTitle(),
+                description: achievement.getDescription(),
                 onShown: () => markNotified(achievement.id),
             });
         });
@@ -85,7 +82,6 @@ export default function init() {
         setTimeout(safeCheckForNewAchievements, 0);
     }));
 
-    // Startup check. The wheel dialog module puts the startup prompt first,
-    // whatever the order in main.js.
+    // Startup check: its toasts show alongside the startup prompt.
     checkForNewAchievements();
 }

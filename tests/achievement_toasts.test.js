@@ -1,0 +1,101 @@
+﻿// ============================================================
+// The Achievements add-on, started through main.js on the fake PinballY
+// globals, announces its unlocks with Achievement Toasts: never while a
+// game runs, one after the other, over an open menu without taking it
+// over, each one Notified when it starts, and a toast still waiting when a
+// table launches is announced after that game.
+// ============================================================
+
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
+import config from "../common/config.js";
+
+const NOW = new Date(2026, 8, 23, 10, 0, 0);
+const SECONDS_PER_HOUR = 3600;
+// Longer than a toast's whole life (rise, hold, fade).
+const ONE_TOAST_MS = 6000;
+
+// Two Williams tables, both played: unlocks at least the first-table,
+// Williams and 1990s Achievements at startup.
+const TABLES = [
+    {
+        id: 1, configId: "Medieval Madness (Williams 1997)", title: "Medieval Madness (Williams 1997)",
+        manufacturer: "Williams", year: 1997, categories: [],
+        playCount: 5, playTime: 2 * SECONDS_PER_HOUR, lastPlayed: new Date(2026, 8, 1), rating: 4, isHidden: false,
+    },
+    {
+        id: 2, configId: "Attack from Mars (Williams 1995)", title: "Attack from Mars (Williams 1995)",
+        manufacturer: "Williams", year: 1995, categories: [],
+        playCount: 3, playTime: SECONDS_PER_HOUR, lastPlayed: new Date(2026, 8, 2), rating: 5, isHidden: false,
+    },
+];
+
+const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";
+
+function notifiedCount(fake) {
+    return [...fake.writtenSettingsKeys()].filter(key => key.startsWith(NOTIFIED_KEY_PREFIX)).length;
+}
+
+function toasts(fake) {
+    return fake.drawings().map(drawing => drawing.texts.join(" | "));
+}
+
+test("Achievement Toasts wait for the end of the game, follow each other and never take over a menu", async () => {
+    const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
+    // Never uninstalled: node --test runs each test file in its own process.
+    fake.installGlobals();
+    for (const key of Object.keys(config.addOns)) {
+        config.addOns[key] = key === "achievements";
+    }
+    config.language = "en";
+
+    // A game is already running when the startup check runs.
+    fake.playGame(TABLES[0]);
+    await import("../main.js");
+    await settle();
+    fake.advanceTime(ONE_TOAST_MS);
+
+    assert.deepEqual(toasts(fake), [], "no toast while a game runs");
+    assert.equal(notifiedCount(fake), 0);
+
+    fake.gameOver(TABLES[0]);
+    await settle();
+    assert.equal(toasts(fake).length, 1, "first toast on the return to the wheel");
+    assert.equal(notifiedCount(fake), 1, "Notified when its toast starts");
+
+    fake.advanceTime(1000);
+    assert.equal(toasts(fake).length, 1, "one toast at a time");
+
+    // The next toast starts over an open menu, which stays in charge.
+    fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }]);
+    fake.advanceTime(ONE_TOAST_MS);
+    assert.equal(toasts(fake).length, 2);
+    assert.equal(notifiedCount(fake), 2);
+    assert.equal(fake.currentMenu().id, "main");
+    assert.equal(fake.getUIMode(), "menu");
+    assert.deepEqual(fake.executedCommands(), []);
+    fake.closeMenu();
+
+    // A table launched while toasts wait: they are announced after the game.
+    fake.playGame(TABLES[1]);
+    fake.gameStarted(TABLES[1]);
+    fake.advanceTime(10 * ONE_TOAST_MS);
+    assert.equal(toasts(fake).length, 2, "no toast while a game runs");
+    fake.gameOver(TABLES[1]);
+    await settle();
+    assert.equal(toasts(fake).length, 3, "the waiting toasts resume after the game");
+
+    for (let guard = 0; guard < 100; guard++) {
+        const shownCount = toasts(fake).length;
+        fake.advanceTime(ONE_TOAST_MS);
+        await settle();
+        if (toasts(fake).length === shownCount) break;
+    }
+
+    const shownCount = toasts(fake).length;
+    assert.ok(shownCount >= 4, `expected several Achievements, got ${shownCount}`);
+    assert.equal(notifiedCount(fake), shownCount, "each toast Notified its Achievement");
+    assert.equal(new Set(toasts(fake)).size, shownCount, "each Achievement announced once");
+    assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
+});

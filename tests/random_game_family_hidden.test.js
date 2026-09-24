@@ -7,15 +7,13 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 
 const TABLE = {
     id: 1, configId: "Medieval Madness (Williams 1997)", title: "Medieval Madness", manufacturer: "Williams",
     year: 1997, categories: [], playCount: 0, playTime: 0, lastPlayed: null, rating: -1, isHidden: false,
 };
-
-const settle = () => new Promise(resolve => setTimeout(resolve, 10));
 
 test("no Random Game family when neither the main menu commands nor the startup prompt are enabled", async () => {
     const fake = createFakePinballYHost({ now: new Date(2026, 8, 23, 10, 0, 0), tables: [TABLE] });

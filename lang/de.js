@@ -247,8 +247,8 @@ export default {
             8: "Serien-Untreuer",
         },
         dayManufacturersDescription: (count) => `Sie haben am selben Tag Tische von ${count} verschiedenen Herstellern gespielt!`,
-        unlockedIntro: (title, description) => `[Erfolg freigeschaltet]\n\n${title}\n${description}`,
-        acknowledge: "Super!",
+        // Header of the Achievement Toast card.
+        toastHeader: "Erfolg freigeschaltet",
     },
 
     achievementList: {

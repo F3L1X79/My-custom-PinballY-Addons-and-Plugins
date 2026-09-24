@@ -247,8 +247,8 @@ export default {
             8: "Infiel em série",
         },
         dayManufacturersDescription: (count) => `Você jogou mesas de ${count} fabricantes diferentes no mesmo dia!`,
-        unlockedIntro: (title, description) => `[Conquista desbloqueada]\n\n${title}\n${description}`,
-        acknowledge: "Incrível!",
+        // Header of the Achievement Toast card.
+        toastHeader: "Conquista desbloqueada",
     },
 
     achievementList: {

@@ -4,14 +4,19 @@
 // the date (a manual clock that also runs the host's timers), the table
 // list, the wheel selection and the layout size, seed settings, fire
 // PinballY events, pick menu items, play launched games, and inspect shown
-// menus, launches, written settings keys, drawing layers and sounds
-// played. installGlobals() also exposes it as PinballY's globals (and the
-// global Date, but not the global timers), so code not yet on the host
-// runs too.
+// menus, launches, written settings keys, drawing layers, what was drawn
+// and sounds played. installGlobals() also exposes it as PinballY's
+// globals (and the global Date and timers), so code not yet on the host
+// runs too. settle() waits on a real timer for the deferred work to run.
 // Never loaded by PinballY.
 // ============================================================
 
 const RealDate = Date;
+const realSetTimeout = setTimeout;
+const realClearTimeout = clearTimeout;
+
+// Lets the zero-delay timers (deferred checks, dialogs) run for real.
+export const settle = () => new Promise(resolve => realSetTimeout(resolve, 10));
 
 // PinballY's own commands used by the add-ons; custom ones start above them.
 const BUILT_IN_COMMANDS = {
@@ -31,8 +36,9 @@ function toStoredString(value) {
     return String(value);
 }
 
-// Records its runs and gives a plausible measure; drawing it writes its
-// whole text to the drawing context, where the fake layer records it.
+// Records its runs and gives a plausible measure; drawing it writes each
+// run's text (without its line break) to the drawing context, where the
+// fake layer records it.
 class FakeStyledText {
     constructor(options = {}) {
         this.options = options;
@@ -56,7 +62,7 @@ class FakeStyledText {
     }
 
     draw(dc, rect) {
-        dc.drawText(this.text(), rect);
+        for (const run of this.runs) dc.drawText(run.text.replace(/\n$/, ""), rect);
     }
 }
 
@@ -69,6 +75,8 @@ export function createFakePinballYHost({
     let nowMs = now.getTime();
     let currentLayoutSize = { ...layoutSize };
     const layers = [];
+    // Every layer draw, in order: { zIndex, texts }.
+    const drawingList = [];
     const sounds = [];
     // Pending timers, run in due order by advanceTime(): { id, dueMs, callback, intervalMs }.
     let timers = [];
@@ -186,6 +194,7 @@ export function createFakePinballYHost({
             draw(drawFunction) {
                 texts = [];
                 drawFunction(dc);
+                drawingList.push({ zIndex, texts: [...texts] });
             },
             clear() { texts = []; },
             setPos(x, y) { position = { x, y }; },
@@ -255,6 +264,7 @@ export function createFakePinballYHost({
         advanceTime,
         setLayoutSize(size) { currentLayoutSize = { ...size }; },
         drawingLayers: () => [...layers],
+        drawings: () => drawingList.map(drawing => ({ ...drawing, texts: [...drawing.texts] })),
         soundsPlayed: () => [...sounds],
         setTables(newTables) { allTables = newTables.map(table => ({ ...table })); },
         // The current wheel selection, in wheel order (index 0 is the current table).
@@ -340,6 +350,7 @@ export function createFakePinballYHost({
             const globalNames = [
                 "optionSettings", "gameList", "mainWindow", "command", "logfile", "Date",
                 "StyledText", "systemInfo", "createAutomationObject",
+                "setTimeout", "clearTimeout", "setInterval", "clearInterval",
             ];
             const previous = globalNames.map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]);
 
@@ -375,6 +386,16 @@ export function createFakePinballYHost({
                 command: { ...BUILT_IN_COMMANDS, allocate: allocateCommand },
                 logfile: { log: (text) => { logLines.push(text); } },
                 Date: FakeDate,
+                // Zero-delay timeouts stay on the real event loop, so the
+                // add-ons' "next tick" deferrals still run on settle(); every
+                // other timer waits for advanceTime().
+                setTimeout: (callback, ms = 0) => (ms > 0 ? addTimer(callback, ms) : realSetTimeout(callback, 0)),
+                clearTimeout: (id) => {
+                    if (typeof id === "number") removeTimer(id);
+                    else realClearTimeout(id);
+                },
+                setInterval: (callback, ms) => addTimer(callback, ms, ms),
+                clearInterval: removeTimer,
                 StyledText: FakeStyledText,
                 systemInfo: { programDir: programFolder },
                 // Only Windows Media Player, where setting the URL plays the
