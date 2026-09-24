@@ -5,6 +5,7 @@
 // Called by achievements_engine.js at each check; no side effects.
 // ============================================================
 
+import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 import { getVisibleTables } from "../common/visible_tables.js";
 
@@ -22,6 +23,7 @@ export function buildPlayTimeTotalAchievements() {
 
     return PLAY_TIME_THRESHOLDS_HOURS.map(hours => ({
         id: `playTimeMilestone:${hours}h`,
+        family: ACHIEVEMENT_FAMILY.PLAY_TIME,
         getTitle: () => TEXT.playTimeMilestoneTitle(hours),
         getDescription: () => TEXT.playTimeMilestoneDescription(hours),
         checkUnlocked: () => getTotalPlayTimeSeconds() >= hours * 3600,

@@ -5,6 +5,7 @@
 // session_stats_tracker.js; writes nothing.
 // ============================================================
 
+import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 import {
     LONGEST_SESSION_KEY,
@@ -23,6 +24,7 @@ export function buildSessionMilestoneAchievements() {
 
     const achievements = MARATHON_THRESHOLDS_MINUTES.map(minutes => ({
         id: `marathon:${minutes}`,
+        family: ACHIEVEMENT_FAMILY.SESSIONS,
         getTitle: () => TEXT.marathonTitle(minutes),
         getDescription: () => TEXT.marathonDescription(minutes),
         checkUnlocked: () => optionSettings.getFloat(LONGEST_SESSION_KEY, 0) >= minutes * 60,
@@ -30,6 +32,7 @@ export function buildSessionMilestoneAchievements() {
 
     achievements.push({
         id: "rageQuit",
+        family: ACHIEVEMENT_FAMILY.SESSIONS,
         getTitle: () => TEXT.rageQuitTitle(),
         getDescription: () => TEXT.rageQuitDescription(RAGE_QUIT_THRESHOLD_SECONDS),
         checkUnlocked: () => {
@@ -40,6 +43,7 @@ export function buildSessionMilestoneAchievements() {
 
     achievements.push({
         id: "grandReturn",
+        family: ACHIEVEMENT_FAMILY.SESSIONS,
         getTitle: () => TEXT.grandReturnTitle(),
         getDescription: () => TEXT.grandReturnDescription(GRAND_RETURN_THRESHOLD_DAYS),
         checkUnlocked: () => optionSettings.getBool(GRAND_RETURN_FLAG_KEY, false),

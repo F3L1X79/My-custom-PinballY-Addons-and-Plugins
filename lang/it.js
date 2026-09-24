@@ -199,4 +199,20 @@ export default {
         unlockedIntro: (title, description) => `[Obiettivo sbloccato]\n\n${title}\n${description}`,
         acknowledge: "Fantastico!",
     },
+
+    achievementList: {
+        menuEntry: "Elenco degli obiettivi",
+        totalLine: (unlockedCount, totalCount) => `Totale: ${unlockedCount}/${totalCount}`,
+        familyLine: (family, unlockedCount, totalCount) => `${family} (${unlockedCount}/${totalCount})`,
+        back: "Indietro",
+        families: {
+            collection: "Collezione",
+            playTime: "Tempo di gioco",
+            streaks: "Serie",
+            sessions: "Sessioni",
+            manufacturers: "Produttori",
+            decades: "Decenni",
+            categories: "Categorie",
+        },
+    },
 };

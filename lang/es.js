@@ -200,4 +200,20 @@ export default {
         unlockedIntro: (title, description) => `[Logro desbloqueado]\n\n${title}\n${description}`,
         acknowledge: "¡Genial!",
     },
+
+    achievementList: {
+        menuEntry: "Lista de logros",
+        totalLine: (unlockedCount, totalCount) => `Total: ${unlockedCount}/${totalCount}`,
+        familyLine: (family, unlockedCount, totalCount) => `${family} (${unlockedCount}/${totalCount})`,
+        back: "Volver",
+        families: {
+            collection: "Colección",
+            playTime: "Tiempo de juego",
+            streaks: "Rachas",
+            sessions: "Sesiones",
+            manufacturers: "Fabricantes",
+            decades: "Décadas",
+            categories: "Categorías",
+        },
+    },
 };

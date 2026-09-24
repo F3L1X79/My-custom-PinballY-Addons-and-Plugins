@@ -1,0 +1,60 @@
+﻿// ============================================================
+// Main menu module: Add-ons add their entries (label, action, position)
+// and it inserts them into PinballY's main menu right after "Play", in a
+// fixed position order, so the Add-on order in main.js never decides where
+// an entry lands. It owns the entry commands and runs the matching action
+// when one is selected. Listens to "menuopen" and "command".
+// ============================================================
+
+import { safeHandler } from "./safe_handler.js";
+import { createPinballYHost } from "./pinbally_host.js";
+
+const SCRIPT_NAME = "MainMenu";
+
+// Lower is closer to "Play".
+export const MAIN_MENU_POSITION = Object.freeze({
+    ACHIEVEMENT_LIST: 0,
+    TABLE_SETUP: 1,
+    RANDOM_GAME: 2,
+    TABLE_OF_THE_DAY: 3,
+    TABLE_OF_THE_WEEK: 4,
+});
+
+export function createMainMenu(host) {
+    // Sorted by position.
+    const entries = [];
+
+    function add({ name, label, position, action }) {
+        const entry = { label, position, action, cmd: host.allocateCommand(name) };
+        const insertAt = entries.findIndex(other => other.position > position);
+        if (insertAt === -1) entries.push(entry);
+        else entries.splice(insertAt, 0, entry);
+    }
+
+    // Fires when any menu opens, with a fresh item list each time: adds the
+    // entries to the main menu.
+    host.on("menuopen", safeHandler(SCRIPT_NAME, ev => {
+        if (ev.id !== "main" || entries.length === 0) return;
+        ev.addMenuItem(
+            { after: host.getBuiltInCommand("PlayGame") },
+            entries.map(({ label, cmd }) => ({ title: label, cmd }))
+        );
+    }));
+
+    // Fires on every command; async because an action may animate the
+    // wheel, so its rejections are logged too.
+    host.on("command", safeHandler(SCRIPT_NAME, async ev => {
+        const entry = entries.find(item => item.cmd === ev.id);
+        if (entry) await entry.action();
+    }));
+
+    return { add };
+}
+
+let sharedMainMenu = null;
+
+// One main menu for every Add-on, so their entries are ordered together.
+export function getMainMenu() {
+    if (!sharedMainMenu) sharedMainMenu = createMainMenu(createPinballYHost());
+    return sharedMainMenu;
+}

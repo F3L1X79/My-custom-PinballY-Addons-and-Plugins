@@ -12,7 +12,9 @@
 const RealDate = Date;
 
 // PinballY's own commands used by the add-ons; custom ones start above them.
-const BUILT_IN_COMMANDS = { PlayGame: 1, ShowGameSetupMenu: 2, RateGame: 3 };
+const BUILT_IN_COMMANDS = {
+    PlayGame: 1, ShowGameSetupMenu: 2, RateGame: 3, MenuReturn: 4, MenuPageUp: 5, MenuPageDown: 6,
+};
 const FIRST_CUSTOM_COMMAND = 1000;
 
 const TRUE_STRINGS = ["1", "true", "yes", "on"];
@@ -89,6 +91,11 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
         return allTables.find(table => table.configId === configId || table.id === configId) || null;
     }
 
+    function getBuiltInCommand(name) {
+        if (!(name in BUILT_IN_COMMANDS)) throw new Error(`The fake host has no built-in command "${name}".`);
+        return BUILT_IN_COMMANDS[name];
+    }
+
     function allocateCommand(name) {
         const id = nextCommandId++;
         commandIds.set(name, id);
@@ -107,6 +114,7 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
         showMenu,
         on,
         allocateCommand,
+        getBuiltInCommand,
         // PinballY leaves the wheel as soon as a launch starts.
         playGame: (game) => {
             launchList.push(game);
@@ -162,12 +170,15 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
         },
 
         // Picks the item with this title in the current menu: fires its
-        // command, then closes the menu.
+        // command, then closes the menu, unless the item stays open. A menu
+        // shown by the command replaces it: only its "menuclose" fires.
         selectMenuItem(title) {
-            const item = shownMenu && shownMenu.items.find(menuItem => menuItem.title === title);
+            const menu = shownMenu;
+            const item = menu && menu.items.find(menuItem => menuItem.title === title);
             if (!item) throw new Error(`No menu item titled "${title}" is showing.`);
             fire("command", { id: item.cmd });
-            host.closeMenu();
+            if (shownMenu !== menu) fire("menuclose", { id: menu.id });
+            else if (!item.stayOpen) host.closeMenu();
         },
 
         launches: () => [...launchList],

@@ -1,6 +1,7 @@
 ﻿// ============================================================
 // Generic achievement evaluation. An achievement is a plain object:
-//   { id, getTitle(), getDescription(), checkUnlocked() }
+//   { id, family, getTitle(), getDescription(), checkUnlocked() }
+// where family is one of ACHIEVEMENT_FAMILY.
 // "Unlocked" is computed live from game stats; only the fact that the player
 // was Notified is persisted (optionSettings key
 // "custom.achievements.notified.<id>"), so each popup is shown only once.
@@ -8,6 +9,17 @@
 // ============================================================
 
 const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";
+
+// Listed in the order the Achievement List shows them.
+export const ACHIEVEMENT_FAMILY = Object.freeze({
+    COLLECTION: "collection",
+    PLAY_TIME: "playTime",
+    STREAKS: "streaks",
+    SESSIONS: "sessions",
+    MANUFACTURERS: "manufacturers",
+    DECADES: "decades",
+    CATEGORIES: "categories",
+});
 
 function wasNotified(id) {
     return optionSettings.getBool(NOTIFIED_KEY_PREFIX + id, false);

@@ -30,6 +30,8 @@ export function createPinballYHost() {
         on: (eventName, handler) => { mainWindow.on(eventName, handler); },
 
         allocateCommand: (name) => command.allocate(name),
+        // PinballY's own command IDs, such as "PlayGame" or "MenuReturn".
+        getBuiltInCommand: (name) => command[name],
         playGame: (game) => { mainWindow.playGame(game); },
     };
 }

@@ -5,6 +5,7 @@
 // Called by achievements_engine.js at each check; no side effects.
 // ============================================================
 
+import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 import { getVisibleTables } from "../common/visible_tables.js";
 
@@ -24,6 +25,7 @@ export function buildCollectionCompletionAchievements() {
     const achievements = [
         {
             id: "collectionMilestone:firstTable",
+            family: ACHIEVEMENT_FAMILY.COLLECTION,
             getTitle: () => TEXT.firstTableTitle(),
             getDescription: () => TEXT.firstTableDescription(),
             checkUnlocked: () => countPlayed() >= 1,
@@ -35,6 +37,7 @@ export function buildCollectionCompletionAchievements() {
 
         achievements.push({
             id: `collectionMilestone:${percent}percent`,
+            family: ACHIEVEMENT_FAMILY.COLLECTION,
             getTitle: () => TEXT.collectionPercentTitle(percent),
             getDescription: () => TEXT.collectionPercentDescription(percent, requiredCount, totalCount),
             checkUnlocked: () => countPlayed() >= requiredCount,

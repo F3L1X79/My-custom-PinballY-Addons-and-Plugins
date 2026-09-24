@@ -203,4 +203,20 @@ export default {
         unlockedIntro: (title, description) => `[Succès débloqué]\n\n${title}\n${description}`,
         acknowledge: "Merci mon coco !",
     },
+
+    achievementList: {
+        menuEntry: "Succès personnels",
+        totalLine: (unlockedCount, totalCount) => `Total : ${unlockedCount}/${totalCount}`,
+        familyLine: (family, unlockedCount, totalCount) => `${family} (${unlockedCount}/${totalCount})`,
+        back: "Retour",
+        families: {
+            collection: "Collection",
+            playTime: "Temps de jeu",
+            streaks: "Séries",
+            sessions: "Sessions",
+            manufacturers: "Fabricants",
+            decades: "Décennies",
+            categories: "Catégories",
+        },
+    },
 };

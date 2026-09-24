@@ -112,4 +112,21 @@ export default {
         unlockedIntro: (title, description) => `[Achievement Unlocked]\n\n${title}\n${description}`,
         acknowledge: "Awesome!",
     },
+
+    // The Achievement List screen (see common/achievement_list.js).
+    achievementList: {
+        menuEntry: "Achievement List",
+        totalLine: (unlockedCount, totalCount) => `Total: ${unlockedCount}/${totalCount}`,
+        familyLine: (family, unlockedCount, totalCount) => `${family} (${unlockedCount}/${totalCount})`,
+        back: "Back",
+        families: {
+            collection: "Collection",
+            playTime: "Play Time",
+            streaks: "Streaks",
+            sessions: "Sessions",
+            manufacturers: "Manufacturers",
+            decades: "Decades",
+            categories: "Categories",
+        },
+    },
 };

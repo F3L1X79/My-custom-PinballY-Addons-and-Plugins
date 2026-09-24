@@ -132,6 +132,33 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
             assert.deepEqual(events, [`command:${okCommand}`, "menuclose:testDialog"]);
         });
 
+        test("gives PinballY's built-in command IDs, distinct from the allocated ones", () => {
+            const allocated = host.allocateCommand("custom");
+            const builtIn = ["PlayGame", "MenuReturn", "MenuPageUp", "MenuPageDown"].map(host.getBuiltInCommand);
+
+            assert.ok(builtIn.every(id => Number.isInteger(id)), builtIn.join(", "));
+            assert.equal(new Set([...builtIn, allocated]).size, builtIn.length + 1);
+        });
+
+        test("a menu shown by a command replaces the current one; an item that stays open keeps it", () => {
+            const events = [];
+            const submenuCommand = host.allocateCommand("submenu");
+            const stayCommand = host.allocateCommand("stay");
+            host.on("command", ev => {
+                if (ev.id === submenuCommand) host.showMenu("submenu", [{ title: "Stay", cmd: stayCommand, stayOpen: true }]);
+            });
+            host.on("menuclose", ev => events.push(`menuclose:${ev.id}`));
+            host.on("wheelmode", () => events.push("wheelmode"));
+
+            host.showMenu("parent", [{ title: "Open", cmd: submenuCommand }]);
+            fake.selectMenuItem("Open");
+            fake.selectMenuItem("Stay");
+
+            assert.deepEqual(events, ["menuclose:parent"]);
+            assert.equal(fake.currentMenu().id, "submenu");
+            assert.equal(host.getUIMode(), "menu");
+        });
+
         test("records table launches and plays the game events the test fires", () => {
             const events = [];
             host.on("gamestarted", ev => events.push(`gamestarted:${ev.game.configId}:${host.getUIMode()}`));

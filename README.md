@@ -16,10 +16,10 @@ Everything is plain JavaScript run by PinballY itself: no build step, no depende
 - **Table of the day.** One pick per day: a table you've never played, or else the one you played longest ago.
 - **Table of the week.** One purely random pick per week, Monday to Sunday.
 - **Random table.** The wheel spins to a random table with a "wheel of fortune" animation (fast start, slow finish), then launches it.
-- **Main menu entries.** "Launch Table of the Day", "Launch Table of the Week", "Start Random Game" and a shortcut to "Table Setup" are added right after "Play".
+- **Main menu entries.** "Achievement List" (with the achievements add-on), a shortcut to "Table Setup", "Start Random Game", "Launch Table of the Day" and "Launch Table of the Week" are added right after "Play", in that order.
 - **"Original Tables" filter.** Added to the "Filter by Manufacturer" menu. It lists every table except the community-made ones (see `communityTablesManufacturer` in the configuration below).
 
-**Achievements.** A congratulations dialog appears when you're back at the wheel. Each achievement is shown only once.
+**Achievements.** A congratulations dialog appears when you're back at the wheel. Each achievement is shown only once. The "Achievement List" entry of the main menu shows every achievement by family (collection, play time, streaks, sessions, manufacturers, decades, categories), with the unlocked ones checked at the top.
 - **First table.** Your very first table played.
 - **Collection.** 10, 25, 50, 75 and 100 % of your collection played.
 - **Completion.** All the tables of a manufacturer, of a decade or of a category played.
@@ -145,10 +145,11 @@ tests\                   node tests (never loaded by PinballY)
 
 To add an add-on, create its file at the root, then register it in `main.js` (`import` and `SCRIPTS`) and in `addOns` in `common\config.js`. Code shared by several add-ons goes in `common\`.
 
-Three shared modules carry most of the logic:
+Four shared modules carry most of the logic:
 - **PinballY host** (`common/pinbally_host.js`). Everything the Period Table and wheel dialog modules take from PinballY: settings, clock, visible tables, main window menus, UI mode and events, commands, table launch. It passes straight through to PinballY; the tests replace it with an in-memory fake. The other add-ons and helpers still use PinballY's globals directly.
 - **Period Table** (`common/period_table.js`). One module for both the table of the day and the table of the week: it picks the table once per period and keeps it, launches it, and keeps its streak. A period counts in the streak when its table actually starts playing. Add-ons share one instance of each through `getTableOfTheDay()` and `getTableOfTheWeek()`.
 - **Wheel dialog** (`common/wheel_dialog.js`). Add-ons `submit()` a dialog description (message, buttons with their actions, priority) to the queue returned by `getWheelDialogs()`. It shows the dialogs one at a time, only when the wheel is free, in a fixed priority order (startup prompt, then achievements, then rating prompt), and moves on as soon as one closes. The order of add-ons in `main.js` never decides which dialog comes first.
+- **Main menu** (`common/main_menu.js`). Add-ons `add()` their main menu entries (label, action, position) to the module returned by `getMainMenu()`. It places them right after "Play" in a fixed position order, so the order of add-ons in `main.js` never decides where an entry lands.
 
 The conventions, enforced in review:
 - **Language.** Code, comments and log messages are in English.
@@ -159,7 +160,8 @@ The conventions, enforced in review:
 - **Settings.**
   - Read typed values with `optionSettings.getInt` / `getFloat` / `getBool`, because `get()` always returns a string.
   - Don't call `optionSettings.save()`: PinballY saves on its own.
-- **Dialogs.** Submit them to the wheel dialog module, which waits for the wheel to be free. A menu opened directly must only open when `mainWindow.getUIMode().mode === "wheel"`; otherwise, wait for the `wheelmode` event.
+- **Dialogs.** Submit spontaneous dialogs (announcements, prompts) to the wheel dialog module, which waits for the wheel to be free. A menu the player opens (such as the Achievement List) opens directly. Any other menu opened directly must only open when `mainWindow.getUIMode().mode === "wheel"`; otherwise, wait for the `wheelmode` event.
+- **Main menu entries** are added through `getMainMenu().add(...)` with a position from `MAIN_MENU_POSITION`.
 - **Menu separators** are written `{ cmd: -1 }`.
 
 **Tests.** From the project folder, run `node --test` (Node.js 22 or later, nothing to install). The tests run the add-ons on an in-memory fake PinballY (`tests/fake_pinbally_host.js`), the test twin of `common/pinbally_host.js`. `tests/persisted_data_pinning.test.js` locks the saved settings keys and Achievement IDs: if it fails, a change would lose players' progress.

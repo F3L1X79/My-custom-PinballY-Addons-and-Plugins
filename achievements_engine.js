@@ -4,6 +4,7 @@
 // the wheel dialog module as a congratulations dialog. That module shows
 // them one at a time once the wheel is free; an Achievement becomes
 // Notified when its dialog is shown, acknowledged or dismissed.
+// Also adds the Achievement List entry to the main menu, right after "Play".
 // ============================================================
 
 import { evaluateAchievements, markNotified } from "./common/achievements.js";
@@ -15,6 +16,9 @@ import { buildDecadeCompletionAchievements } from "./achievements/decade_complet
 import { buildCategoryCompletionAchievements } from "./achievements/category_completion.js";
 import { buildSessionMilestoneAchievements } from "./achievements/session_milestones.js";
 import { getWheelDialogs, DIALOG_PRIORITY } from "./common/wheel_dialog.js";
+import { getMainMenu, MAIN_MENU_POSITION } from "./common/main_menu.js";
+import { createAchievementList } from "./common/achievement_list.js";
+import { createPinballYHost } from "./common/pinbally_host.js";
 import lang from "./common/i18n.js";
 import { safeHandler } from "./common/safe_handler.js";
 
@@ -36,6 +40,14 @@ function getAllAchievements() {
 export default function init() {
     const { achievements: TEXT } = lang;
     const wheelDialogs = getWheelDialogs();
+
+    const achievementList = createAchievementList(createPinballYHost(), getAllAchievements);
+    getMainMenu().add({
+        name: "achievementList",
+        label: lang.achievementList.menuEntry,
+        position: MAIN_MENU_POSITION.ACHIEVEMENT_LIST,
+        action: achievementList.open,
+    });
     // Achievements handed to the wheel dialog module. They are not Notified
     // until shown, so later checks find the waiting ones again.
     const submittedIds = new Set();

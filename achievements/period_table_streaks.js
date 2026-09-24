@@ -4,6 +4,7 @@
 // Reads the Streaks kept by common/period_table.js; writes nothing.
 // ============================================================
 
+import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 import { getTableOfTheDay, getTableOfTheWeek } from "../common/period_table.js";
 
@@ -20,6 +21,7 @@ export function buildPeriodTableStreakAchievements() {
     for (const days of dailyThresholds) {
         achievements.push({
             id: `tableOfTheDayStreak:${days}`,
+            family: ACHIEVEMENT_FAMILY.STREAKS,
             getTitle: () => TEXT.dailyStreakTitle(days),
             getDescription: () => TEXT.dailyStreakDescription(days),
             checkUnlocked: () => tableOfTheDay.getStreak() >= days,
@@ -29,6 +31,7 @@ export function buildPeriodTableStreakAchievements() {
     for (const weeks of weeklyThresholds) {
         achievements.push({
             id: `tableOfTheWeekStreak:${weeks}`,
+            family: ACHIEVEMENT_FAMILY.STREAKS,
             getTitle: () => TEXT.weeklyStreakTitle(weeks),
             getDescription: () => TEXT.weeklyStreakDescription(weeks),
             checkUnlocked: () => tableOfTheWeek.getStreak() >= weeks,

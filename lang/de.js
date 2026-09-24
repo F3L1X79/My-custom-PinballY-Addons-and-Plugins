@@ -200,4 +200,20 @@ export default {
         unlockedIntro: (title, description) => `[Erfolg freigeschaltet]\n\n${title}\n${description}`,
         acknowledge: "Super!",
     },
+
+    achievementList: {
+        menuEntry: "Erfolgsliste",
+        totalLine: (unlockedCount, totalCount) => `Gesamt: ${unlockedCount}/${totalCount}`,
+        familyLine: (family, unlockedCount, totalCount) => `${family} (${unlockedCount}/${totalCount})`,
+        back: "Zurück",
+        families: {
+            collection: "Sammlung",
+            playTime: "Spielzeit",
+            streaks: "Serien",
+            sessions: "Sitzungen",
+            manufacturers: "Hersteller",
+            decades: "Jahrzehnte",
+            categories: "Kategorien",
+        },
+    },
 };

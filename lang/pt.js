@@ -200,4 +200,20 @@ export default {
         unlockedIntro: (title, description) => `[Conquista desbloqueada]\n\n${title}\n${description}`,
         acknowledge: "Incrível!",
     },
+
+    achievementList: {
+        menuEntry: "Lista de conquistas",
+        totalLine: (unlockedCount, totalCount) => `Total: ${unlockedCount}/${totalCount}`,
+        familyLine: (family, unlockedCount, totalCount) => `${family} (${unlockedCount}/${totalCount})`,
+        back: "Voltar",
+        families: {
+            collection: "Coleção",
+            playTime: "Tempo de jogo",
+            streaks: "Sequências",
+            sessions: "Sessões",
+            manufacturers: "Fabricantes",
+            decades: "Décadas",
+            categories: "Categorias",
+        },
+    },
 };
