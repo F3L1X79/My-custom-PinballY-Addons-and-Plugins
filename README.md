@@ -134,6 +134,7 @@ main.js                  entry point and add-on list
 achievements\            achievement definitions
 common\                  shared code: config, i18n, safe_handler, pickers, trackers...
 lang\                    translations
+tests\                   node tests (never loaded by PinballY)
 ```
 
 To add an add-on, create its file, then register it in `main.js` (`import` and `SCRIPTS`) and in `config.scripts.enabled`.
@@ -149,6 +150,8 @@ The conventions, enforced in review:
   - Don't call `optionSettings.save()`: PinballY saves on its own.
 - **Dialogs.** Only open a dialog when `mainWindow.getUIMode().mode === "wheel"`. Otherwise, wait for the `wheelmode` event.
 - **Menu separators** are written `{ cmd: -1 }`.
+
+**Tests.** From the project folder, run `node --test` (Node.js 22 or later, nothing to install). The tests run the add-ons on an in-memory fake PinballY (`tests/fake_pinbally_host.js`), the test twin of `common/pinbally_host.js`. `tests/persisted_data_pinning.test.js` locks the saved settings keys and Achievement IDs: if it fails, a change would lose players' progress.
 
 The PinballY scripting reference is in PinballY's help (`PinballY\Help\Javascript.html`, also [online](https://mjrnet.org/pinscape/downloads/PinballY/Help/PinballY.html)). Official examples are in [PinballY-Addons-and-Examples](https://github.com/PinballY/PinballY-Addons-and-Examples).
 

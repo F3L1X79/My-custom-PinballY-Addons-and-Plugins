@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // Contract tests for the PinballY host: the same behaviours are checked on
 // the in-memory fake host and on the production adapter running over the
 // fake PinballY globals, so both adapters stay interchangeable.
@@ -9,6 +9,8 @@ import { describe, test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { createFakePinballYHost } from "./fake_pinbally_host.js";
 import { createPinballYHost } from "../common/pinbally_host.js";
+
+const NOW = new Date(2026, 8, 23, 10, 0, 0);
 
 const TABLES = [
     { id: 1, configId: "Medieval Madness (Williams 1997)", title: "Medieval Madness", isHidden: false },
@@ -28,7 +30,7 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
         let uninstallGlobals = () => {};
 
         beforeEach(() => {
-            fake = createFakePinballYHost({ now: new Date(2026, 8, 23, 10, 0, 0), tables: TABLES });
+            fake = createFakePinballYHost({ now: NOW, tables: TABLES });
             if (usesGlobals) uninstallGlobals = fake.installGlobals();
             host = createHost(fake);
         });
@@ -61,7 +63,7 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
         });
 
         test("gives the date set by the test, and moves it forward", () => {
-            assert.equal(host.now().getTime(), new Date(2026, 8, 23, 10, 0, 0).getTime());
+            assert.equal(host.now().getTime(), NOW.getTime());
 
             fake.advanceTime(90 * 60 * 1000);
             assert.equal(host.now().getTime(), new Date(2026, 8, 23, 11, 30, 0).getTime());
@@ -129,6 +131,7 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
             const game = host.getGameInfo("Medieval Madness (Williams 1997)");
             host.playGame(game);
             assert.deepEqual(fake.launches().map(launched => launched.configId), [game.configId]);
+            assert.equal(host.getUIMode(), "running");
 
             fake.gameStarted(game);
             fake.gameOver(game);
@@ -143,10 +146,10 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
 
 describe("fake PinballY globals", () => {
     test("the global Date follows the fake host clock until uninstalled", () => {
-        const fake = createFakePinballYHost({ now: new Date(2026, 8, 23, 10, 0, 0) });
+        const fake = createFakePinballYHost({ now: NOW });
         const uninstall = fake.installGlobals();
         try {
-            assert.equal(new Date().getTime(), new Date(2026, 8, 23, 10, 0, 0).getTime());
+            assert.equal(new Date().getTime(), NOW.getTime());
             fake.advanceTime(1000);
             assert.equal(Date.now(), new Date(2026, 8, 23, 10, 0, 1).getTime());
             assert.equal(new Date("2020-01-01T00:00:00Z").toISOString(), "2020-01-01T00:00:00.000Z");

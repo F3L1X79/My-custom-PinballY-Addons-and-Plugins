@@ -1,0 +1,195 @@
+﻿// ============================================================
+// Pinning test: starts the add-ons through main.js on the fake PinballY
+// globals, plays a scripted session on a fixture collection, and locks the
+// exact settings keys written (Period Table locks, Streaks, Notified flags,
+// session stats) and every Achievement ID produced. These strings are
+// players' saved progress: this test must keep passing unchanged.
+// ============================================================
+
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import config from "../common/config.js";
+
+// Wednesday 23 September 2026, 10:00 local time: its week starts Monday 21.
+const NOW = new Date(2026, 8, 23, 10, 0, 0);
+const SECONDS_PER_HOUR = 3600;
+
+const TABLES = [
+    {
+        id: 1, configId: "Medieval Madness (Williams 1997)", title: "Medieval Madness (Williams 1997)",
+        manufacturer: "Williams", year: 1997, categories: ["Fantasy"],
+        playCount: 5, playTime: 60 * SECONDS_PER_HOUR, lastPlayed: new Date(2025, 0, 1), rating: 4, isHidden: false,
+    },
+    {
+        id: 2, configId: "Attack from Mars (Bally 1995)", title: "Attack from Mars (Bally 1995)",
+        manufacturer: "Bally", year: 1995, categories: ["SciFi", "Classic"],
+        playCount: 3, playTime: 50 * SECONDS_PER_HOUR, lastPlayed: new Date(2026, 5, 1), rating: 5, isHidden: false,
+    },
+    {
+        id: 3, configId: "Space Trip (VPX Community 2021)", title: "Space Trip (VPX Community 2021)",
+        manufacturer: "VPX Community", year: 2021, categories: [],
+        playCount: 1, playTime: 100, lastPlayed: new Date(2026, 7, 1), rating: 3, isHidden: false,
+    },
+    {
+        id: 4, configId: "Homebrew Table", title: "Homebrew Table",
+        manufacturer: "", year: 0, categories: [],
+        playCount: 2, playTime: 200, lastPlayed: new Date(2026, 8, 1), rating: 2, isHidden: false,
+    },
+    // Hidden: must produce no Gottlieb, 1970s or "Retro" achievement.
+    {
+        id: 5, configId: "Hidden Table (Gottlieb 1978)", title: "Hidden Table (Gottlieb 1978)",
+        manufacturer: "Gottlieb", year: 1978, categories: ["Retro"],
+        playCount: 0, playTime: 0, lastPlayed: null, rating: -1, isHidden: true,
+    },
+];
+
+const EXPECTED_ACHIEVEMENT_IDS = [
+    "categoryCompletion:Classic",
+    "categoryCompletion:Fantasy",
+    "categoryCompletion:SciFi",
+    "collectionMilestone:100percent",
+    "collectionMilestone:10percent",
+    "collectionMilestone:25percent",
+    "collectionMilestone:50percent",
+    "collectionMilestone:75percent",
+    "collectionMilestone:firstTable",
+    "decadeCompletion:1990s",
+    "decadeCompletion:2020s",
+    "grandReturn",
+    "manufacturerCompletion:Bally",
+    "manufacturerCompletion:VPX Community",
+    "manufacturerCompletion:Williams",
+    "marathon:30",
+    "marathon:60",
+    "playTimeMilestone:100h",
+    "playTimeMilestone:10h",
+    "playTimeMilestone:1h",
+    "playTimeMilestone:50h",
+    "playTimeMilestone:5h",
+    "rageQuit",
+    "tableOfTheDayStreak:3",
+    "tableOfTheDayStreak:30",
+    "tableOfTheDayStreak:7",
+    "tableOfTheWeekStreak:12",
+    "tableOfTheWeekStreak:4",
+];
+
+const EXPECTED_FIXED_KEYS = [
+    "custom.sessionStats.grandReturnUnlocked",
+    "custom.sessionStats.longestSeconds",
+    "custom.sessionStats.shortestSeconds",
+    "custom.streaks.tableOfTheDay.currentStreak",
+    "custom.streaks.tableOfTheDay.lastPeriod",
+    "custom.streaks.tableOfTheDay.longestStreak",
+    "custom.streaks.tableOfTheWeek.currentStreak",
+    "custom.streaks.tableOfTheWeek.lastPeriod",
+    "custom.streaks.tableOfTheWeek.longestStreak",
+    "custom.tableOfTheDay.configId",
+    "custom.tableOfTheDay.period",
+    "custom.tableOfTheWeek.configId",
+    "custom.tableOfTheWeek.period",
+];
+
+const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";
+const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
+
+// Lets the deferred achievement checks (setTimeout 0) run.
+const settle = () => new Promise(resolve => setTimeout(resolve, 10));
+
+// The add-ons involved in persisted data; the others would need more
+// PinballY globals and write nothing that is pinned here.
+const ADD_ONS_UNDER_TEST = ["customMenuCommands", "sessionStatsTracker", "achievements", "ratingPrompt", "startupChoicePrompt"];
+
+// Fixed here so the pinned IDs don't depend on the player's configuration;
+// changing the shared config object is safe since each test file runs in
+// its own process.
+function useFixtureConfig() {
+    for (const key of Object.keys(config.scripts.enabled)) {
+        config.scripts.enabled[key] = ADD_ONS_UNDER_TEST.includes(key);
+    }
+    config.translation.enabled = false;
+    Object.assign(config.achievements, {
+        collectionPercentThresholds: [10, 25, 50, 75, 100],
+        playTimeThresholdsHours: [1, 5, 10, 50, 100],
+        marathonThresholdsMinutes: [30, 60],
+        rageQuitThresholdSeconds: 30,
+        grandReturnThresholdDays: 365,
+    });
+}
+
+async function playLastLaunch(fake, durationSeconds) {
+    const launches = fake.launches();
+    const game = launches[launches.length - 1];
+    fake.gameStarted(game);
+    await settle();
+    fake.advanceTime(durationSeconds * 1000);
+    fake.gameOver(game);
+    await settle();
+    return game;
+}
+
+async function closeEveryDialog(fake, closeDialog) {
+    for (let guard = 0; fake.currentMenu() && guard < 100; guard++) {
+        closeDialog();
+        await settle();
+    }
+    assert.equal(fake.currentMenu(), null, "dialogs kept opening");
+}
+
+test("persisted settings keys and Achievement IDs stay byte-identical", async () => {
+    const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
+    fake.seedSettings({
+        // One Period short of the longest Streak Achievements.
+        "custom.streaks.tableOfTheDay.lastPeriod": "2026-09-22",
+        "custom.streaks.tableOfTheDay.currentStreak": 29,
+        "custom.streaks.tableOfTheDay.longestStreak": 29,
+        "custom.streaks.tableOfTheWeek.lastPeriod": "2026-09-14",
+        "custom.streaks.tableOfTheWeek.currentStreak": 11,
+        "custom.streaks.tableOfTheWeek.longestStreak": 11,
+        // Every table last played two years ago, for the grand return.
+        ...Object.fromEntries(TABLES.map(table =>
+            [PREVIOUS_PLAY_KEY_PREFIX + table.configId, new Date(2024, 8, 1).toISOString()])),
+    });
+    // Never uninstalled: node --test runs each test file in its own process.
+    fake.installGlobals();
+
+    useFixtureConfig();
+    const { default: lang } = await import("../common/i18n.js");
+    await import("../main.js");
+    await settle();
+
+    // Startup prompt: launch the Table of the Day, play a long session, and
+    // acknowledge every Achievement dialog.
+    fake.selectMenuItem(lang.startupPrompt.tableOfTheDay);
+    await settle();
+    const dayTable = await playLastLaunch(fake, 61 * 60);
+    await closeEveryDialog(fake, () => {
+        const canAcknowledge = fake.currentMenu().items.some(item => item.title === lang.achievements.acknowledge);
+        if (canAcknowledge) fake.selectMenuItem(lang.achievements.acknowledge);
+        else fake.closeMenu();
+    });
+
+    // Main menu: launch the Table of the Week, play a very short session, and
+    // dismiss every Achievement dialog.
+    fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }]);
+    fake.selectMenuItem(lang.customMenuLabels.tableOfTheWeek);
+    await settle();
+    const weekTable = await playLastLaunch(fake, 10);
+    await closeEveryDialog(fake, () => fake.closeMenu());
+
+    const writtenKeys = [...fake.writtenSettingsKeys()];
+
+    const notifiedIds = writtenKeys
+        .filter(key => key.startsWith(NOTIFIED_KEY_PREFIX))
+        .map(key => key.slice(NOTIFIED_KEY_PREFIX.length))
+        .sort();
+    assert.deepEqual(notifiedIds, EXPECTED_ACHIEVEMENT_IDS);
+
+    const expectedPreviousPlayKeys = [...new Set([dayTable.configId, weekTable.configId])]
+        .map(configId => PREVIOUS_PLAY_KEY_PREFIX + configId);
+    const otherKeys = writtenKeys.filter(key => !key.startsWith(NOTIFIED_KEY_PREFIX)).sort();
+    assert.deepEqual(otherKeys, [...EXPECTED_FIXED_KEYS, ...expectedPreviousPlayKeys].sort());
+
+    assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
+});
