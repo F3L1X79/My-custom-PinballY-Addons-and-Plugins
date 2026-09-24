@@ -1,0 +1,17 @@
+## PinballY reference
+
+Before using a PinballY API, read `.claude/reference/pinbally-help.md` (digest of the full local help in `../Help/`) and `.claude/reference/pinbally-examples.md` (idioms from the official PinballY-Addons-and-Examples repo). Go back to `../Help/*.html` for details.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues (`F3L1X79/PinballY-Arcade-Addons`) via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.

@@ -1,13 +1,11 @@
-.claude/
+#AI-related
 .agents/
-CLAUDE.md
-AGENTS.md
+.claude/rules/
+.claude/skills/
+.scratch/
 skills-lock.json
-docs/agents/
-docs/adr/
-CONTEXT.md
-CONTEXT-MAP.md
-.scratch
+
+# This folder is already provided by PinballY
 System/
 
 # Player settings (see .env.example)
