@@ -241,6 +241,12 @@ export default {
             100: "Eu adoooooro o acaso",
         },
         randomGamesDescription: (count) => `Você jogou ${count} mesas aleatórias!`,
+        dayManufacturersTitles: {
+            3: "Volta ao mundo expressa",
+            5: "Borboleta do pinball",
+            8: "Infiel em série",
+        },
+        dayManufacturersDescription: (count) => `Você jogou mesas de ${count} fabricantes diferentes no mesmo dia!`,
         unlockedIntro: (title, description) => `[Conquista desbloqueada]\n\n${title}\n${description}`,
         acknowledge: "Incrível!",
     },

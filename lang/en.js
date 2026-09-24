@@ -155,6 +155,12 @@ export default {
             100: "I Looooove Chance",
         },
         randomGamesDescription: (count) => `You've played ${count} Random Games!`,
+        dayManufacturersTitles: {
+            3: "Express World Tour",
+            5: "Pinball Butterfly",
+            8: "Serial Unfaithful",
+        },
+        dayManufacturersDescription: (count) => `You've played tables from ${count} different manufacturers on the same day!`,
         unlockedIntro: (title, description) => `[Achievement Unlocked]\n\n${title}\n${description}`,
         acknowledge: "Awesome!",
     },

@@ -241,6 +241,12 @@ export default {
             100: "Me encaaaanta el azar",
         },
         randomGamesDescription: (count) => `¡Has jugado ${count} mesas al azar!`,
+        dayManufacturersTitles: {
+            3: "Vuelta al mundo exprés",
+            5: "Mariposa del pinball",
+            8: "Infiel en serie",
+        },
+        dayManufacturersDescription: (count) => `¡Has jugado mesas de ${count} fabricantes distintos el mismo día!`,
         unlockedIntro: (title, description) => `[Logro desbloqueado]\n\n${title}\n${description}`,
         acknowledge: "¡Genial!",
     },

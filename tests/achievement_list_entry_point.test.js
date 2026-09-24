@@ -113,6 +113,7 @@ test("the Achievement List entry follows Play and lists the real Achievements by
     ]);
     assert.deepEqual(openFamily("manufacturers"), [
         ...["Gottlieb", "Stern", "Williams"].map(name => `✓ ${ACHIEVEMENT.manufacturerCompletionTitle(name)}`),
+        ...[3, 5, 8].map(count => `  ${ACHIEVEMENT.dayManufacturersTitles[count]}`),
         ...["Bally", "Zaccaria"].map(name => `  ${ACHIEVEMENT.manufacturerCompletionTitle(name)}`),
     ]);
     assert.deepEqual(openFamily("decades"), [

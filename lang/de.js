@@ -241,6 +241,12 @@ export default {
             100: "Ich liiiiebe den Zufall",
         },
         randomGamesDescription: (count) => `Sie haben ${count} zufällige Tische gespielt!`,
+        dayManufacturersTitles: {
+            3: "Weltreise im Eiltempo",
+            5: "Flipper-Schmetterling",
+            8: "Serien-Untreuer",
+        },
+        dayManufacturersDescription: (count) => `Sie haben am selben Tag Tische von ${count} verschiedenen Herstellern gespielt!`,
         unlockedIntro: (title, description) => `[Erfolg freigeschaltet]\n\n${title}\n${description}`,
         acknowledge: "Super!",
     },

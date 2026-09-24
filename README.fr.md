@@ -17,7 +17,8 @@ Des add-ons JavaScript pour [PinballY](https://mjrnet.org/pinscape/PinballY.php)
   - tables du jour et de la semaine : première partie, total de jours ou de semaines joués, séries ;
   - sessions : marathon de 30 ou 60 minutes, rage quit (5 secondes ou moins), grand retour après 31 jours ;
   - table au hasard : 10, 50 et 100 tables au hasard jouées ;
-  - complétion d'un fabricant, d'une décennie ou d'une catégorie.
+  - fabricants : 3, 5 ou 8 fabricants différents joués le même jour, complétion d'un fabricant ;
+  - complétion d'une décennie ou d'une catégorie.
 - **Interface** : PinballY traduit en français, allemand, espagnol, italien ou portugais ; une ligne d'état sur la table sélectionnée ; un rappel pour noter une table après 60 minutes de jeu.
 - **Lancement** : pas de flash noir entre la roue et la table, un son de lancement optionnel, le backglass masqué pendant une partie.
 

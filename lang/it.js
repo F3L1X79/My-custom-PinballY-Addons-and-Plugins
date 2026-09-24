@@ -240,6 +240,12 @@ export default {
             100: "Adoooooro il caso",
         },
         randomGamesDescription: (count) => `Hai giocato ${count} tavoli a caso!`,
+        dayManufacturersTitles: {
+            3: "Giro del mondo express",
+            5: "Farfalla del flipper",
+            8: "Infedele seriale",
+        },
+        dayManufacturersDescription: (count) => `Hai giocato tavoli di ${count} produttori diversi nello stesso giorno!`,
         unlockedIntro: (title, description) => `[Obiettivo sbloccato]\n\n${title}\n${description}`,
         acknowledge: "Fantastico!",
     },

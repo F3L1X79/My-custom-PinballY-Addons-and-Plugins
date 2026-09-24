@@ -17,7 +17,8 @@ JavaScript add-ons for [PinballY](https://mjrnet.org/pinscape/PinballY.php) that
   - tables of the day and week: first play, total days or weeks played, streaks;
   - sessions: 30 or 60 minute marathon, rage quit (5 seconds or less), grand comeback after 31 days;
   - random game: 10, 50 and 100 random tables played;
-  - completion of a manufacturer, a decade or a category.
+  - manufacturers: 3, 5 or 8 different manufacturers played the same day, completion of a manufacturer;
+  - completion of a decade or a category.
 - **Interface**: PinballY translated into French, German, Spanish, Italian or Portuguese; a status line about the selected table; a reminder to rate a table after 60 minutes of play.
 - **Launch**: no black flash between the wheel and the table, an optional launch sound, the backglass hidden while a table runs.
 

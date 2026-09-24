@@ -2,8 +2,9 @@
 // Pinning test: starts the add-ons through main.js on the fake PinballY
 // globals, plays a scripted session on a fixture collection, and locks the
 // exact settings keys written (Period Table locks, Streaks, Periods Played,
-// Random Games played, Notified flags, session stats) and every Achievement ID produced. These
-// strings are players' saved progress: this test must keep passing unchanged.
+// Random Games played, Day's Manufacturers, Notified flags, session stats)
+// and every Achievement ID produced. These strings are players' saved
+// progress: this test must keep passing unchanged.
 // ============================================================
 
 import { test } from "node:test";
@@ -54,6 +55,9 @@ const EXPECTED_ACHIEVEMENT_IDS = [
     "collectionMilestone:50percent",
     "collectionMilestone:75percent",
     "collectionMilestone:firstTable",
+    "dayManufacturers:3",
+    "dayManufacturers:5",
+    "dayManufacturers:8",
     "decadeCompletion:1990s",
     "decadeCompletion:2020s",
     "grandReturn",
@@ -88,8 +92,11 @@ const EXPECTED_ACHIEVEMENT_IDS = [
 
 const EXPECTED_FIXED_KEYS = [
     "custom.randomGame.launchCount",
+    "custom.sessionStats.dayManufacturers.day",
+    "custom.sessionStats.dayManufacturers.list",
     "custom.sessionStats.grandReturnUnlocked",
     "custom.sessionStats.longestSeconds",
+    "custom.sessionStats.mostManufacturersInADay",
     "custom.sessionStats.shortestSeconds",
     "custom.streaks.tableOfTheDay.currentStreak",
     "custom.streaks.tableOfTheDay.lastPeriod",
@@ -160,6 +167,12 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
         "custom.streaks.tableOfTheWeek.periodsPlayed": 51,
         // One Random Game short of the last Random Game fan Achievement.
         "custom.randomGame.launchCount": 99,
+        // Seven manufacturers outside the collection already played today:
+        // any manufacturer played next unlocks the last multi-manufacturer
+        // Achievement.
+        "custom.sessionStats.dayManufacturers.day": "2026-09-23",
+        "custom.sessionStats.dayManufacturers.list": JSON.stringify(["A", "B", "C", "D", "E", "F", "G"]),
+        "custom.sessionStats.mostManufacturersInADay": 7,
         // Every table last played two years ago, for the grand return.
         ...Object.fromEntries(TABLES.map(table =>
             [PREVIOUS_PLAY_KEY_PREFIX + table.configId, new Date(2024, 8, 1).toISOString()])),

@@ -1,0 +1,115 @@
+// ============================================================
+// Multi-manufacturer day Achievements, started through main.js on the fake
+// PinballY globals: tables of three different manufacturers started the
+// same day unlock the first one, even after a very short session; a table
+// with no manufacturer and a repeated manufacturer don't count; a new
+// calendar day starts over, and the Achievement stays Unlocked in the
+// Achievement List.
+// ============================================================
+
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import config from "../common/config.js";
+
+const NOW = new Date(2026, 8, 23, 10, 0, 0);
+const SESSION_MS = 5 * 60 * 1000;
+const VERY_SHORT_SESSION_MS = 1000;
+
+// Never counted as played and never replayed, so the Day's Manufacturers
+// are the only thing these plays can unlock.
+function table(id, title, manufacturer, isHidden = false) {
+    return {
+        id, configId: title, title, manufacturer, year: 0, categories: [],
+        playCount: 0, playTime: 0, lastPlayed: null, rating: -1, isHidden,
+    };
+}
+
+const WILLIAMS = table(1, "Medieval Madness", "Williams");
+const OTHER_WILLIAMS = table(2, "Twilight Zone", "Williams");
+const HOMEBREW = table(3, "Homebrew Table", "");
+const BALLY = table(4, "Attack from Mars", "Bally");
+const HIDDEN_STERN = table(5, "Hidden Stern", "Stern", true);
+const GOTTLIEB = table(6, "Gottlieb Table", "Gottlieb");
+const DATA_EAST = table(7, "Data East Table", "Data East");
+// Kept as the Table of the Day and of the Week, so the plays above never
+// count as a Period Table play.
+const PERIOD_TABLE = table(8, "Period Table", "");
+
+const DIALOG_ID = "achievementUnlocked";
+
+const settle = () => new Promise(resolve => setTimeout(resolve, 10));
+
+test("three manufacturers in one calendar day unlock the first multi-manufacturer Achievement for good", async () => {
+    const fake = createFakePinballYHost({
+        now: NOW,
+        tables: [WILLIAMS, OTHER_WILLIAMS, HOMEBREW, BALLY, HIDDEN_STERN, GOTTLIEB, DATA_EAST, PERIOD_TABLE],
+    });
+    fake.seedSettings({
+        "custom.tableOfTheDay.period": "2026-09-23",
+        "custom.tableOfTheDay.configId": PERIOD_TABLE.configId,
+        "custom.tableOfTheWeek.period": "2026-09-21",
+        "custom.tableOfTheWeek.configId": PERIOD_TABLE.configId,
+    });
+    // Never uninstalled: node --test runs each test file in its own process.
+    fake.installGlobals();
+    for (const key of Object.keys(config.addOns)) {
+        config.addOns[key] = ["sessionStatsTracker", "achievements"].includes(key);
+    }
+    config.language = "en";
+
+    const { default: lang } = await import("../common/i18n.js");
+    const TEXT = lang.achievements;
+    await import("../main.js");
+    await settle();
+
+    const dayManufacturersTitles = Object.values(TEXT.dayManufacturersTitles);
+    const announcements = () => fake.shownMenus().filter(menu => menu.id === DIALOG_ID).map(menu => menu.items[0].title);
+
+    // Returns the multi-manufacturer Achievements announced for this play;
+    // a very short session may announce others (rage quit).
+    async function play(game, sessionMs = SESSION_MS) {
+        const before = announcements().length;
+        fake.gameStarted(game);
+        await settle();
+        fake.advanceTime(sessionMs);
+        fake.gameOver(game);
+        await settle();
+        const announced = announcements().slice(before);
+        while (fake.currentMenu()) {
+            fake.selectMenuItem(TEXT.acknowledge);
+            await settle();
+        }
+        return announced.filter(title => dayManufacturersTitles.some(dayTitle => title.includes(dayTitle)));
+    }
+
+    assert.deepEqual(await play(WILLIAMS), []);
+    assert.deepEqual(await play(OTHER_WILLIAMS), [], "the same manufacturer counts once");
+    assert.deepEqual(await play(HOMEBREW), [], "a table with no manufacturer doesn't count");
+    assert.deepEqual(await play(BALLY), []);
+    assert.deepEqual(await play(HIDDEN_STERN, VERY_SHORT_SESSION_MS), [
+        TEXT.unlockedIntro(TEXT.dayManufacturersTitles[3], TEXT.dayManufacturersDescription(3)),
+    ], "a hidden table counts, even for a very short session");
+    assert.deepEqual(await play(GOTTLIEB), []);
+
+    // Four manufacturers yesterday: a fifth one would unlock the next
+    // Achievement if the day's set were not started over.
+    fake.setNow(new Date(2026, 8, 24, 10, 0, 0));
+    assert.deepEqual(await play(DATA_EAST), [], "a new calendar day starts a new set");
+
+    fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }]);
+    fake.selectMenuItem(lang.achievementList.menuEntry);
+    const manufacturersLine = fake.currentMenu().items
+        .find(item => item.title && item.title.includes(lang.achievementList.families.manufacturers));
+    fake.selectMenuItem(manufacturersLine.title);
+    const dayManufacturersItems = fake.currentMenu().items
+        .filter(item => dayManufacturersTitles.includes(item.title))
+        .map(({ title, checked }) => ({ title, checked }));
+    assert.deepEqual(dayManufacturersItems, [
+        { title: TEXT.dayManufacturersTitles[3], checked: true },
+        { title: TEXT.dayManufacturersTitles[5], checked: false },
+        { title: TEXT.dayManufacturersTitles[8], checked: false },
+    ]);
+
+    assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
+});

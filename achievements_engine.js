@@ -8,6 +8,7 @@
 // ============================================================
 
 import { evaluateAchievements, markNotified } from "./common/achievements.js";
+import { buildDayManufacturersAchievements } from "./achievements/day_manufacturers.js";
 import { buildManufacturerCompletionAchievements } from "./achievements/manufacturer_completion.js";
 import { buildCollectionCompletionAchievements } from "./achievements/collection_completion.js";
 import { buildPlayTimeTotalAchievements } from "./achievements/play_time_totals.js";
@@ -28,6 +29,7 @@ const DIALOG_ID = "achievementUnlocked";
 
 function getAllAchievements() {
     return [
+        ...buildDayManufacturersAchievements(),
         ...buildManufacturerCompletionAchievements(),
         ...buildCollectionCompletionAchievements(),
         ...buildPlayTimeTotalAchievements(),

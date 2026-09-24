@@ -244,6 +244,12 @@ export default {
             100: "J'adooooore le hasard",
         },
         randomGamesDescription: (count) => `Vous avez lancé ${count} tables au hasard !`,
+        dayManufacturersTitles: {
+            3: "Tour du monde express",
+            5: "Papillon du flipper",
+            8: "Infidèle en série",
+        },
+        dayManufacturersDescription: (count) => `Vous avez joué des tables de ${count} fabricants différents le même jour !`,
         unlockedIntro: (title, description) => `[Succès débloqué]\n\n${title}\n${description}`,
         acknowledge: "Youpi !",
     },
