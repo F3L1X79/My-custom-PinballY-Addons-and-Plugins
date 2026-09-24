@@ -1,11 +1,13 @@
 ﻿// ============================================================
 // In-memory fake PinballY host for the node tests. Offers the same
 // interface as common/pinbally_host.js, plus controls for the tests: set
-// the date, the table list and the wheel selection, seed settings, fire
+// the date (a manual clock that also runs the host's timers), the table
+// list, the wheel selection and the layout size, seed settings, fire
 // PinballY events, pick menu items, play launched games, and inspect shown
-// menus, launches and written settings keys. installGlobals() also
-// exposes it as PinballY's globals (and the global Date), so code not yet
-// on the host runs too.
+// menus, launches, written settings keys, drawing layers and sounds
+// played. installGlobals() also exposes it as PinballY's globals (and the
+// global Date, but not the global timers), so code not yet on the host
+// runs too.
 // Never loaded by PinballY.
 // ============================================================
 
@@ -19,14 +21,58 @@ const FIRST_CUSTOM_COMMAND = 1000;
 
 const TRUE_STRINGS = ["1", "true", "yes", "on"];
 
+// Rough text metrics for the fake StyledText: fixed-width characters and lines.
+const CHAR_WIDTH = 7;
+const LINE_HEIGHT = 20;
+
 // PinballY stores every setting as a string and converts on read.
 function toStoredString(value) {
     if (typeof value === "boolean") return value ? "1" : "0";
     return String(value);
 }
 
-export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {}) {
+// Records its runs and gives a plausible measure; drawing it writes its
+// whole text to the drawing context, where the fake layer records it.
+class FakeStyledText {
+    constructor(options = {}) {
+        this.options = options;
+        this.runs = [];
+    }
+
+    add(run) {
+        this.runs.push(typeof run === "string" ? { text: run } : run);
+    }
+
+    text() {
+        return this.runs.map(run => run.text).join("");
+    }
+
+    measure(width) {
+        const lines = this.text().split("\n");
+        const lineCount = lines.reduce(
+            (count, line) => count + Math.max(1, Math.ceil(line.length * CHAR_WIDTH / width)), 0);
+        const longest = Math.max(...lines.map(line => line.length));
+        return { width: Math.min(width, longest * CHAR_WIDTH), height: lineCount * LINE_HEIGHT };
+    }
+
+    draw(dc, rect) {
+        dc.drawText(this.text(), rect);
+    }
+}
+
+export function createFakePinballYHost({
+    now = new RealDate(),
+    tables = [],
+    layoutSize = { width: 1920, height: 1080 },
+    programFolder = "C:\\PinballY\\",
+} = {}) {
     let nowMs = now.getTime();
+    let currentLayoutSize = { ...layoutSize };
+    const layers = [];
+    const sounds = [];
+    // Pending timers, run in due order by advanceTime(): { id, dueMs, callback, intervalMs }.
+    let timers = [];
+    let nextTimerId = 1;
     let allTables = tables.map(table => ({ ...table }));
     // null = the wheel shows every visible table, in collection order.
     let wheelConfigIds = null;
@@ -38,6 +84,8 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
     const shownMenuList = [];
     let shownMenu = null;
     let uiMode = "wheel";
+    // "starting", "running" or "exiting" while a game is on, as in PinballY.
+    let runMode;
     const launchList = [];
     const logLines = [];
     const executedCommands = [];
@@ -78,7 +126,78 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
 
     function returnToWheel() {
         uiMode = "wheel";
+        runMode = undefined;
         fire("wheelmode");
+    }
+
+    function getFullUIMode() {
+        const mode = { mode: uiMode };
+        if (shownMenu) mode.menuID = shownMenu.id;
+        if (runMode) mode.runMode = runMode;
+        return mode;
+    }
+
+    function addTimer(callback, ms, intervalMs) {
+        // A zero interval would never let advanceTime() reach its target.
+        if (intervalMs !== undefined && !(intervalMs > 0)) {
+            throw new Error(`The fake host needs a positive interval, not ${intervalMs} ms.`);
+        }
+        const id = nextTimerId++;
+        timers.push({ id, dueMs: nowMs + ms, callback, intervalMs });
+        return id;
+    }
+
+    function removeTimer(id) {
+        timers = timers.filter(timer => timer.id !== id);
+    }
+
+    // Moves the clock forward, running every timer that falls due on the way
+    // at its own due time, earliest first (creation order on a tie).
+    function advanceTime(ms) {
+        const targetMs = nowMs + ms;
+        for (;;) {
+            const due = timers
+                .filter(timer => timer.dueMs <= targetMs)
+                .sort((a, b) => a.dueMs - b.dueMs || a.id - b.id)[0];
+            if (!due) break;
+            nowMs = due.dueMs;
+            if (due.intervalMs === undefined) removeTimer(due.id);
+            else due.dueMs += due.intervalMs;
+            due.callback();
+        }
+        nowMs = targetMs;
+    }
+
+    // A drawing layer that keeps only what the tests look at: the texts drawn
+    // since the last clear, its position and its alpha.
+    function createDrawingLayer(zIndex) {
+        let texts = [];
+        let position = { x: 0, y: 0 };
+        const dc = {
+            getSize: () => ({ ...currentLayoutSize }),
+            fillRect() {},
+            frameRect() {},
+            drawImage() {},
+            drawText: (text) => { texts.push(text); },
+        };
+        const layer = {
+            zIndex,
+            alpha: 1,
+            draw(drawFunction) {
+                texts = [];
+                drawFunction(dc);
+            },
+            clear() { texts = []; },
+            setPos(x, y) { position = { x, y }; },
+            texts: () => [...texts],
+            position: () => ({ ...position }),
+        };
+        layers.push(layer);
+        return layer;
+    }
+
+    function playSound(filePath) {
+        sounds.push(filePath);
     }
 
     function showMenu(id, items, options = {}) {
@@ -105,24 +224,38 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
     const host = {
         settings,
         now: () => new RealDate(nowMs),
+        setTimeout: (callback, ms) => addTimer(callback, ms),
+        clearTimeout: removeTimer,
+        setInterval: (callback, ms) => addTimer(callback, ms, ms),
+        clearInterval: removeTimer,
         getVisibleTables: () => allTables.filter(table => !table.isHidden),
         getWheelTables: () => (wheelConfigIds === null
             ? host.getVisibleTables()
             : wheelConfigIds.map(getGameInfo)),
         getGameInfo,
         getUIMode: () => uiMode,
+        getFullUIMode,
         showMenu,
         on,
+        createDrawingLayer,
+        createStyledText: (options) => new FakeStyledText(options),
         allocateCommand,
         getBuiltInCommand,
         // PinballY leaves the wheel as soon as a launch starts.
         playGame: (game) => {
             launchList.push(game);
             uiMode = "running";
+            runMode = "starting";
         },
+        getProgramFolder: () => programFolder,
+        playSound,
 
+        // Moves the date without running the timers.
         setNow(date) { nowMs = date.getTime(); },
-        advanceTime(ms) { nowMs += ms; },
+        advanceTime,
+        setLayoutSize(size) { currentLayoutSize = { ...size }; },
+        drawingLayers: () => [...layers],
+        soundsPlayed: () => [...sounds],
         setTables(newTables) { allTables = newTables.map(table => ({ ...table })); },
         // The current wheel selection, in wheel order (index 0 is the current table).
         setWheelTables(configIds) {
@@ -184,13 +317,16 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
         launches: () => [...launchList],
         gameStarted(game) {
             uiMode = "running";
+            runMode = "running";
             fire("gamestarted", { game });
         },
         gameOver(game) {
+            runMode = "exiting";
             fire("gameover", { game });
             returnToWheel();
         },
         launchError(game) {
+            runMode = "exiting";
             fire("launcherror", { game });
             returnToWheel();
         },
@@ -201,7 +337,10 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
         // Exposes this fake as PinballY's globals; returns the function that
         // restores the previous globals.
         installGlobals() {
-            const globalNames = ["optionSettings", "gameList", "mainWindow", "command", "logfile", "Date"];
+            const globalNames = [
+                "optionSettings", "gameList", "mainWindow", "command", "logfile", "Date",
+                "StyledText", "systemInfo", "createAutomationObject",
+            ];
             const previous = globalNames.map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]);
 
             class FakeDate extends RealDate {
@@ -228,13 +367,25 @@ export function createFakePinballYHost({ now = new RealDate(), tables = [] } = {
                 mainWindow: {
                     on,
                     showMenu,
-                    getUIMode: () => (shownMenu ? { mode: uiMode, menuID: shownMenu.id } : { mode: uiMode }),
+                    getUIMode: getFullUIMode,
                     playGame: host.playGame,
                     doCommand: (id) => { executedCommands.push(id); },
+                    createDrawingLayer,
                 },
                 command: { ...BUILT_IN_COMMANDS, allocate: allocateCommand },
                 logfile: { log: (text) => { logLines.push(text); } },
                 Date: FakeDate,
+                StyledText: FakeStyledText,
+                systemInfo: { programDir: programFolder },
+                // Only Windows Media Player, where setting the URL plays the
+                // file. Any other COM object throws, so common/config.js still
+                // falls back to its defaults when imported after this.
+                createAutomationObject: (progId) => {
+                    if (progId !== "WMPlayer.OCX.7") {
+                        throw new Error(`The fake host has no COM object "${progId}".`);
+                    }
+                    return { settings: {}, set URL(filePath) { playSound(filePath); } };
+                },
             });
 
             return function uninstallGlobals() {

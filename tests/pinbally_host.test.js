@@ -178,8 +178,76 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
                 "wheelmode:wheel",
             ]);
         });
+
+        test("draws styled text on a main-window drawing layer and records its position and alpha", () => {
+            fake.setLayoutSize({ width: 1080, height: 1920 });
+            const layer = host.createDrawingLayer(6500);
+            let size = null;
+            layer.draw(dc => {
+                size = dc.getSize();
+                const text = host.createStyledText({ textStyle: { font: "Segoe UI", size: 11 } });
+                text.add({ weight: 600, text: "Achievement unlocked\n" });
+                text.add("Play 5 tables in one day.");
+                const metrics = text.measure(300);
+                assert.ok(metrics.height > 0, `measured height ${metrics.height}`);
+                text.draw(dc, { x: 0, y: 0, width: 300, height: metrics.height });
+            });
+            layer.setPos(0, 0.25);
+            layer.alpha = 0.5;
+
+            assert.deepEqual(size, { width: 1080, height: 1920 });
+            const [recorded] = fake.drawingLayers();
+            assert.equal(recorded.zIndex, 6500);
+            assert.deepEqual(recorded.texts(), ["Achievement unlocked\nPlay 5 tables in one day."]);
+            assert.deepEqual(recorded.position(), { x: 0, y: 0.25 });
+            assert.equal(recorded.alpha, 0.5);
+        });
+
+        test("reports the run mode while a game starts, runs and exits", () => {
+            const runModes = [];
+            host.on("gameover", () => runModes.push(host.getFullUIMode().runMode));
+            const game = host.getGameInfo("Medieval Madness (Williams 1997)");
+
+            assert.equal(host.getFullUIMode().runMode, undefined);
+            host.playGame(game);
+            runModes.push(host.getFullUIMode().runMode);
+            fake.gameStarted(game);
+            runModes.push(host.getFullUIMode().runMode);
+            fake.gameOver(game);
+
+            assert.deepEqual(runModes, ["starting", "running", "exiting"]);
+            assert.deepEqual(host.getFullUIMode(), { mode: "wheel" });
+        });
+
+        test("gives the PinballY program folder and records the sounds played", () => {
+            assert.equal(host.getProgramFolder(), "C:\\PinballY\\");
+
+            host.playSound("C:\\Sounds\\achievement.mp3");
+            assert.deepEqual(fake.soundsPlayed(), ["C:\\Sounds\\achievement.mp3"]);
+        });
     });
 }
+
+describe("fake host timers", () => {
+    test("run on the manual clock as the test advances time, and can be cleared", () => {
+        const fake = createFakePinballYHost({ now: NOW });
+        const calls = [];
+        fake.setTimeout(() => calls.push(`timeout@${fake.now().getTime() - NOW.getTime()}`), 100);
+        const cleared = fake.setTimeout(() => calls.push("cleared"), 50);
+        fake.clearTimeout(cleared);
+        const interval = fake.setInterval(() => {
+            calls.push(`tick@${fake.now().getTime() - NOW.getTime()}`);
+            if (calls.length === 4) fake.clearInterval(interval);
+        }, 40);
+
+        fake.advanceTime(99);
+        assert.deepEqual(calls, ["tick@40", "tick@80"]);
+
+        fake.advanceTime(1000);
+        assert.deepEqual(calls, ["tick@40", "tick@80", "timeout@100", "tick@120"]);
+        assert.equal(fake.now().getTime() - NOW.getTime(), 1099);
+    });
+});
 
 describe("fake PinballY globals", () => {
     test("the global Date follows the fake host clock until uninstalled", () => {
