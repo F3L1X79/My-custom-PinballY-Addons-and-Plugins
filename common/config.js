@@ -39,6 +39,7 @@ const DEFAULTS = {
         forceBackglass: true,
         customMenuCommands: true,
         customFilter: true,
+        hallOfFame: true,
         sessionStatsTracker: true,
         achievements: true,
         seamlessLaunchOverlay: true,

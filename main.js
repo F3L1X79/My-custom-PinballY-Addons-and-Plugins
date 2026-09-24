@@ -14,6 +14,7 @@ import * as uiTranslation from "./ui_translation.js";
 import * as statusLineInfo from "./status_line_info.js";
 import * as customMenuCommands from "./custom_menu_commands.js";
 import * as customFilter from "./custom_filter.js";
+import * as hallOfFame from "./hall_of_fame.js";
 import * as seamlessLaunchOverlay from "./seamless_launch_overlay.js";
 import * as forceBackglass from "./force_backglass.js";
 import * as playLaunchSound from "./play_launch_sound.js";
@@ -41,6 +42,7 @@ const SCRIPTS = [
     { key: "statusLineInfo", module: statusLineInfo },
     { key: "customMenuCommands", module: customMenuCommands },
     { key: "customFilter", module: customFilter },
+    { key: "hallOfFame", module: hallOfFame },
     { key: "seamlessLaunchOverlay", module: seamlessLaunchOverlay },
 
     // Game session: windows, sound, stats, achievements, rating.

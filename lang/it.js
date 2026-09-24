@@ -159,8 +159,9 @@ export default {
         year: (position) => `Tavolo ${position}/[Filter.Count] - pubblicato nel [Game.Year].`,
     },
 
-    // Labels for menu items this project adds itself (see custom_menu_commands.js).
+    // Labels for menu items this project adds itself (see custom_menu_commands.js, custom_filter.js and hall_of_fame.js).
     customMenuLabels: {
+        hallOfFameFilter: "Hall of Fame",
         originalTablesFilter: "Tavoli originali",
         randomGame: "Avvia un tavolo casuale",
         tableOfTheDay: "Avvia il tavolo del giorno",

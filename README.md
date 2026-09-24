@@ -11,6 +11,7 @@ JavaScript add-ons for [PinballY](http://mjrnet.org/pinscape/PinballY.php) that 
 - **Random table**: a "wheel of fortune" animation, never the last played table.
 - **Main menu entries** after "Play": Achievement List, Table Setup, Random Game, Table of the Day, Table of the Week.
 - **"Original Tables" filter** in "Filter by Manufacturer": every table except the community-made ones.
+- **"Hall of Fame" filter** in the main menu: your ten most played tables, ranked by play time.
 - **Achievements**, each announced once by a small card in the bottom-right corner of the playfield screen that disappears on its own (never during a game; several stack, with an optional sound), and browsable by family in the "Achievement List":
   - collection: first table, then 10 to 100 % of your collection played;
   - play time: 1 to 100 hours;

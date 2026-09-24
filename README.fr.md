@@ -11,6 +11,7 @@ Des add-ons JavaScript pour [PinballY](http://mjrnet.org/pinscape/PinballY.php) 
 - **Table au hasard** : une animation « roue de la fortune », jamais la dernière table jouée.
 - **Entrées du menu principal** après « Jouer » : Succès personnels, Configuration de la table, table au hasard, table du jour, table de la semaine.
 - **Filtre « Tables Originales »** dans « Filtrer par fabricant » : toutes les tables sauf celles de la communauté.
+- **Filtre « Hall of Fame »** dans le menu principal : vos dix tables les plus jouées, classées par temps de jeu.
 - **Succès**, chacun annoncé une fois par une petite carte en bas à droite de l'écran du plateau, qui disparaît toute seule (jamais pendant une partie ; plusieurs cartes s'empilent, avec un son facultatif), et consultables par famille dans « Succès personnels » :
   - collection : première table, puis de 10 à 100 % de la collection jouée ;
   - temps de jeu : de 1 à 100 heures ;
