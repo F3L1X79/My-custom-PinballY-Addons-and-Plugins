@@ -10,7 +10,8 @@ import lang from "../common/i18n.js";
 import { getVisibleTables } from "../common/visible_tables.js";
 
 // Each value is part of an Achievement ID: changing one would announce the
-// Achievement again to players who already earned it.
+// Achievement again to players who already earned it. Each one also needs
+// its title in every lang/ file.
 const COLLECTION_PERCENT_THRESHOLDS = [10, 25, 50, 75, 100];
 
 export function buildCollectionCompletionAchievements() {
@@ -38,7 +39,7 @@ export function buildCollectionCompletionAchievements() {
         achievements.push({
             id: `collectionMilestone:${percent}percent`,
             family: ACHIEVEMENT_FAMILY.COLLECTION,
-            getTitle: () => TEXT.collectionPercentTitle(percent),
+            getTitle: () => TEXT.collectionPercentTitles[percent],
             getDescription: () => TEXT.collectionPercentDescription(percent, requiredCount, totalCount),
             checkUnlocked: () => countPlayed() >= requiredCount,
         });

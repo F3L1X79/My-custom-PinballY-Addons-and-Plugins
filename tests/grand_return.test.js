@@ -1,0 +1,68 @@
+// ============================================================
+// The grand return, started through main.js on the fake PinballY globals:
+// replaying a table after a 30-day break announces nothing, replaying one
+// after a 31-day break announces the grand return, whose description
+// gives the 31 days.
+// ============================================================
+
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import config from "../common/config.js";
+
+const NOW = new Date(2026, 8, 23, 10, 0, 0);
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const SESSION_MS = 5 * 60 * 1000;
+
+// Without manufacturer and never counted as played, so the grand return is
+// the only Achievement these plays can unlock.
+function table(id, title) {
+    return {
+        id, configId: title, title, manufacturer: "", year: 0, categories: [],
+        playCount: 0, playTime: 0, lastPlayed: null, rating: -1, isHidden: false,
+    };
+}
+
+const THIRTY_DAYS_AGO = table(1, "Thirty Days Ago");
+const THIRTY_ONE_DAYS_AGO = table(2, "Thirty-One Days Ago");
+
+const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
+const DIALOG_ID = "achievementUnlocked";
+
+const settle = () => new Promise(resolve => setTimeout(resolve, 10));
+
+test("the grand return needs a 31-day break and says so", async () => {
+    const fake = createFakePinballYHost({ now: NOW, tables: [THIRTY_DAYS_AGO, THIRTY_ONE_DAYS_AGO] });
+    fake.seedSettings({
+        [PREVIOUS_PLAY_KEY_PREFIX + THIRTY_DAYS_AGO.configId]: new Date(NOW.getTime() - 30 * MS_PER_DAY).toISOString(),
+        [PREVIOUS_PLAY_KEY_PREFIX + THIRTY_ONE_DAYS_AGO.configId]: new Date(NOW.getTime() - 31 * MS_PER_DAY).toISOString(),
+    });
+    // Never uninstalled: node --test runs each test file in its own process.
+    fake.installGlobals();
+    for (const key of Object.keys(config.addOns)) {
+        config.addOns[key] = ["sessionStatsTracker", "achievements"].includes(key);
+    }
+    config.language = "en";
+
+    const { default: lang } = await import("../common/i18n.js");
+    const TEXT = lang.achievements;
+    await import("../main.js");
+    await settle();
+
+    async function play(game) {
+        fake.gameStarted(game);
+        await settle();
+        fake.advanceTime(SESSION_MS);
+        fake.gameOver(game);
+        await settle();
+        return fake.shownMenus().filter(menu => menu.id === DIALOG_ID).map(menu => menu.items[0].title);
+    }
+
+    assert.deepEqual(await play(THIRTY_DAYS_AGO), [], "no Achievement after a 30-day break");
+
+    assert.deepEqual(await play(THIRTY_ONE_DAYS_AGO), [
+        TEXT.unlockedIntro(TEXT.grandReturnTitle(), TEXT.grandReturnDescription(31)),
+    ]);
+    assert.match(TEXT.grandReturnDescription(31), /31/);
+    assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
+});

@@ -16,7 +16,7 @@ export const SHORTEST_SESSION_KEY = "custom.sessionStats.shortestSeconds";
 export const GRAND_RETURN_FLAG_KEY = "custom.sessionStats.grandReturnUnlocked";
 // Break (in days) after which replaying a table sets the "grand return" flag.
 // Exported so the Achievement description shows the same value.
-export const GRAND_RETURN_THRESHOLD_DAYS = 365;
+export const GRAND_RETURN_THRESHOLD_DAYS = 31;
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
 const SCRIPT_NAME = "SessionStatsTracker";
 

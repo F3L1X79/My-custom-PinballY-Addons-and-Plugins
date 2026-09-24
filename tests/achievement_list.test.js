@@ -37,7 +37,7 @@ function sampleAchievements() {
         fakeAchievement("stern", ACHIEVEMENT_FAMILY.MANUFACTURERS, true),
         fakeAchievement("williams", ACHIEVEMENT_FAMILY.MANUFACTURERS, true),
         fakeAchievement("rageQuit", ACHIEVEMENT_FAMILY.SESSIONS, true),
-        fakeAchievement("streak3", ACHIEVEMENT_FAMILY.STREAKS, false),
+        fakeAchievement("streak3", ACHIEVEMENT_FAMILY.PERIOD_TABLES, false),
         fakeAchievement("oneHour", ACHIEVEMENT_FAMILY.PLAY_TIME, true),
         fakeAchievement("firstTable", ACHIEVEMENT_FAMILY.COLLECTION, true),
         fakeAchievement("tenPercent", ACHIEVEMENT_FAMILY.COLLECTION, false),
@@ -69,12 +69,30 @@ test("the families level shows the total line, then the non-empty families in th
     assert.deepEqual(familyItems(menu).map(item => item.title), [
         familyTitle(ACHIEVEMENT_FAMILY.COLLECTION, 1, 2),
         familyTitle(ACHIEVEMENT_FAMILY.PLAY_TIME, 1, 1),
-        familyTitle(ACHIEVEMENT_FAMILY.STREAKS, 0, 1),
+        familyTitle(ACHIEVEMENT_FAMILY.PERIOD_TABLES, 0, 1),
         familyTitle(ACHIEVEMENT_FAMILY.SESSIONS, 1, 1),
         familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 2, 3),
     ]);
     assert.ok(familyItems(menu).every(item => item.cmd > 0), "every family can be selected");
     assert.deepEqual(menu.items.slice(-2), [{ cmd: -1 }, { title: TEXT.back, cmd: fake.getBuiltInCommand("MenuReturn") }]);
+});
+
+test("the families come in the fixed order: Collection, Play Time, Period Tables, Sessions, Random Game, Manufacturers, Decades, Categories", () => {
+    const families = [
+        ACHIEVEMENT_FAMILY.CATEGORIES,
+        ACHIEVEMENT_FAMILY.DECADES,
+        ACHIEVEMENT_FAMILY.MANUFACTURERS,
+        ACHIEVEMENT_FAMILY.RANDOM_GAME,
+        ACHIEVEMENT_FAMILY.SESSIONS,
+        ACHIEVEMENT_FAMILY.PERIOD_TABLES,
+        ACHIEVEMENT_FAMILY.PLAY_TIME,
+        ACHIEVEMENT_FAMILY.COLLECTION,
+    ];
+    const { fake } = setUp(families.map(family => fakeAchievement(family, family)));
+
+    assert.deepEqual(familyItems(fake.currentMenu()).map(item => item.title), [
+        "collection", "playTime", "periodTables", "sessions", "randomGame", "manufacturers", "decades", "categories",
+    ].map(family => familyTitle(family, 0, 1)));
 });
 
 test("every family has a label in every language", async () => {

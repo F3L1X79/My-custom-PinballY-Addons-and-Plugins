@@ -13,6 +13,7 @@ export function buildPeriodTableStreakAchievements() {
     const tableOfTheDay = getTableOfTheDay();
     const tableOfTheWeek = getTableOfTheWeek();
 
+    // Each threshold also needs its title in every lang/ file.
     const dailyThresholds = [3, 7, 30];
     const weeklyThresholds = [4, 12];
 
@@ -21,8 +22,8 @@ export function buildPeriodTableStreakAchievements() {
     for (const days of dailyThresholds) {
         achievements.push({
             id: `tableOfTheDayStreak:${days}`,
-            family: ACHIEVEMENT_FAMILY.STREAKS,
-            getTitle: () => TEXT.dailyStreakTitle(days),
+            family: ACHIEVEMENT_FAMILY.PERIOD_TABLES,
+            getTitle: () => TEXT.dailyStreakTitles[days],
             getDescription: () => TEXT.dailyStreakDescription(days),
             checkUnlocked: () => tableOfTheDay.getStreak() >= days,
         });
@@ -31,8 +32,8 @@ export function buildPeriodTableStreakAchievements() {
     for (const weeks of weeklyThresholds) {
         achievements.push({
             id: `tableOfTheWeekStreak:${weeks}`,
-            family: ACHIEVEMENT_FAMILY.STREAKS,
-            getTitle: () => TEXT.weeklyStreakTitle(weeks),
+            family: ACHIEVEMENT_FAMILY.PERIOD_TABLES,
+            getTitle: () => TEXT.weeklyStreakTitles[weeks],
             getDescription: () => TEXT.weeklyStreakDescription(weeks),
             checkUnlocked: () => tableOfTheWeek.getStreak() >= weeks,
         });

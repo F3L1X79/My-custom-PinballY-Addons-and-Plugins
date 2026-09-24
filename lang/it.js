@@ -169,33 +169,55 @@ export default {
     },
 
     achievements: {
-        dailyStreakTitle: (days) => `${days} giorni di fila!`,
+        dailyStreakTitles: {
+            3: "Non c'è due senza tre",
+            7: "Settimana perfetta",
+            30: "Monaco del flipper",
+        },
         dailyStreakDescription: (days) => `Hai avviato il tavolo del giorno per ${days} giorni di fila!`,
-        weeklyStreakTitle: (weeks) => `${weeks} settimane di fila!`,
+        weeklyStreakTitles: {
+            4: "Un mese senza errori",
+            12: "Abbonato fedele",
+        },
         weeklyStreakDescription: (weeks) => `Hai avviato il tavolo della settimana per ${weeks} settimane di fila!`,
-        manufacturerCompletionTitle: (manufacturer) => `Collezione completa: ${manufacturer}`,
+        manufacturerCompletionTitle: (manufacturer) => `Fan assoluto di ${manufacturer}`,
         manufacturerCompletionDescription: (manufacturer, count) =>
             `Hai giocato tutti i ${count} tavoli ${manufacturer} almeno una volta!`,
         firstTableTitle: () => "Primi passi",
         firstTableDescription: () => "Hai giocato il tuo primissimo tavolo!",
-        collectionPercentTitle: (percent) => `${percent}% della collezione`,
+        collectionPercentTitles: {
+            10: "Il gusto del metallo",
+            25: "Collezionista in erba",
+            50: "Metà partita",
+            75: "Quasi tutto visto",
+            100: "Non mi sfugge niente",
+        },
         collectionPercentDescription: (percent, playedCount, totalCount) =>
             `Hai giocato ${playedCount} tavoli su ${totalCount} (${percent}% della tua collezione)!`,
-        playTimeMilestoneTitle: (hours) => `${hours} h di gioco totali`,
+        playTimeMilestoneTitles: {
+            1: "Riscaldamento",
+            5: "Si fa sul serio",
+            10: "Malato di flipper",
+            50: "Flipper nel sangue",
+            100: "Leggenda del tilt",
+        },
         playTimeMilestoneDescription: (hours) =>
             `Hai accumulato più di ${hours} or${hours > 1 ? "e" : "a"} di gioco in totale!`,
-        decadeCompletionTitle: (decadeStartYear) => `Decennio completo: anni ${decadeStartYear}`,
+        decadeCompletionTitle: (decadeStartYear) => `Viaggio negli anni ${decadeStartYear}`,
         decadeCompletionDescription: (decadeStartYear, count) =>
             `Hai giocato tutti i ${count} tavoli degli anni ${decadeStartYear} almeno una volta!`,
-        categoryCompletionTitle: (category) => `Categoria completa: ${category}`,
+        categoryCompletionTitle: (category) => `Maestro ${category}`,
         categoryCompletionDescription: (category, count) =>
             `Hai giocato tutti i ${count} tavoli "${category}" almeno una volta!`,
-        marathonTitle: (minutes) => `Maratona di ${minutes} minuti!`,
+        marathonTitles: {
+            30: "Piccola maratona",
+            60: "Maratoneta",
+        },
         marathonDescription: (minutes) => `Hai giocato una singola sessione di oltre ${minutes} minuti!`,
-        rageQuitTitle: () => "Abbandono per rabbia?",
+        rageQuitTitle: () => "Abbandono per rabbia?!",
         rageQuitDescription: (seconds) => `Hai lasciato un tavolo in meno di ${seconds} secondi...`,
         grandReturnTitle: () => "Il grande ritorno",
-        grandReturnDescription: (days) => `Hai rigiocato un tavolo dopo oltre ${days} giorni di assenza!`,
+        grandReturnDescription: (days) => `Hai rigiocato un tavolo dopo ${days} o più giorni di assenza!`,
         unlockedIntro: (title, description) => `[Obiettivo sbloccato]\n\n${title}\n${description}`,
         acknowledge: "Fantastico!",
     },
@@ -211,8 +233,9 @@ export default {
         families: {
             collection: "Collezione",
             playTime: "Tempo di gioco",
-            streaks: "Serie",
+            periodTables: "Tavoli del giorno e della settimana",
             sessions: "Sessioni",
+            randomGame: "Tavolo a caso",
             manufacturers: "Produttori",
             decades: "Decenni",
             categories: "Categorie",

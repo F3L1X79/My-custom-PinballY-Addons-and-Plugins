@@ -10,7 +10,8 @@ import lang from "../common/i18n.js";
 import { getVisibleTables } from "../common/visible_tables.js";
 
 // Each value is part of an Achievement ID: changing one would announce the
-// Achievement again to players who already earned it.
+// Achievement again to players who already earned it. Each one also needs
+// its title in every lang/ file.
 const PLAY_TIME_THRESHOLDS_HOURS = [1, 5, 10, 50, 100];
 
 export function buildPlayTimeTotalAchievements() {
@@ -24,7 +25,7 @@ export function buildPlayTimeTotalAchievements() {
     return PLAY_TIME_THRESHOLDS_HOURS.map(hours => ({
         id: `playTimeMilestone:${hours}h`,
         family: ACHIEVEMENT_FAMILY.PLAY_TIME,
-        getTitle: () => TEXT.playTimeMilestoneTitle(hours),
+        getTitle: () => TEXT.playTimeMilestoneTitles[hours],
         getDescription: () => TEXT.playTimeMilestoneDescription(hours),
         checkUnlocked: () => getTotalPlayTimeSeconds() >= hours * 3600,
     }));

@@ -174,34 +174,56 @@ export default {
     },
 
     achievements: {
-        dailyStreakTitle: (days) => `${days} jours d'affilée !`,
+        dailyStreakTitles: {
+            3: "Jamais deux sans trois",
+            7: "Semaine parfaite",
+            30: "Moine du flipper",
+        },
         dailyStreakDescription: (days) => `Vous avez lancé la table du jour ${days} jours consécutifs !`,
-        weeklyStreakTitle: (weeks) => `${weeks} semaines d'affilée !`,
+        weeklyStreakTitles: {
+            4: "Un mois sans faute",
+            12: "Abonné fidèle",
+        },
         weeklyStreakDescription: (weeks) => `Vous avez lancé la table de la semaine ${weeks} semaines consécutives !`,
-        decadeCompletionTitle: (decadeStartYear) => `Décennie complète : années ${decadeStartYear}`,
-        manufacturerCompletionTitle: (manufacturer) => `Collection complète : ${manufacturer}`,
+        decadeCompletionTitle: (decadeStartYear) => `Voyage dans les années ${decadeStartYear}`,
+        manufacturerCompletionTitle: (manufacturer) => `Fan absolu de ${manufacturer}`,
         manufacturerCompletionDescription: (manufacturer, count) =>
             `Vous avez joué aux ${count} tables ${manufacturer} au moins une fois !`,
         firstTableTitle: () => "Premiers pas",
         firstTableDescription: () => "Vous avez joué votre toute première table !",
-        collectionPercentTitle: (percent) => `${percent}% de la collection`,
+        collectionPercentTitles: {
+            10: "Le goût du métal",
+            25: "Collectionneur en herbe",
+            50: "Mi-temps",
+            75: "Presque tout vu",
+            100: "Rien ne m'échappe",
+        },
         collectionPercentDescription: (percent, playedCount, totalCount) =>
             `Vous avez joué à ${playedCount} tables sur ${totalCount} (${percent}% de votre collection) !`,
-        playTimeMilestoneTitle: (hours) => `${hours}h de jeu cumulées`,
+        playTimeMilestoneTitles: {
+            1: "Mise en jambes",
+            5: "Ça devient sérieux",
+            10: "Accro aux flippers",
+            50: "Flipper dans le sang",
+            100: "Légende du tilt",
+        },
         playTimeMilestoneDescription: (hours) =>
             `Vous avez cumulé plus de ${hours} heure${hours > 1 ? "s" : ""} de jeu au total !`,
         decadeCompletionDescription: (decadeStartYear, count) =>
             `Vous avez joué aux ${count} tables des années ${decadeStartYear} au moins une fois !`,
-        categoryCompletionTitle: (category) => `Catégorie complète : ${category}`,
+        categoryCompletionTitle: (category) => `Maître ${category}`,
         categoryCompletionDescription: (category, count) => `Vous avez joué aux ${count} tables "${category}" au moins une fois !`,
-        marathonTitle: (minutes) => `Marathon de ${minutes} min !`,
+        marathonTitles: {
+            30: "Semi-marathonien",
+            60: "Marathonien errant",
+        },
         marathonDescription: (minutes) => `Vous avez joué une session de plus de ${minutes} minutes d'affilée !`,
-        rageQuitTitle: () => "Rage quit ?",
+        rageQuitTitle: () => "Rage quit ?!",
         rageQuitDescription: (seconds) => `Vous avez quitté une table en moins de ${seconds} secondes...`,
         grandReturnTitle: () => "Le grand retour",
-        grandReturnDescription: (days) => `Vous avez rejoué une table après plus de ${days} jours d'absence !`,
+        grandReturnDescription: (days) => `Vous avez rejoué une table après ${days} jours d'absence ou plus !`,
         unlockedIntro: (title, description) => `[Succès débloqué]\n\n${title}\n${description}`,
-        acknowledge: "Merci mon coco !",
+        acknowledge: "Youpi !",
     },
 
     achievementList: {
@@ -215,8 +237,9 @@ export default {
         families: {
             collection: "Collection",
             playTime: "Temps de jeu",
-            streaks: "Séries",
+            periodTables: "Tables du jour et de la semaine",
             sessions: "Sessions",
+            randomGame: "Table au hasard",
             manufacturers: "Fabricants",
             decades: "Décennies",
             categories: "Catégories",

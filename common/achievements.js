@@ -14,8 +14,9 @@ const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";
 export const ACHIEVEMENT_FAMILY = Object.freeze({
     COLLECTION: "collection",
     PLAY_TIME: "playTime",
-    STREAKS: "streaks",
+    PERIOD_TABLES: "periodTables",
     SESSIONS: "sessions",
+    RANDOM_GAME: "randomGame",
     MANUFACTURERS: "manufacturers",
     DECADES: "decades",
     CATEGORIES: "categories",

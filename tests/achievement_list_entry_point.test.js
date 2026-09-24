@@ -71,14 +71,17 @@ test("the Achievement List entry follows Play and lists the real Achievements by
     const familiesMenu = fake.currentMenu();
     const familyLines = familiesMenu.items.filter(item => item.cmd > 0 && item.title !== TEXT.back);
     const familyNames = familyLines.map(item => item.title.replace(/ \(\d+\/\d+\)$/, ""));
+    // No Random Game Achievement exists yet, so that family stays hidden.
     assert.deepEqual(familyNames, [
-        "collection", "playTime", "streaks", "sessions", "manufacturers", "decades", "categories",
+        "collection", "playTime", "periodTables", "sessions", "manufacturers", "decades", "categories",
     ].map(family => TEXT.families[family]));
 
     function openFamily(family) {
         const line = familyLines.find(item => item.title.startsWith(TEXT.families[family]));
         fake.selectMenuItem(line.title);
         const items = fake.currentMenu().items.filter(item => typeof item.checked === "boolean");
+        // A threshold without its title in lang/en.js would show as undefined.
+        assert.ok(items.every(item => typeof item.title === "string" && item.title !== ""), `${family}: every Achievement has a title`);
         const shown = items.map(item => (item.checked ? "✓ " : "  ") + item.title);
         fake.selectMenuItem(TEXT.back);
         return shown;
@@ -86,19 +89,19 @@ test("the Achievement List entry follows Play and lists the real Achievements by
 
     assert.deepEqual(openFamily("collection"), [
         `✓ ${ACHIEVEMENT.firstTableTitle()}`,
-        ...[10, 25, 50].map(percent => `✓ ${ACHIEVEMENT.collectionPercentTitle(percent)}`),
-        ...[75, 100].map(percent => `  ${ACHIEVEMENT.collectionPercentTitle(percent)}`),
+        ...[10, 25, 50].map(percent => `✓ ${ACHIEVEMENT.collectionPercentTitles[percent]}`),
+        ...[75, 100].map(percent => `  ${ACHIEVEMENT.collectionPercentTitles[percent]}`),
     ]);
     assert.deepEqual(openFamily("playTime"), [
-        ...[1, 5].map(hours => `✓ ${ACHIEVEMENT.playTimeMilestoneTitle(hours)}`),
-        ...[10, 50, 100].map(hours => `  ${ACHIEVEMENT.playTimeMilestoneTitle(hours)}`),
+        ...[1, 5].map(hours => `✓ ${ACHIEVEMENT.playTimeMilestoneTitles[hours]}`),
+        ...[10, 50, 100].map(hours => `  ${ACHIEVEMENT.playTimeMilestoneTitles[hours]}`),
     ]);
-    assert.deepEqual(openFamily("streaks"), [
-        ...[3, 7, 30].map(days => `  ${ACHIEVEMENT.dailyStreakTitle(days)}`),
-        ...[4, 12].map(weeks => `  ${ACHIEVEMENT.weeklyStreakTitle(weeks)}`),
+    assert.deepEqual(openFamily("periodTables"), [
+        ...[3, 7, 30].map(days => `  ${ACHIEVEMENT.dailyStreakTitles[days]}`),
+        ...[4, 12].map(weeks => `  ${ACHIEVEMENT.weeklyStreakTitles[weeks]}`),
     ]);
     assert.deepEqual(openFamily("sessions"), [
-        ...[30, 60].map(minutes => `  ${ACHIEVEMENT.marathonTitle(minutes)}`),
+        ...[30, 60].map(minutes => `  ${ACHIEVEMENT.marathonTitles[minutes]}`),
         `  ${ACHIEVEMENT.rageQuitTitle()}`,
         `  ${ACHIEVEMENT.grandReturnTitle()}`,
     ]);

@@ -15,7 +15,8 @@ import {
 } from "../session_stats_tracker.js";
 
 // Each marathon value is part of an Achievement ID: changing one would
-// announce the Achievement again to players who already earned it.
+// announce the Achievement again to players who already earned it. Each
+// one also needs its title in every lang/ file.
 const MARATHON_THRESHOLDS_MINUTES = [30, 60];
 const RAGE_QUIT_THRESHOLD_SECONDS = 30;
 
@@ -25,7 +26,7 @@ export function buildSessionMilestoneAchievements() {
     const achievements = MARATHON_THRESHOLDS_MINUTES.map(minutes => ({
         id: `marathon:${minutes}`,
         family: ACHIEVEMENT_FAMILY.SESSIONS,
-        getTitle: () => TEXT.marathonTitle(minutes),
+        getTitle: () => TEXT.marathonTitles[minutes],
         getDescription: () => TEXT.marathonDescription(minutes),
         checkUnlocked: () => optionSettings.getFloat(LONGEST_SESSION_KEY, 0) >= minutes * 60,
     }));

@@ -170,33 +170,55 @@ export default {
     },
 
     achievements: {
-        dailyStreakTitle: (days) => `${days} Tage in Folge!`,
+        dailyStreakTitles: {
+            3: "Aller guten Dinge sind drei",
+            7: "Perfekte Woche",
+            30: "Flipper-Mönch",
+        },
         dailyStreakDescription: (days) => `Sie haben den Tisch des Tages ${days} Tage in Folge gestartet!`,
-        weeklyStreakTitle: (weeks) => `${weeks} Wochen in Folge!`,
+        weeklyStreakTitles: {
+            4: "Ein Monat ohne Fehler",
+            12: "Treuer Abonnent",
+        },
         weeklyStreakDescription: (weeks) => `Sie haben den Tisch der Woche ${weeks} Wochen in Folge gestartet!`,
-        manufacturerCompletionTitle: (manufacturer) => `Komplette Sammlung: ${manufacturer}`,
+        manufacturerCompletionTitle: (manufacturer) => `Absoluter ${manufacturer}-Fan`,
         manufacturerCompletionDescription: (manufacturer, count) =>
             `Sie haben alle ${count} Tische von ${manufacturer} mindestens einmal gespielt!`,
         firstTableTitle: () => "Erste Schritte",
         firstTableDescription: () => "Sie haben Ihren allerersten Tisch gespielt!",
-        collectionPercentTitle: (percent) => `${percent} % der Sammlung`,
+        collectionPercentTitles: {
+            10: "Der Geschmack von Metall",
+            25: "Angehender Sammler",
+            50: "Halbzeit",
+            75: "Fast alles gesehen",
+            100: "Mir entgeht nichts",
+        },
         collectionPercentDescription: (percent, playedCount, totalCount) =>
             `Sie haben ${playedCount} von ${totalCount} Tischen gespielt (${percent} % Ihrer Sammlung)!`,
-        playTimeMilestoneTitle: (hours) => `${hours} Std. Gesamtspielzeit`,
+        playTimeMilestoneTitles: {
+            1: "Aufwärmen",
+            5: "Jetzt wird's ernst",
+            10: "Flippersüchtig",
+            50: "Flippern im Blut",
+            100: "Tilt-Legende",
+        },
         playTimeMilestoneDescription: (hours) =>
             `Sie haben insgesamt über ${hours} Stunde${hours > 1 ? "n" : ""} gespielt!`,
-        decadeCompletionTitle: (decadeStartYear) => `Komplettes Jahrzehnt: ${decadeStartYear}er`,
+        decadeCompletionTitle: (decadeStartYear) => `Reise in die ${decadeStartYear}er`,
         decadeCompletionDescription: (decadeStartYear, count) =>
             `Sie haben alle ${count} Tische der ${decadeStartYear}er mindestens einmal gespielt!`,
-        categoryCompletionTitle: (category) => `Komplette Kategorie: ${category}`,
+        categoryCompletionTitle: (category) => `${category}-Meister`,
         categoryCompletionDescription: (category, count) =>
             `Sie haben alle ${count} Tische der Kategorie "${category}" mindestens einmal gespielt!`,
-        marathonTitle: (minutes) => `${minutes}-Minuten-Marathon!`,
+        marathonTitles: {
+            30: "Kleiner Marathon",
+            60: "Marathonläufer",
+        },
         marathonDescription: (minutes) => `Sie haben eine einzige Session von über ${minutes} Minuten gespielt!`,
-        rageQuitTitle: () => "Wutausstieg?",
+        rageQuitTitle: () => "Wutausstieg?!",
         rageQuitDescription: (seconds) => `Sie haben einen Tisch nach weniger als ${seconds} Sekunden verlassen...`,
         grandReturnTitle: () => "Die große Rückkehr",
-        grandReturnDescription: (days) => `Sie haben einen Tisch nach mehr als ${days} Tagen Pause wieder gespielt!`,
+        grandReturnDescription: (days) => `Sie haben einen Tisch nach ${days} oder mehr Tagen Pause wieder gespielt!`,
         unlockedIntro: (title, description) => `[Erfolg freigeschaltet]\n\n${title}\n${description}`,
         acknowledge: "Super!",
     },
@@ -212,8 +234,9 @@ export default {
         families: {
             collection: "Sammlung",
             playTime: "Spielzeit",
-            streaks: "Serien",
+            periodTables: "Tisch des Tages und der Woche",
             sessions: "Sitzungen",
+            randomGame: "Zufallsspiel",
             manufacturers: "Hersteller",
             decades: "Jahrzehnte",
             categories: "Kategorien",

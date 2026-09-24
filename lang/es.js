@@ -170,33 +170,55 @@ export default {
     },
 
     achievements: {
-        dailyStreakTitle: (days) => `¡${days} días seguidos!`,
+        dailyStreakTitles: {
+            3: "No hay dos sin tres",
+            7: "Semana perfecta",
+            30: "Monje del pinball",
+        },
         dailyStreakDescription: (days) => `¡Has iniciado la mesa del día ${days} días seguidos!`,
-        weeklyStreakTitle: (weeks) => `¡${weeks} semanas seguidas!`,
+        weeklyStreakTitles: {
+            4: "Un mes sin fallos",
+            12: "Suscriptor fiel",
+        },
         weeklyStreakDescription: (weeks) => `¡Has iniciado la mesa de la semana ${weeks} semanas seguidas!`,
-        manufacturerCompletionTitle: (manufacturer) => `Colección completa: ${manufacturer}`,
+        manufacturerCompletionTitle: (manufacturer) => `Fan absoluto de ${manufacturer}`,
         manufacturerCompletionDescription: (manufacturer, count) =>
             `¡Has jugado las ${count} mesas de ${manufacturer} al menos una vez!`,
         firstTableTitle: () => "Primeros pasos",
         firstTableDescription: () => "¡Has jugado tu primera mesa!",
-        collectionPercentTitle: (percent) => `${percent} % de la colección`,
+        collectionPercentTitles: {
+            10: "El sabor del metal",
+            25: "Coleccionista en ciernes",
+            50: "Medio tiempo",
+            75: "Casi todo visto",
+            100: "Nada se me escapa",
+        },
         collectionPercentDescription: (percent, playedCount, totalCount) =>
             `¡Has jugado ${playedCount} de ${totalCount} mesas (${percent} % de tu colección)!`,
-        playTimeMilestoneTitle: (hours) => `${hours} h de juego en total`,
+        playTimeMilestoneTitles: {
+            1: "Calentando",
+            5: "Esto va en serio",
+            10: "Adicto al pinball",
+            50: "Pinball en la sangre",
+            100: "Leyenda del tilt",
+        },
         playTimeMilestoneDescription: (hours) =>
             `¡Has acumulado más de ${hours} hora${hours > 1 ? "s" : ""} de juego en total!`,
-        decadeCompletionTitle: (decadeStartYear) => `Década completa: años ${decadeStartYear}`,
+        decadeCompletionTitle: (decadeStartYear) => `Viaje a los años ${decadeStartYear}`,
         decadeCompletionDescription: (decadeStartYear, count) =>
             `¡Has jugado las ${count} mesas de los años ${decadeStartYear} al menos una vez!`,
-        categoryCompletionTitle: (category) => `Categoría completa: ${category}`,
+        categoryCompletionTitle: (category) => `Maestro de ${category}`,
         categoryCompletionDescription: (category, count) =>
             `¡Has jugado las ${count} mesas de "${category}" al menos una vez!`,
-        marathonTitle: (minutes) => `¡Maratón de ${minutes} minutos!`,
+        marathonTitles: {
+            30: "Pequeño maratón",
+            60: "Maratonista",
+        },
         marathonDescription: (minutes) => `¡Has jugado una sola sesión de más de ${minutes} minutos!`,
-        rageQuitTitle: () => "¿Abandono por rabia?",
+        rageQuitTitle: () => "¡¿Abandono por rabia?!",
         rageQuitDescription: (seconds) => `Has salido de una mesa en menos de ${seconds} segundos...`,
         grandReturnTitle: () => "El gran regreso",
-        grandReturnDescription: (days) => `¡Has vuelto a jugar una mesa tras más de ${days} días sin tocarla!`,
+        grandReturnDescription: (days) => `¡Has vuelto a jugar una mesa tras ${days} días o más sin tocarla!`,
         unlockedIntro: (title, description) => `[Logro desbloqueado]\n\n${title}\n${description}`,
         acknowledge: "¡Genial!",
     },
@@ -212,8 +234,9 @@ export default {
         families: {
             collection: "Colección",
             playTime: "Tiempo de juego",
-            streaks: "Rachas",
+            periodTables: "Mesas del día y de la semana",
             sessions: "Sesiones",
+            randomGame: "Mesa al azar",
             manufacturers: "Fabricantes",
             decades: "Décadas",
             categories: "Categorías",
