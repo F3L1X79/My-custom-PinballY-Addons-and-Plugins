@@ -19,7 +19,7 @@ Everything is plain JavaScript run by PinballY itself: no build step, no depende
 - **Main menu entries.** "Achievement List" (with the achievements add-on), a shortcut to "Table Setup", "Start Random Game", "Launch Table of the Day" and "Launch Table of the Week" are added right after "Play", in that order.
 - **"Original Tables" filter.** Added to the "Filter by Manufacturer" menu. It lists every table except the community-made ones (see `communityTablesManufacturer` in the configuration below).
 
-**Achievements.** A congratulations dialog appears when you're back at the wheel. Each achievement is shown only once. The "Achievement List" entry of the main menu shows every achievement by family (collection, play time, streaks, sessions, manufacturers, decades, categories), with the unlocked ones checked at the top.
+**Achievements.** A congratulations dialog appears when you're back at the wheel. Each achievement is shown only once. The "Achievement List" entry of the main menu shows every achievement by family (collection, play time, streaks, sessions, manufacturers, decades, categories), with the unlocked ones checked at the top. Selecting an achievement shows its card: what it asks for and whether it is unlocked.
 - **First table.** Your very first table played.
 - **Collection.** 10, 25, 50, 75 and 100 % of your collection played.
 - **Completion.** All the tables of a manufacturer, of a decade or of a category played.

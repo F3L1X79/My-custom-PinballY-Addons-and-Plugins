@@ -1,8 +1,9 @@
 ﻿// ============================================================
 // Achievement List module: the screen the player opens from the main menu
-// to browse every Achievement by Achievement Family. It owns two levels of
-// native PinballY menus (the families with their counts, then a family's
-// Achievements, Unlocked ones first) and the Back navigation between them.
+// to browse every Achievement by Achievement Family. It owns three levels of
+// native PinballY menus (the families with their counts, a family's
+// Achievements, Unlocked ones first, then an Achievement's card) and the
+// Back navigation between them.
 // Created from the PinballY host and a function that returns the current
 // Achievements; Unlocked is computed again each time a level opens.
 // Listens to "command". Opens its menus directly, not through the wheel
@@ -16,6 +17,7 @@ import { safeHandler } from "./safe_handler.js";
 const SCRIPT_NAME = "AchievementList";
 const FAMILIES_MENU_ID = "achievementListFamilies";
 const FAMILY_MENU_ID = "achievementListFamily";
+const CARD_MENU_ID = "achievementListCard";
 
 const FAMILY_ORDER = Object.values(ACHIEVEMENT_FAMILY);
 
@@ -25,11 +27,24 @@ export function createAchievementList(host, getAchievements) {
     const familyByCommand = new Map(FAMILY_ORDER.map(family =>
         [host.allocateCommand(`achievementListFamily.${family}`), family]));
     const commandByFamily = new Map([...familyByCommand].map(([cmd, family]) => [family, cmd]));
-    // Selecting an Achievement does nothing yet; its item stays open.
-    const achievementCommand = host.allocateCommand("achievementListAchievement");
+    // One command per line of a family, by position. The largest family
+    // depends on the collection, so the pool grows on demand instead of
+    // being allocated all at startup.
+    const achievementCommands = [];
     const backToFamiliesCommand = host.allocateCommand("achievementListBackToFamilies");
-    // The family on screen, so Back puts the cursor on it again.
+    const backToFamilyCommand = host.allocateCommand("achievementListBackToFamily");
+    // The family on screen and its Achievements in shown order, so Back
+    // puts the cursor on the family or Achievement the player left.
     let shownFamily = null;
+    let shownAchievements = [];
+    let shownCardAchievement = null;
+
+    function getAchievementCommand(index) {
+        while (achievementCommands.length <= index) {
+            achievementCommands.push(host.allocateCommand(`achievementListAchievement.${achievementCommands.length}`));
+        }
+        return achievementCommands[index];
+    }
 
     // The current Achievements with their live status, keyed by family, each
     // family in the natural order of the Achievement definitions.
@@ -67,31 +82,54 @@ export function createAchievementList(host, getAchievements) {
         ]);
     }
 
-    function showFamily(family) {
+    // The page size depends on the screen, so the module can't name the
+    // page to reopen: it relies on PinballY opening the paged section on the
+    // page that holds the selected Achievement. The help doesn't document
+    // this; to be checked in PinballY.
+    function showFamily(family, selectedAchievementId = null) {
         const entries = readFamilies().get(family);
         const ordered = [...entries.filter(entry => entry.unlocked), ...entries.filter(entry => !entry.unlocked)];
 
         host.showMenu(FAMILY_MENU_ID, [
             { cmd: host.getBuiltInCommand("MenuPageUp") },
-            ...ordered.map(({ achievement, unlocked }) => ({
+            ...ordered.map(({ achievement, unlocked }, index) => ({
                 title: achievement.getTitle(),
-                cmd: achievementCommand,
+                cmd: getAchievementCommand(index),
                 checked: unlocked,
-                stayOpen: true,
+                ...(achievement.id === selectedAchievementId ? { selected: true } : {}),
             })),
             { cmd: host.getBuiltInCommand("MenuPageDown") },
             { cmd: -1 },
             { title: TEXT.back, cmd: backToFamiliesCommand },
         ]);
         shownFamily = family;
+        shownAchievements = ordered.map(entry => entry.achievement);
     }
 
-    // Fires on every command: a family opens its Achievements, Back in a
-    // family reopens the families. Showing a menu from the command replaces
-    // the current one.
+    function showCard(achievement) {
+        const status = achievement.checkUnlocked() ? TEXT.unlocked : TEXT.notUnlocked;
+        host.showMenu(CARD_MENU_ID, [
+            { title: TEXT.cardMessage(achievement.getTitle(), achievement.getDescription(), status), cmd: -1 },
+            { cmd: -1 },
+            { title: TEXT.back, cmd: backToFamilyCommand },
+        ], { dialogStyle: true });
+        shownCardAchievement = achievement;
+    }
+
+    // Fires on every command: a family opens its Achievements, an
+    // Achievement opens its card, Back goes up one level. Showing a menu
+    // from the command replaces the current one.
     host.on("command", safeHandler(SCRIPT_NAME, ev => {
-        if (familyByCommand.has(ev.id)) showFamily(familyByCommand.get(ev.id));
-        else if (ev.id === backToFamiliesCommand) showFamilies(shownFamily);
+        const achievementIndex = achievementCommands.indexOf(ev.id);
+        if (familyByCommand.has(ev.id)) {
+            showFamily(familyByCommand.get(ev.id));
+        } else if (achievementIndex >= 0 && achievementIndex < shownAchievements.length) {
+            showCard(shownAchievements[achievementIndex]);
+        } else if (ev.id === backToFamilyCommand) {
+            showFamily(shownFamily, shownCardAchievement.id);
+        } else if (ev.id === backToFamiliesCommand) {
+            showFamilies(shownFamily);
+        }
     }));
 
     return { open: () => showFamilies() };

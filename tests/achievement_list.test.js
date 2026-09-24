@@ -2,8 +2,8 @@
 // Achievement List module tests: over the fake PinballY host with fake
 // Achievements, checks what the player sees at each level (total line,
 // Achievement Families with their counts, a family's Achievements, Unlocked
-// ones first and checked) and the Back navigation. Unlocked is computed
-// live each time a level opens.
+// ones first and checked, an Achievement's card) and the Back navigation.
+// Unlocked is computed live each time a level opens.
 // ============================================================
 
 import { test } from "node:test";
@@ -105,15 +105,93 @@ test("a family lists its Unlocked Achievements first, checked, then the missing 
     assert.equal(menu.items.length, 7);
 });
 
-test("selecting an Achievement keeps its family on screen", () => {
+function cardItems(fake, title, description, status) {
+    return [
+        { title: TEXT.cardMessage(title, description, status), cmd: -1 },
+        { cmd: -1 },
+        { title: TEXT.back, cmd: fake.currentMenu().items[2].cmd },
+    ];
+}
+
+test("selecting an Unlocked Achievement opens its card as a dialog-style menu", () => {
     const { fake } = setUp();
     fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 2, 3));
-    const familyMenu = fake.currentMenu();
+
+    fake.selectMenuItem("williams title");
+
+    const menu = fake.currentMenu();
+    assert.deepEqual(menu.items, cardItems(fake, "williams title", "williams description", TEXT.unlocked));
+    assert.ok(menu.items[2].cmd > 0, "Back can be selected");
+    assert.deepEqual(menu.options, { dialogStyle: true });
+    assert.equal(fake.getUIMode(), "menu");
+});
+
+test("selecting a missing Achievement opens its card with the not-unlocked status", () => {
+    const { fake } = setUp();
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 2, 3));
 
     fake.selectMenuItem("bally title");
 
-    assert.equal(fake.currentMenu(), familyMenu);
-    assert.equal(fake.getUIMode(), "menu");
+    assert.deepEqual(fake.currentMenu().items,
+        cardItems(fake, "bally title", "bally description", TEXT.notUnlocked));
+});
+
+test("a surprise Achievement shows its card like the others", () => {
+    const { fake } = setUp();
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.SESSIONS, 1, 1));
+
+    fake.selectMenuItem("rageQuit title");
+
+    assert.deepEqual(fake.currentMenu().items,
+        cardItems(fake, "rageQuit title", "rageQuit description", TEXT.unlocked));
+});
+
+test("the card shows the live status of its Achievement", () => {
+    const { fake, achievements } = setUp();
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 2, 3));
+    achievements.find(achievement => achievement.id === "stern").unlocked = false;
+
+    fake.selectMenuItem("stern title");
+
+    assert.equal(fake.currentMenu().items[0].title,
+        TEXT.cardMessage("stern title", "stern description", TEXT.notUnlocked));
+});
+
+test("Back on a card reopens its family with that Achievement selected", () => {
+    const { fake } = setUp();
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 2, 3));
+    fake.selectMenuItem("bally title");
+
+    fake.selectMenuItem(TEXT.back);
+
+    const menu = fake.currentMenu();
+    assert.deepEqual(menu.items.slice(1, 4).map(item => item.title), ["stern title", "williams title", "bally title"]);
+    assert.deepEqual(menu.items.filter(item => item.selected).map(item => item.title), ["bally title"]);
+
+    fake.selectMenuItem(TEXT.back);
+    assert.deepEqual(fake.currentMenu().items.filter(item => item.selected).map(item => item.title),
+        [familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 2, 3)]);
+});
+
+test("Back on a card finds its Achievement again when the Achievements are rebuilt at each read", () => {
+    const fake = createFakePinballYHost();
+    const list = createAchievementList(fake, sampleAchievements);
+    list.open();
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 2, 3));
+    fake.selectMenuItem("williams title");
+
+    fake.selectMenuItem(TEXT.back);
+
+    assert.deepEqual(fake.currentMenu().items.filter(item => item.selected).map(item => item.title), ["williams title"]);
+});
+
+test("every card label has a text in every language", async () => {
+    for (const code of ["en", "fr", "de", "es", "it", "pt"]) {
+        const { default: texts } = await import(`../lang/${code}.js`);
+        assert.equal(typeof texts.achievementList.cardMessage, "function", `${code}: cardMessage`);
+        assert.equal(typeof texts.achievementList.unlocked, "string", `${code}: unlocked`);
+        assert.equal(typeof texts.achievementList.notUnlocked, "string", `${code}: notUnlocked`);
+    }
 });
 
 test("Back in a family goes up to the families, on that family", () => {

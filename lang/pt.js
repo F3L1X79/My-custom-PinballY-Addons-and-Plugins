@@ -206,6 +206,9 @@ export default {
         totalLine: (unlockedCount, totalCount) => `Total: ${unlockedCount}/${totalCount}`,
         familyLine: (family, unlockedCount, totalCount) => `${family} (${unlockedCount}/${totalCount})`,
         back: "Voltar",
+        cardMessage: (title, description, status) => `${title}\n${description}\n\n${status}`,
+        unlocked: "Desbloqueada",
+        notUnlocked: "Ainda não desbloqueada",
         families: {
             collection: "Coleção",
             playTime: "Tempo de jogo",
