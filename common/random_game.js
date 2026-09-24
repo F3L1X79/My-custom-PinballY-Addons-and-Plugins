@@ -8,13 +8,16 @@
 import { animateWheelTo, sleep } from "./wheel_navigator.js";
 import config from "./config.js";
 
-const {
-    animationBaseSpeedMs: ANIMATION_BASE_SPEED_MS,
-    skipAnimation: SKIP_ANIMATION,
-    skipFinalStepProbability: SKIP_FINAL_STEP_PROBABILITY,
-    usePageJumpOptimization: USE_PAGE_JUMP_OPTIMIZATION,
-    postAnimationDelayMs: POST_ANIMATION_DELAY_MS,
-} = config.randomGameCommand;
+const { skipAnimation: SKIP_ANIMATION } = config.randomGameCommand;
+
+// Base speed (ms) of the "wheel of fortune" animation.
+const ANIMATION_BASE_SPEED_MS = 200;
+// Probability (0-1) of intentionally stopping one table before the target.
+const SKIP_FINAL_STEP_PROBABILITY = 0.5;
+// Use NextPage-based jumps for long distances.
+const USE_PAGE_JUMP_OPTIMIZATION = true;
+// Delay after the wheel animation before launching the selected game.
+const POST_ANIMATION_DELAY_MS = 1000;
 
 let randomLaunchInProgress = false;
 

@@ -109,13 +109,6 @@ function useFixtureConfig() {
         config.scripts.enabled[key] = ADD_ONS_UNDER_TEST.includes(key);
     }
     config.translation.enabled = false;
-    Object.assign(config.achievements, {
-        collectionPercentThresholds: [10, 25, 50, 75, 100],
-        playTimeThresholdsHours: [1, 5, 10, 50, 100],
-        marathonThresholdsMinutes: [30, 60],
-        rageQuitThresholdSeconds: 30,
-        grandReturnThresholdDays: 365,
-    });
 }
 
 async function playLastLaunch(fake, durationSeconds) {

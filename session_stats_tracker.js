@@ -6,7 +6,6 @@
 // achievements_engine's check, which is deferred with setTimeout(fn, 0).
 // ============================================================
 
-import config from "./common/config.js";
 import { safeHandler } from "./common/safe_handler.js";
 
 // Exported so the achievement readers (achievements/session_milestones.js)
@@ -15,11 +14,13 @@ import { safeHandler } from "./common/safe_handler.js";
 export const LONGEST_SESSION_KEY = "custom.sessionStats.longestSeconds";
 export const SHORTEST_SESSION_KEY = "custom.sessionStats.shortestSeconds";
 export const GRAND_RETURN_FLAG_KEY = "custom.sessionStats.grandReturnUnlocked";
+// Break (in days) after which replaying a table sets the "grand return" flag.
+// Exported so the Achievement description shows the same value.
+export const GRAND_RETURN_THRESHOLD_DAYS = 365;
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
 const SCRIPT_NAME = "SessionStatsTracker";
 
 export default function init() {
-    const { grandReturnThresholdDays } = config.achievements;
     const sessionStartTimes = new Map();
 
     // Fires on table launch: records the start time and flags a "grand return".
@@ -33,7 +34,7 @@ export default function init() {
         const previousPlayIso = optionSettings.get(PREVIOUS_PLAY_KEY_PREFIX + configId, "");
         if (previousPlayIso) {
             const daysSincePreviousPlay = (Date.now() - new Date(previousPlayIso).getTime()) / (1000 * 60 * 60 * 24);
-            if (daysSincePreviousPlay >= grandReturnThresholdDays) {
+            if (daysSincePreviousPlay >= GRAND_RETURN_THRESHOLD_DAYS) {
                 optionSettings.set(GRAND_RETURN_FLAG_KEY, true);
             }
         }

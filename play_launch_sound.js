@@ -9,15 +9,14 @@
 import config from "./common/config.js";
 import { safeHandler } from "./common/safe_handler.js";
 
-function clampVolume(value) {
-    return Math.max(0, Math.min(100, Number(value) || 0));
-}
+// Playback volume, 0-100.
+const VOLUME_PERCENT = 100;
 
 function initializeMediaPlayer() {
     try {
         const player = createAutomationObject("WMPlayer.OCX.7");
         player.settings.autoStart = true;
-        player.settings.volume = clampVolume(config.launchSound.volumePercent);
+        player.settings.volume = VOLUME_PERCENT;
         return player;
     } catch (error) {
         logfile.log(

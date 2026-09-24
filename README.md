@@ -78,7 +78,6 @@ translation: {
 // ...
 launchSound: {
     absoluteFilePath: "",
-    volumePercent: 100,
 },
 ```
 
@@ -97,13 +96,10 @@ Every setting lives in `common\config.js`, and each one has a comment there. The
 | Section | What it controls |
 |---|---|
 | `scripts.enabled` | Turn any add-on off by setting it to `false`, for example `forceBackglass: false` if you have no backglass screen. |
-| `scripts.logStartupTiming` | Logs how long each add-on takes to start. |
 | `translation` | Language. `enabled: false` forces English. |
-| `menuTranslation.logUnknownTitles` | Logs PinballY menu titles that have no translation yet. Useful when adding a language. |
-| `achievements` | Thresholds: collection percentages, play time hours, marathon minutes, rage-quit seconds, grand-comeback days. |
-| `randomGameCommand` | Wheel animation: speed, skipping it, the chance of stopping one table early, the delay before launch. |
+| `randomGameCommand.skipAnimation` | Jump straight to the random table, without the wheel animation. |
 | `ratingPrompt.thresholdMinutes` | Total play time before you're asked to rate a table. |
-| `launchSound` | Sound file and volume. |
+| `launchSound` | Sound file. |
 | `tableMetadata` | Name used for community-made tables. |
 
 ## Where your progress is stored

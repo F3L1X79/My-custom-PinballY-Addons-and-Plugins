@@ -2,10 +2,13 @@
 // Entry point loaded by PinballY: initializes every project script listed in
 // SCRIPTS, in order, skipping those disabled in config.scripts.enabled.
 // A script whose init() throws is logged to logfile.log and skipped so the
-// others still load; config.scripts.logStartupTiming logs each init time.
+// others still load; LOG_STARTUP_TIMING logs each init time.
 // ============================================================
 
 import config from "./common/config.js";
+
+// Logs each script's init duration (ms), to help find a slow-starting script.
+const LOG_STARTUP_TIMING = true;
 
 import * as uiTranslation from "./ui_translation.js";
 import * as statusLineInfo from "./status_line_info.js";
@@ -50,7 +53,7 @@ const SCRIPTS = [
     { key: "startupChoicePrompt", module: startupChoicePrompt },
 ];
 
-const { enabled: ENABLED_SCRIPTS, logStartupTiming: LOG_STARTUP_TIMING } = config.scripts;
+const { enabled: ENABLED_SCRIPTS } = config.scripts;
 
 for (const { key, module } of SCRIPTS) {
     if (ENABLED_SCRIPTS[key] === false) {

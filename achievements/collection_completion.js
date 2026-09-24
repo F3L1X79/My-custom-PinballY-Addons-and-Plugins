@@ -1,17 +1,19 @@
 ﻿// ============================================================
 // Achievements for the number of DISTINCT tables played at least once:
-// a special "first table ever" achievement, plus one per configured
-// percentage of the full collection (config.achievements).
+// a special "first table ever" achievement, plus one per percentage of the
+// full collection in COLLECTION_PERCENT_THRESHOLDS.
 // Called by achievements_engine.js at each check; no side effects.
 // ============================================================
 
-import config from "../common/config.js";
 import lang from "../common/i18n.js";
 import { getVisibleTables } from "../common/visible_tables.js";
 
+// Each value is part of an Achievement ID: changing one would announce the
+// Achievement again to players who already earned it.
+const COLLECTION_PERCENT_THRESHOLDS = [10, 25, 50, 75, 100];
+
 export function buildCollectionCompletionAchievements() {
     const { achievements: TEXT } = lang;
-    const { collectionPercentThresholds } = config.achievements;
 
     const totalCount = getVisibleTables().length;
 
@@ -28,7 +30,7 @@ export function buildCollectionCompletionAchievements() {
         },
     ];
 
-    for (const percent of collectionPercentThresholds) {
+    for (const percent of COLLECTION_PERCENT_THRESHOLDS) {
         const requiredCount = Math.ceil((percent / 100) * totalCount);
 
         achievements.push({

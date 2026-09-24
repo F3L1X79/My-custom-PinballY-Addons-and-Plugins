@@ -2,14 +2,19 @@
 // Translates PinballY's native menu titles (fixed labels, plus dynamically
 // built ones matched by DYNAMIC_TITLE_RULES) and launch-overlay status
 // messages into the active project language. Listens to "menuopen" and
-// "launchoverlaymessage"; can log untranslated titles (config.menuTranslation).
+// "launchoverlaymessage"; can log untranslated titles (LOG_UNKNOWN_TITLES).
 // ============================================================
 
 import lang from "./common/i18n.js";
-import config from "./common/config.js";
 import { safeHandler } from "./common/safe_handler.js";
 
 const SCRIPT_NAME = "UITranslation";
+
+// Logs any menu title encountered without a known translation. Useful while
+// discovering new strings or adding a language.
+const LOG_UNKNOWN_TITLES = false;
+// Menu scroll indicators to ignore silently (never logged as missing).
+const IGNORED_SCROLL_INDICATORS = ["↑", "↓"]; // ↑ ↓
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 
@@ -19,11 +24,6 @@ export default function init() {
     const MEDIA_CAPTURE_ACTION_LABELS = lang.mediaCaptureActionLabels || {};
     const LAUNCH_OVERLAY_MESSAGES = lang.launchOverlayMessages || {};
     const BUILD_LABEL = lang.dynamicLabelBuilders || {};
-
-    const {
-        ignoredScrollIndicators: IGNORED_SCROLL_INDICATORS,
-        logUnknownTitles: LOG_UNKNOWN_TITLES,
-    } = config.menuTranslation;
 
     // Rules for menu titles PinballY builds dynamically (category names, star
     // ratings, media-capture labels...), tried in order — first match wins.
