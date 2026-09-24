@@ -219,10 +219,12 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
             assert.deepEqual(host.getFullUIMode(), { mode: "wheel" });
         });
 
-        test("gives the PinballY program folder and records the sounds played", () => {
+        test("gives the PinballY program folder and plays existing sound files only", () => {
             assert.equal(host.getProgramFolder(), "C:\\PinballY\\");
 
+            fake.addFile("C:\\Sounds\\achievement.mp3");
             host.playSound("C:\\Sounds\\achievement.mp3");
+            assert.throws(() => host.playSound("C:\\Sounds\\missing.mp3"), /not found/);
             assert.deepEqual(fake.soundsPlayed(), ["C:\\Sounds\\achievement.mp3"]);
         });
     });

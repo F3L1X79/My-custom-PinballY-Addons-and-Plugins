@@ -6,19 +6,22 @@
 // the bottom edge, holds a few seconds, then fades out. Cards stack, the
 // newest at the bottom, arrive staggered, at most five on screen, and
 // the oldest leaves first. Toasts wait while a game starts, runs or exits;
-// waiting ones start on "wheelmode".
+// waiting ones start on "wheelmode". The hold duration and an optional
+// sound played with each card come from the player settings.
 // ============================================================
 
 import lang from "./i18n.js";
 import { safeHandler } from "./safe_handler.js";
 import { createPinballYHost } from "./pinbally_host.js";
+import config from "./config.js";
 
 const SCRIPT_NAME = "AchievementToast";
 
 // Above PinballY's menus and popups.
 const TOAST_Z_INDEX = 6500;
 const FRAME_MS = 16;
-const HOLD_MS = 4000;
+const DEFAULT_TOAST_SECONDS = 4;
+const MAX_TOAST_SECONDS = 60;
 const FADE_MS = 250;
 // Fraction of the remaining distance covered each frame while rising (ease-out).
 const RISE_EASE = 0.2;
@@ -106,7 +109,19 @@ function drawCard(host, dc, toast, trophyPath) {
     return { height, layoutHeight: size.height };
 }
 
-export function createAchievementToasts(host) {
+// Seconds a card stays fully visible; an absurd value falls back to the default.
+function toHoldMs(toastSeconds) {
+    if (toastSeconds > 0 && toastSeconds <= MAX_TOAST_SECONDS) return toastSeconds * 1000;
+    logfile.log(`[${SCRIPT_NAME}] achievementToastSeconds must be above 0 and at most ${MAX_TOAST_SECONDS}, `
+        + `not ${toastSeconds}; using ${DEFAULT_TOAST_SECONDS}.`);
+    return DEFAULT_TOAST_SECONDS * 1000;
+}
+
+// soundFile: absolute path played at the start of each card, empty for none.
+export function createAchievementToasts(host, { toastSeconds = DEFAULT_TOAST_SECONDS, soundFile = "" } = {}) {
+    const holdMs = toHoldMs(toastSeconds);
+    // A sound that cannot play is logged and never stops the card.
+    const playSound = safeHandler(SCRIPT_NAME, () => { if (soundFile) host.playSound(soundFile); });
     const waiting = [];
     const trophyPath = `${host.getProgramFolder().replace(/\\+$/, "")}\\${TROPHY_FILE}`;
     // Cards on screen, oldest first. Each one: its layer, its height, the
@@ -193,11 +208,12 @@ export function createAchievementToasts(host) {
         cards.push(card);
         placeLayer(card);
         // Every card holds as long from its arrival: the oldest leaves first.
-        host.setTimeout(safeHandler(SCRIPT_NAME, () => startLeaving(card)), HOLD_MS);
+        host.setTimeout(safeHandler(SCRIPT_NAME, () => startLeaving(card)), holdMs);
         arrivalOpen = false;
         host.setTimeout(safeHandler(SCRIPT_NAME, openArrival), ARRIVAL_GAP_MS);
         // Animated before onShown, so a failing callback never leaves the card stuck on screen.
         startFrames();
+        playSound();
         toast.onShown();
     }
 
@@ -218,6 +234,11 @@ export function createAchievementToasts(host) {
 let sharedAchievementToasts = null;
 
 export function getAchievementToasts() {
-    if (!sharedAchievementToasts) sharedAchievementToasts = createAchievementToasts(createPinballYHost());
+    if (!sharedAchievementToasts) {
+        sharedAchievementToasts = createAchievementToasts(createPinballYHost(), {
+            toastSeconds: config.achievementToastSeconds,
+            soundFile: config.achievementSoundFile,
+        });
+    }
     return sharedAchievementToasts;
 }

@@ -14,6 +14,8 @@ const DEFAULTS = {
     language: "en",
     // ABSOLUTE path to the sound played when a table launches. Empty = no sound.
     launchSoundFile: "",
+    // ABSOLUTE path to the sound played with each Achievement Toast. Empty = no sound.
+    achievementSoundFile: "",
     // Manufacturer name you gave fictional/community VPX tables in PinballY.
     // Used by the status line and the "Original Tables" filter.
     communityTablesManufacturer: "VPX Community",
@@ -24,6 +26,8 @@ const DEFAULTS = {
     skipRandomGameAnimation: false,
     // Total play time (in minutes) on a table before you're asked to rate it.
     askToRateAfterMinutesPlayed: 60,
+    // Seconds an Achievement Toast stays fully visible (above 0, at most 60).
+    achievementToastSeconds: 4,
 
     // --- Add-ons ---
 

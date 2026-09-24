@@ -97,5 +97,6 @@ test("Achievement Toasts wait for the end of the game, arrive staggered and neve
     assert.ok(shownCount >= 4, `expected several Achievements, got ${shownCount}`);
     assert.equal(notifiedCount(fake), shownCount, "each toast Notified its Achievement");
     assert.equal(new Set(toasts(fake)).size, shownCount, "each Achievement announced once");
+    assert.deepEqual(fake.soundsPlayed(), [], "no sound by default");
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
 });

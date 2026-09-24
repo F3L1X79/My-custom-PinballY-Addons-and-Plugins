@@ -50,11 +50,16 @@ export function createPinballYHost() {
         // drawImage resolves relative paths from this folder, not from Scripts/.
         getProgramFolder: () => systemInfo.programDir,
         // Through the Windows Media Player COM component, like the launch
-        // sound; throws when it is unavailable or cannot play the file.
+        // sound; throws when it is unavailable or the file is missing
+        // (Windows Media Player itself fails silently on a missing file).
         playSound: (filePath) => {
+            if (!createAutomationObject("Scripting.FileSystemObject").FileExists(filePath)) {
+                throw new Error(`Sound file not found: ${filePath}`);
+            }
             if (!mediaPlayer) {
-                mediaPlayer = createAutomationObject("WMPlayer.OCX.7");
-                mediaPlayer.settings.autoStart = true;
+                const player = createAutomationObject("WMPlayer.OCX.7");
+                player.settings.autoStart = true;
+                mediaPlayer = player;
             }
             mediaPlayer.URL = filePath;
         },

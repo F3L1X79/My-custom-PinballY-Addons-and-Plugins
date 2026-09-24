@@ -2,7 +2,7 @@
 
 *[Version française](README.fr.md)*
 
-JavaScript add-ons for [PinballY](https://mjrnet.org/pinscape/PinballY.php) that make a virtual pinball cabinet feel more like an arcade machine. Plain JavaScript run by PinballY itself: no build step, no dependencies.
+JavaScript add-ons for [PinballY](http://mjrnet.org/pinscape/PinballY.php) that make a virtual pinball cabinet feel more like an arcade machine. Plain JavaScript run by PinballY itself: no build step, no dependencies.
 
 ## Features
 
@@ -11,7 +11,7 @@ JavaScript add-ons for [PinballY](https://mjrnet.org/pinscape/PinballY.php) that
 - **Random table**: a "wheel of fortune" animation, never the last played table.
 - **Main menu entries** after "Play": Achievement List, Table Setup, Random Game, Table of the Day, Table of the Week.
 - **"Original Tables" filter** in "Filter by Manufacturer": every table except the community-made ones.
-- **Achievements**, each announced once by a small card in the bottom-right corner of the playfield screen that disappears on its own (never during a game), and browsable by family in the "Achievement List":
+- **Achievements**, each announced once by a small card in the bottom-right corner of the playfield screen that disappears on its own (never during a game; several stack, with an optional sound), and browsable by family in the "Achievement List":
   - collection: first table, then 10 to 100 % of your collection played;
   - play time: 1 to 100 hours;
   - tables of the day and week: first play, total days or weeks played, streaks;
@@ -24,7 +24,7 @@ JavaScript add-ons for [PinballY](https://mjrnet.org/pinscape/PinballY.php) that
 
 ## Install
 
-Requires **Windows** and **PinballY 1.1.0 Beta 10** or later (plus the *Windows Media Player* optional feature for the launch sound only).
+Requires **Windows** and **PinballY 1.1.0 Beta 10** or later (plus the *Windows Media Player* optional feature for the launch and Achievement sounds only).
 
 1. **Back up** `PinballY\Scripts`, especially `main.js`: this project replaces it.
 2. **Copy the project** into `PinballY\Scripts`, keeping your own `System` folder.
@@ -35,9 +35,11 @@ Requires **Windows** and **PinballY 1.1.0 Beta 10** or later (plus the *Windows 
 |---|---|---|
 | `LANGUAGE` | `en` | `en`, `fr`, `de`, `es`, `it` or `pt`. |
 | `LAUNCH_SOUND_FILE` | empty | Full path to the launch sound, e.g. `C:\PinballY\Media\Sounds\launch.mp3`. |
+| `ACHIEVEMENT_SOUND_FILE` | empty | Full path to a sound played with each Achievement card. |
 | `COMMUNITY_TABLES_MANUFACTURER` | `VPX Community` | Manufacturer name of your community-made tables. |
 | `SKIP_RANDOM_GAME_ANIMATION` | `false` | `true` skips the wheel animation. |
 | `ASK_TO_RATE_AFTER_MINUTES_PLAYED` | `60` | Play time before the rating reminder. |
+| `ACHIEVEMENT_TOAST_SECONDS` | `4` | Seconds an Achievement card stays fully visible (above 0, at most 60). |
 | `ADD_ON_<NAME>` | `true` | `false` turns an add-on off, e.g. `ADD_ON_FORCE_BACKGLASS=false`. |
 
 Upgrading from a version where you edited `common\config.js`? Move your values into `.env.local` and run `git checkout common/config.js` before pulling.

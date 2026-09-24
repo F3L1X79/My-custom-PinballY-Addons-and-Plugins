@@ -2,7 +2,7 @@
 
 *[English version](README.md)*
 
-Des add-ons JavaScript pour [PinballY](https://mjrnet.org/pinscape/PinballY.php) qui donnent à une borne de flipper virtuel un air de machine d'arcade. Du JavaScript exécuté tel quel par PinballY : aucune étape de build, aucune dépendance.
+Des add-ons JavaScript pour [PinballY](http://mjrnet.org/pinscape/PinballY.php) qui donnent à une borne de flipper virtuel un air de machine d'arcade. Du JavaScript exécuté tel quel par PinballY : aucune étape de build, aucune dépendance.
 
 ## Fonctionnalités
 
@@ -11,7 +11,7 @@ Des add-ons JavaScript pour [PinballY](https://mjrnet.org/pinscape/PinballY.php)
 - **Table au hasard** : une animation « roue de la fortune », jamais la dernière table jouée.
 - **Entrées du menu principal** après « Jouer » : Succès personnels, Configuration de la table, table au hasard, table du jour, table de la semaine.
 - **Filtre « Tables Originales »** dans « Filtrer par fabricant » : toutes les tables sauf celles de la communauté.
-- **Succès**, chacun annoncé une fois par une petite carte en bas à droite de l'écran du plateau, qui disparaît toute seule (jamais pendant une partie), et consultables par famille dans « Succès personnels » :
+- **Succès**, chacun annoncé une fois par une petite carte en bas à droite de l'écran du plateau, qui disparaît toute seule (jamais pendant une partie ; plusieurs cartes s'empilent, avec un son facultatif), et consultables par famille dans « Succès personnels » :
   - collection : première table, puis de 10 à 100 % de la collection jouée ;
   - temps de jeu : de 1 à 100 heures ;
   - tables du jour et de la semaine : première partie, total de jours ou de semaines joués, séries ;
@@ -24,7 +24,7 @@ Des add-ons JavaScript pour [PinballY](https://mjrnet.org/pinscape/PinballY.php)
 
 ## Installation
 
-Nécessite **Windows** et **PinballY 1.1.0 Beta 10** ou plus récent (plus la fonctionnalité facultative *Lecteur Windows Media*, pour le son de lancement uniquement).
+Nécessite **Windows** et **PinballY 1.1.0 Beta 10** ou plus récent (plus la fonctionnalité facultative *Lecteur Windows Media*, pour les sons de lancement et de succès uniquement).
 
 1. **Sauvegardez** `PinballY\Scripts`, en particulier `main.js` : ce projet le remplace.
 2. **Copiez le projet** dans `PinballY\Scripts`, en gardant votre dossier `System`.
@@ -35,9 +35,11 @@ Nécessite **Windows** et **PinballY 1.1.0 Beta 10** ou plus récent (plus la fo
 |---|---|---|
 | `LANGUAGE` | `en` | `en`, `fr`, `de`, `es`, `it` ou `pt`. |
 | `LAUNCH_SOUND_FILE` | vide | Chemin complet du son de lancement, par exemple `C:\PinballY\Media\Sounds\launch.mp3`. |
+| `ACHIEVEMENT_SOUND_FILE` | vide | Chemin complet d'un son joué avec chaque carte de succès. |
 | `COMMUNITY_TABLES_MANUFACTURER` | `VPX Community` | Nom de fabricant de vos tables de la communauté. |
 | `SKIP_RANDOM_GAME_ANIMATION` | `false` | `true` saute l'animation de la roue. |
 | `ASK_TO_RATE_AFTER_MINUTES_PLAYED` | `60` | Temps de jeu avant le rappel de notation. |
+| `ACHIEVEMENT_TOAST_SECONDS` | `4` | Secondes pendant lesquelles une carte de succès reste pleinement visible (plus de 0, au plus 60). |
 | `ADD_ON_<NOM>` | `true` | `false` désactive un add-on, par exemple `ADD_ON_FORCE_BACKGLASS=false`. |
 
 Vous aviez modifié `common\config.js` dans une ancienne version ? Reportez vos valeurs dans `.env.local` et lancez `git checkout common/config.js` avant de faire un pull.

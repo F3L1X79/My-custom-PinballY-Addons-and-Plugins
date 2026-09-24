@@ -5,9 +5,10 @@
 // list, the wheel selection and the layout size, seed settings, fire
 // PinballY events, pick menu items, play launched games, and inspect shown
 // menus, launches, written settings keys, drawing layers, what was drawn
-// and sounds played. installGlobals() also exposes it as PinballY's
-// globals (and the global Date and timers), so code not yet on the host
-// runs too. settle() waits on a real timer for the deferred work to run.
+// and sounds played, and add the files that exist. installGlobals() also
+// exposes it as PinballY's globals (and the global Date and timers), so
+// code not yet on the host runs too. settle() waits on a real timer for
+// the deferred work to run.
 // Never loaded by PinballY.
 // ============================================================
 
@@ -78,6 +79,8 @@ export function createFakePinballYHost({
     // Every layer draw, in order: { zIndex, texts }.
     const drawingList = [];
     const sounds = [];
+    // Paths of the files that exist, for Scripting.FileSystemObject.
+    const existingFiles = new Set();
     // Pending timers, run in due order by advanceTime(): { id, dueMs, callback, intervalMs }.
     let timers = [];
     let nextTimerId = 1;
@@ -205,7 +208,9 @@ export function createFakePinballYHost({
         return layer;
     }
 
+    // Like the production host: a file never added by addFile() is missing.
     function playSound(filePath) {
+        if (!existingFiles.has(filePath)) throw new Error(`Sound file not found: ${filePath}`);
         sounds.push(filePath);
     }
 
@@ -266,6 +271,7 @@ export function createFakePinballYHost({
         drawingLayers: () => [...layers],
         drawings: () => drawingList.map(drawing => ({ ...drawing, texts: [...drawing.texts] })),
         soundsPlayed: () => [...sounds],
+        addFile(filePath) { existingFiles.add(filePath); },
         setTables(newTables) { allTables = newTables.map(table => ({ ...table })); },
         // The current wheel selection, in wheel order (index 0 is the current table).
         setWheelTables(configIds) {
@@ -399,13 +405,17 @@ export function createFakePinballYHost({
                 StyledText: FakeStyledText,
                 systemInfo: { programDir: programFolder },
                 // Only Windows Media Player, where setting the URL plays the
-                // file. Any other COM object throws, so common/config.js still
-                // falls back to its defaults when imported after this.
+                // file, and a file system that knows the files added by
+                // addFile() (no .env.local, so common/config.js imported after
+                // this keeps its defaults). Any other COM object throws.
                 createAutomationObject: (progId) => {
-                    if (progId !== "WMPlayer.OCX.7") {
-                        throw new Error(`The fake host has no COM object "${progId}".`);
+                    if (progId === "WMPlayer.OCX.7") {
+                        return { settings: {}, set URL(filePath) { playSound(filePath); } };
                     }
-                    return { settings: {}, set URL(filePath) { playSound(filePath); } };
+                    if (progId === "Scripting.FileSystemObject") {
+                        return { FileExists: (filePath) => existingFiles.has(filePath) };
+                    }
+                    throw new Error(`The fake host has no COM object "${progId}".`);
                 },
             });
 
