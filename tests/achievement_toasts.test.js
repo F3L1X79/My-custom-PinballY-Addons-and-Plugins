@@ -1,7 +1,7 @@
 ﻿// ============================================================
 // The Achievements add-on, started through main.js on the fake PinballY
 // globals, announces its unlocks with Achievement Toasts: never while a
-// game runs, one after the other, over an open menu without taking it
+// game runs, staggered, over an open menu without taking it
 // over, each one Notified when it starts, and a toast still waiting when a
 // table launches is announced after that game.
 // ============================================================
@@ -15,6 +15,7 @@ const NOW = new Date(2026, 8, 23, 10, 0, 0);
 const SECONDS_PER_HOUR = 3600;
 // Longer than a toast's whole life (rise, hold, fade).
 const ONE_TOAST_MS = 6000;
+const ARRIVAL_GAP_MS = 350;
 
 // Two Williams tables, both played: unlocks at least the first-table,
 // Williams and 1990s Achievements at startup.
@@ -41,7 +42,7 @@ function toasts(fake) {
     return fake.drawings().map(drawing => drawing.texts.join(" | "));
 }
 
-test("Achievement Toasts wait for the end of the game, follow each other and never take over a menu", async () => {
+test("Achievement Toasts wait for the end of the game, arrive staggered and never take over a menu", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
@@ -64,12 +65,11 @@ test("Achievement Toasts wait for the end of the game, follow each other and nev
     assert.equal(toasts(fake).length, 1, "first toast on the return to the wheel");
     assert.equal(notifiedCount(fake), 1, "Notified when its toast starts");
 
-    fake.advanceTime(1000);
-    assert.equal(toasts(fake).length, 1, "one toast at a time");
-
-    // The next toast starts over an open menu, which stays in charge.
+    // The next toast arrives a moment later, over an open menu, which stays in charge.
     fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }]);
-    fake.advanceTime(ONE_TOAST_MS);
+    fake.advanceTime(ARRIVAL_GAP_MS - 1);
+    assert.equal(toasts(fake).length, 1, "the toasts of a batch arrive staggered");
+    fake.advanceTime(1);
     assert.equal(toasts(fake).length, 2);
     assert.equal(notifiedCount(fake), 2);
     assert.equal(fake.currentMenu().id, "main");

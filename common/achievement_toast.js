@@ -3,9 +3,10 @@
 // small Steam-like card in the bottom-right corner of the playfield window,
 // drawn on a main-window drawing layer above menus and popups (see
 // docs/adr/0003). It takes no input and leaves on its own: it rises from
-// the bottom edge, holds a few seconds, then fades out. Toasts show one at
-// a time and wait while a game starts, runs or exits; waiting ones start
-// on "wheelmode".
+// the bottom edge, holds a few seconds, then fades out. Cards stack, the
+// newest at the bottom, arrive staggered, at most five on screen, and
+// the oldest leaves first. Toasts wait while a game starts, runs or exits;
+// waiting ones start on "wheelmode".
 // ============================================================
 
 import lang from "./i18n.js";
@@ -21,10 +22,13 @@ const HOLD_MS = 4000;
 const FADE_MS = 250;
 // Fraction of the remaining distance covered each frame while rising (ease-out).
 const RISE_EASE = 0.2;
+const ARRIVAL_GAP_MS = 350;
+const MAX_CARDS = 5;
 
 // Card look, validated with a prototype in PinballY.
 const CARD_WIDTH = 440;
 const EDGE_MARGIN = 24;
+const STACK_GAP = 10;
 const PADDING_Y = 22;
 const PADDING_RIGHT = 14;
 const GOLD_BAR_WIDTH = 5;
@@ -105,16 +109,19 @@ function drawCard(host, dc, toast, trophyPath) {
 export function createAchievementToasts(host) {
     const waiting = [];
     const trophyPath = `${host.getProgramFolder().replace(/\\+$/, "")}\\${TROPHY_FILE}`;
-    // Created on the first toast, then reused for every other one.
-    let layer = null;
-    // The toast on screen: its lift above its resting place (layout pixels,
-    // up is positive), the layout height, its alpha and whether it is leaving.
-    let shown = null;
+    // Cards on screen, oldest first. Each one: its layer, its height, the
+    // layout height, its lift above the bottom slot (layout pixels, up is
+    // positive), its alpha and whether it is leaving.
+    const cards = [];
+    // Layers of cards that left, kept for the next ones.
+    const freeLayers = [];
     let frameTimer = null;
+    // False for ARRIVAL_GAP_MS after a card arrives, so a batch arrives staggered.
+    let arrivalOpen = true;
 
-    function placeLayer() {
-        layer.alpha = shown.alpha;
-        layer.setPos(0, shown.lift / shown.layoutHeight);
+    function placeLayer(card) {
+        card.layer.alpha = card.alpha;
+        card.layer.setPos(0, card.lift / card.layoutHeight);
     }
 
     function startFrames() {
@@ -126,51 +133,69 @@ export function createAchievementToasts(host) {
         frameTimer = null;
     }
 
-    function startLeaving() {
-        shown.leaving = true;
+    // Every card's slot sits above the newer cards below it.
+    function targetLift(index) {
+        let lift = 0;
+        for (let newer = index + 1; newer < cards.length; newer++) lift += cards[newer].height + STACK_GAP;
+        return lift;
+    }
+
+    function startLeaving(card) {
+        card.leaving = true;
         startFrames();
     }
 
-    // Runs every frame while the toast rises or fades, then stops.
+    // Runs every frame while a card rises, eases up or fades, then stops.
     function step() {
         let moving = false;
-        if (shown.lift !== 0) {
-            shown.lift *= 1 - RISE_EASE;
-            if (Math.abs(shown.lift) >= 0.5) moving = true;
-            else {
-                shown.lift = 0;
-                // Arrived in place: fully visible from now on.
-                host.setTimeout(safeHandler(SCRIPT_NAME, startLeaving), HOLD_MS);
+        cards.forEach((card, index) => {
+            const remaining = targetLift(index) - card.lift;
+            if (Math.abs(remaining) * (1 - RISE_EASE) >= 0.5) {
+                card.lift += remaining * RISE_EASE;
+                moving = true;
+            } else card.lift += remaining;
+            if (card.leaving) {
+                card.alpha = Math.max(0, card.alpha - FRAME_MS / FADE_MS);
+                moving = true;
             }
-        }
-        if (shown.leaving) {
-            shown.alpha = Math.max(0, shown.alpha - FRAME_MS / FADE_MS);
-            if (shown.alpha > 0) moving = true;
-        }
-        placeLayer();
-        if (moving) return;
-
-        stopFrames();
-        if (shown.leaving) {
-            layer.clear(COLORS.transparent);
-            shown = null;
+            placeLayer(card);
+        });
+        if (cards.length > 0 && cards[0].leaving && cards[0].alpha === 0) {
+            const gone = cards.shift();
+            gone.layer.clear(COLORS.transparent);
+            freeLayers.push(gone.layer);
             showNext();
+            moving = true;
         }
+        if (!moving) stopFrames();
+    }
+
+    function openArrival() {
+        arrivalOpen = true;
+        showNext();
     }
 
     function showNext() {
-        if (shown || waiting.length === 0) return;
+        if (!arrivalOpen || cards.length >= MAX_CARDS || waiting.length === 0) return;
         // PinballY stops redrawing its window while a game starts, runs or
         // exits, and the game covers it.
         if (host.getFullUIMode().runMode !== undefined) return;
 
         const toast = waiting.shift();
-        if (!layer) layer = host.createDrawingLayer(TOAST_Z_INDEX);
-        let card = null;
-        layer.draw(dc => { card = drawCard(host, dc, toast, trophyPath); });
+        const layer = freeLayers.pop() || host.createDrawingLayer(TOAST_Z_INDEX);
+        let drawn = null;
+        layer.draw(dc => { drawn = drawCard(host, dc, toast, trophyPath); });
         // Starts just below the bottom edge, then rises into place.
-        shown = { lift: -(card.height + EDGE_MARGIN), layoutHeight: card.layoutHeight, alpha: 1, leaving: false };
-        placeLayer();
+        const card = {
+            layer, height: drawn.height, layoutHeight: drawn.layoutHeight,
+            lift: -(drawn.height + EDGE_MARGIN), alpha: 1, leaving: false,
+        };
+        cards.push(card);
+        placeLayer(card);
+        // Every card holds as long from its arrival: the oldest leaves first.
+        host.setTimeout(safeHandler(SCRIPT_NAME, () => startLeaving(card)), HOLD_MS);
+        arrivalOpen = false;
+        host.setTimeout(safeHandler(SCRIPT_NAME, openArrival), ARRIVAL_GAP_MS);
         // Animated before onShown, so a failing callback never leaves the card stuck on screen.
         startFrames();
         toast.onShown();
