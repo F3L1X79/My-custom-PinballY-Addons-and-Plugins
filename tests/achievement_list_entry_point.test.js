@@ -71,9 +71,8 @@ test("the Achievement List entry follows Play and lists the real Achievements by
     const familiesMenu = fake.currentMenu();
     const familyLines = familiesMenu.items.filter(item => item.cmd > 0 && item.title !== TEXT.back);
     const familyNames = familyLines.map(item => item.title.replace(/ \(\d+\/\d+\)$/, ""));
-    // No Random Game Achievement exists yet, so that family stays hidden.
     assert.deepEqual(familyNames, [
-        "collection", "playTime", "periodTables", "sessions", "manufacturers", "decades", "categories",
+        "collection", "playTime", "periodTables", "sessions", "randomGame", "manufacturers", "decades", "categories",
     ].map(family => TEXT.families[family]));
 
     function openFamily(family) {
@@ -108,6 +107,9 @@ test("the Achievement List entry follows Play and lists the real Achievements by
         ...[30, 60].map(minutes => `  ${ACHIEVEMENT.marathonTitles[minutes]}`),
         `  ${ACHIEVEMENT.rageQuitTitle()}`,
         `  ${ACHIEVEMENT.grandReturnTitle()}`,
+    ]);
+    assert.deepEqual(openFamily("randomGame"), [
+        ...[10, 50, 100].map(count => `  ${ACHIEVEMENT.randomGamesTitles[count]}`),
     ]);
     assert.deepEqual(openFamily("manufacturers"), [
         ...["Gottlieb", "Stern", "Williams"].map(name => `✓ ${ACHIEVEMENT.manufacturerCompletionTitle(name)}`),

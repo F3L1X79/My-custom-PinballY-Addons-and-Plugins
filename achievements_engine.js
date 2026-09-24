@@ -15,6 +15,7 @@ import { buildPeriodTableAchievements } from "./achievements/period_tables.js";
 import { buildDecadeCompletionAchievements } from "./achievements/decade_completion.js";
 import { buildCategoryCompletionAchievements } from "./achievements/category_completion.js";
 import { buildSessionMilestoneAchievements } from "./achievements/session_milestones.js";
+import { buildRandomGameFanAchievements } from "./achievements/random_game_fans.js";
 import { getWheelDialogs, DIALOG_PRIORITY } from "./common/wheel_dialog.js";
 import { getMainMenu, MAIN_MENU_POSITION } from "./common/main_menu.js";
 import { createAchievementList } from "./common/achievement_list.js";
@@ -34,6 +35,7 @@ function getAllAchievements() {
         ...buildDecadeCompletionAchievements(),
         ...buildCategoryCompletionAchievements(),
         ...buildSessionMilestoneAchievements(),
+        ...buildRandomGameFanAchievements(),
     ];
 }
 

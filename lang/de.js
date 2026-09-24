@@ -235,6 +235,12 @@ export default {
         rageQuitDescription: (seconds) => `Sie haben einen Tisch nach weniger als ${seconds} Sekunden verlassen...`,
         grandReturnTitle: () => "Die große Rückkehr",
         grandReturnDescription: (days) => `Sie haben einen Tisch nach ${days} oder mehr Tagen Pause wieder gespielt!`,
+        randomGamesTitles: {
+            10: "Warum nicht?",
+            50: "Würfelspieler",
+            100: "Ich liiiiebe den Zufall",
+        },
+        randomGamesDescription: (count) => `Sie haben ${count} zufällige Tische gespielt!`,
         unlockedIntro: (title, description) => `[Erfolg freigeschaltet]\n\n${title}\n${description}`,
         acknowledge: "Super!",
     },

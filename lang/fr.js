@@ -238,6 +238,12 @@ export default {
         rageQuitDescription: (seconds) => `Vous avez quitté une table en moins de ${seconds} secondes...`,
         grandReturnTitle: () => "Le grand retour",
         grandReturnDescription: (days) => `Vous avez rejoué une table après ${days} jours d'absence ou plus !`,
+        randomGamesTitles: {
+            10: "Et pourquoi pas ?",
+            50: "Joueur de dés",
+            100: "J'adooooore le hasard",
+        },
+        randomGamesDescription: (count) => `Vous avez lancé ${count} tables au hasard !`,
         unlockedIntro: (title, description) => `[Succès débloqué]\n\n${title}\n${description}`,
         acknowledge: "Youpi !",
     },

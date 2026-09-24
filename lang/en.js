@@ -149,6 +149,12 @@ export default {
         rageQuitDescription: (seconds) => `You quit a table in under ${seconds} seconds...`,
         grandReturnTitle: () => "The Grand Comeback",
         grandReturnDescription: (days) => `You replayed a table after ${days} or more days away!`,
+        randomGamesTitles: {
+            10: "Why Not?",
+            50: "Dice Roller",
+            100: "I Looooove Chance",
+        },
+        randomGamesDescription: (count) => `You've played ${count} Random Games!`,
         unlockedIntro: (title, description) => `[Achievement Unlocked]\n\n${title}\n${description}`,
         acknowledge: "Awesome!",
     },

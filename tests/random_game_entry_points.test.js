@@ -1,7 +1,8 @@
 ﻿// ============================================================
 // The startup prompt's random choice and the "Start Random Game" main menu
 // entry, started through main.js on the fake PinballY globals, never launch
-// the Last Played Table when the wheel selection holds another table. Runs
+// the Last Played Table when the wheel selection holds another table, and
+// every started one counts in the Random Games played. Runs
 // with the Random Game animation turned off (the fake has no wheel buttons).
 // ============================================================
 
@@ -9,6 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createFakePinballYHost } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
+import { getRandomGame } from "../common/random_game.js";
 
 const NOW = new Date(2026, 8, 23, 10, 0, 0);
 const MENU_LAUNCH_COUNT = 50;
@@ -31,7 +33,7 @@ function playAndReturnToWheel(fake, game) {
     fake.gameOver(game);
 }
 
-test("the startup prompt and the main menu never launch the Last Played Table as a Random Game", async () => {
+test("the startup prompt and the main menu never launch the Last Played Table, and each Random Game counts", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
     fake.setWheelTables([LAST_PLAYED_CONFIG_ID, "Medieval Madness (Williams 1997)", "Attack from Mars (Bally 1995)"]);
     // Never uninstalled: node --test runs each test file in its own process.
@@ -62,5 +64,6 @@ test("the startup prompt and the main menu never launch the Last Played Table as
     const launchedConfigIds = fake.launches().map(game => game.configId);
     assert.equal(launchedConfigIds.length, 1 + MENU_LAUNCH_COUNT);
     assert.ok(!launchedConfigIds.includes(LAST_PLAYED_CONFIG_ID), launchedConfigIds.join(", "));
+    assert.equal(getRandomGame().getRandomGamesPlayed(), 1 + MENU_LAUNCH_COUNT);
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
 });

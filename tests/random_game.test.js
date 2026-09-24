@@ -136,3 +136,68 @@ test("ignores a Random Game requested while the animation is running", async () 
 
     assert.equal(fake.launches().length, 1);
 });
+
+// The draw then the early stop use Math.random in that order: the first
+// value picks the last table of the pool, the second one stops early.
+function forceEarlyStop(t) {
+    const values = [0.99, 0];
+    t.mock.method(Math, "random", () => (values.length > 0 ? values.shift() : 0.99));
+}
+
+test("a started Random Game adds 1 to the Random Games played, once", async () => {
+    const { fake, randomGame } = createRandomGameOn({ wheel: [MEDIEVAL_MADNESS, ATTACK_FROM_MARS] });
+
+    await randomGame.launch();
+    const [launched] = fake.launches();
+    fake.gameStarted(launched);
+    fake.gameOver(launched);
+    // The same table started again by hand is not a Random Game.
+    fake.gameStarted(launched);
+    fake.gameOver(launched);
+
+    assert.equal(randomGame.getRandomGamesPlayed(), 1);
+});
+
+test("the landing table of an early stop counts as a Random Game", async (t) => {
+    const { fake, randomGame } = createRandomGameOn({ wheel: [MEDIEVAL_MADNESS, ATTACK_FROM_MARS] });
+    forceEarlyStop(t);
+
+    await randomGame.launch();
+    const [launched] = fake.launches();
+    assert.equal(launched.configId, MEDIEVAL_MADNESS.configId, "stopped one table early");
+    fake.gameStarted(launched);
+
+    assert.equal(randomGame.getRandomGamesPlayed(), 1);
+});
+
+test("a Random Game whose launch fails does not count, nor a later start of that table by hand", async () => {
+    const { fake, randomGame } = createRandomGameOn({ wheel: [MEDIEVAL_MADNESS, ATTACK_FROM_MARS] });
+
+    await randomGame.launch();
+    const [launched] = fake.launches();
+    fake.launchError(launched);
+    fake.gameStarted(launched);
+
+    assert.equal(randomGame.getRandomGamesPlayed(), 0);
+});
+
+test("a table started by hand does not count as a Random Game", () => {
+    const { fake, randomGame } = createRandomGameOn({ wheel: [MEDIEVAL_MADNESS, ATTACK_FROM_MARS] });
+
+    fake.gameStarted(MEDIEVAL_MADNESS);
+
+    assert.equal(randomGame.getRandomGamesPlayed(), 0);
+});
+
+test("the Random Games played continue from the saved count", async () => {
+    const fake = createFakePinballYHost({ tables: TABLES });
+    fake.setWheelTables([MEDIEVAL_MADNESS.configId, ATTACK_FROM_MARS.configId]);
+    fake.seedSettings({ "custom.randomGame.launchCount": 9 });
+    const randomGame = createRandomGame(fake, { ...noDelayAnimator, skipAnimation: true });
+
+    await randomGame.launch();
+    fake.gameStarted(fake.launches()[0]);
+
+    assert.equal(randomGame.getRandomGamesPlayed(), 10);
+    assert.equal(fake.storedSettings()["custom.randomGame.launchCount"], "10");
+});

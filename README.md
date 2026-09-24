@@ -2,175 +2,61 @@
 
 *[Version française](README.fr.md)*
 
-A set of JavaScript add-ons for [PinballY](https://mjrnet.org/pinscape/PinballY.php), the virtual pinball front end. They make your cabinet feel more like an arcade machine:
-- a table of the day and a table of the week;
-- a random table picked by a "wheel of fortune" animation;
-- achievements;
-- a translated interface in 6 languages;
-- smoother table launches.
-
-Everything is plain JavaScript run by PinballY itself: no build step, no dependencies.
+JavaScript add-ons for [PinballY](https://mjrnet.org/pinscape/PinballY.php) that make a virtual pinball cabinet feel more like an arcade machine. Plain JavaScript run by PinballY itself: no build step, no dependencies.
 
 ## Features
 
-**Choosing what to play**
-- **Startup dialog.** When PinballY starts, it offers to stay on the last played table, or to launch the table of the day, the table of the week or a random table.
-- **Table of the day.** One pick per day: a table you've never played, or else the one you played longest ago.
-- **Table of the week.** One purely random pick per week, Monday to Sunday.
-- **Random table.** The wheel spins to a random table with a "wheel of fortune" animation (fast start, slow finish), then launches it.
-- **Main menu entries.** "Achievement List" (with the achievements add-on), a shortcut to "Table Setup", "Start Random Game", "Launch Table of the Day" and "Launch Table of the Week" are added right after "Play", in that order.
-- **"Original Tables" filter.** Added to the "Filter by Manufacturer" menu. It lists every table except the community-made ones (see `communityTablesManufacturer` in the configuration below).
+- **Startup dialog**: stay on the last played table, or launch the table of the day, the table of the week or a random table.
+- **Table of the day** (never played, or else played longest ago) and **table of the week** (random, Monday to Sunday).
+- **Random table**: a "wheel of fortune" animation, never the last played table.
+- **Main menu entries** after "Play": Achievement List, Table Setup, Random Game, Table of the Day, Table of the Week.
+- **"Original Tables" filter** in "Filter by Manufacturer": every table except the community-made ones.
+- **Achievements**, announced once when you're back at the wheel and browsable by family in the "Achievement List":
+  - collection: first table, then 10 to 100 % of your collection played;
+  - play time: 1 to 100 hours;
+  - tables of the day and week: first play, total days or weeks played, streaks;
+  - sessions: 30 or 60 minute marathon, rage quit (5 seconds or less), grand comeback after 31 days;
+  - random game: 10, 50 and 100 random tables played;
+  - completion of a manufacturer, a decade or a category.
+- **Interface**: PinballY translated into French, German, Spanish, Italian or Portuguese; a status line about the selected table; a reminder to rate a table after 60 minutes of play.
+- **Launch**: no black flash between the wheel and the table, an optional launch sound, the backglass hidden while a table runs.
 
-**Achievements.** A congratulations dialog appears when you're back at the wheel. Each achievement is shown only once. The "Achievement List" entry of the main menu shows every achievement by family (collection, play time, tables of the day and week, sessions, manufacturers, decades, categories), with the unlocked ones checked at the top. Selecting an achievement shows its card: what it asks for and whether it is unlocked.
-- **First table.** Your very first table played.
-- **Collection.** 10, 25, 50, 75 and 100 % of your collection played.
-- **Completion.** All the tables of a manufacturer, of a decade or of a category played.
-- **Total play time.** 1, 5, 10, 50 and 100 hours.
-- **Tables of the day and week.** The first time you play the table of the day, and the table of the week. The table of the day played on 10, 50 or 100 days in total, and the table of the week in 10, 26 or 52 weeks in total, consecutive or not. Streaks: the table of the day played 3, 7 or 30 days in a row; the table of the week played 4 or 12 weeks in a row. A day or week counts once, as soon as you play its table, whether you launched it from the menus or picked it yourself on the wheel.
-- **Session milestones.** A 30 or 60 minute marathon, a rage quit (30 seconds or less), and a grand comeback on a table untouched for 31 days or more.
+## Install
 
-**Interface**
-- **Translation.** PinballY's own menus and launch messages are translated into French, German, Spanish, Italian or Portuguese. English is the default.
-- **Status line.** The lower status line cycles through information about the selected table: its position in the list, release year, manufacturer, play count and total play time.
-- **Rating reminder.** Once a table's total play time passes 60 minutes, you're asked to rate it if you haven't yet.
+Requires **Windows** and **PinballY 1.1.0 Beta 10** or later (plus the *Windows Media Player* optional feature for the launch sound only).
 
-**Launching a table**
-- **Seamless launch.** The wheel is hidden during loading, which avoids a black flash between the wheel and the table's own loading screen.
-- **Launch sound.** An optional sound (for example "Here we go!") plays when a table starts.
-- **Backglass handling.** The backglass window is shown at startup, hidden while a table runs (Visual Pinball draws its own), then shown again.
+1. **Back up** `PinballY\Scripts`, especially `main.js`: this project replaces it.
+2. **Copy the project** into `PinballY\Scripts`, keeping your own `System` folder.
+3. **Copy `.env.example` to `.env.local`** and set what you need, one `KEY=value` per line (UTF-8). Missing settings keep their default; `.env.local` is ignored by git.
+4. **Restart PinballY** and check `PinballY.log`: it lists your overrides, one "initialized" line per add-on, and `ERROR` lines naming the add-on at fault.
 
-## Requirements
-
-- **Windows**, with **PinballY 1.1.0 Beta 10** or later.
-- **For the launch sound only:** the **Windows Media Player** optional Windows feature (*Settings › Apps › Optional features*). Without it, only the sound is skipped; everything else works.
-
-## Quick install
-
-**1. Back up** your current `PinballY\Scripts` folder, especially `main.js` if you already have one: this project replaces it.
-
-**2. Copy the project** into `PinballY\Scripts`. The `System` folder ships with PinballY itself: keep yours and don't overwrite it.
-
-```text
-PinballY\
-└── Scripts\
-    ├── System\            ← from your PinballY install, leave it alone
-    ├── main.js            ← entry point PinballY loads at startup
-    ├── *.js               ← one file per add-on
-    ├── .env.example       ← every setting, with its default
-    ├── .env.local         ← your settings (you create it in step 3)
-    ├── common\            ← shared code
-    ├── achievements\
-    └── lang\
-```
-
-**3. Create your settings file.** Copy `.env.example` to `.env.local` in the same folder, open `.env.local` in a text editor, and set the three lines under "Set these for your setup":
-
-| Setting | Default | What to set |
+| Setting | Default | Meaning |
 |---|---|---|
-| `LANGUAGE` | `en` | Your language: `en`, `fr`, `de`, `es`, `it` or `pt`. |
-| `LAUNCH_SOUND_FILE` | empty (no sound) | The full path to your sound file, written normally, e.g. `C:\PinballY\Media\Sounds\launch.mp3`. Leave it empty for no sound. |
-| `COMMUNITY_TABLES_MANUFACTURER` | `VPX Community` | The manufacturer name you gave community-made tables in PinballY. It's used by the status line and the "Original Tables" filter. |
+| `LANGUAGE` | `en` | `en`, `fr`, `de`, `es`, `it` or `pt`. |
+| `LAUNCH_SOUND_FILE` | empty | Full path to the launch sound, e.g. `C:\PinballY\Media\Sounds\launch.mp3`. |
+| `COMMUNITY_TABLES_MANUFACTURER` | `VPX Community` | Manufacturer name of your community-made tables. |
+| `SKIP_RANDOM_GAME_ANIMATION` | `false` | `true` skips the wheel animation. |
+| `ASK_TO_RATE_AFTER_MINUTES_PLAYED` | `60` | Play time before the rating reminder. |
+| `ADD_ON_<NAME>` | `true` | `false` turns an add-on off, e.g. `ADD_ON_FORCE_BACKGLASS=false`. |
 
-For example, for a French setup with a launch sound:
+Upgrading from a version where you edited `common\config.js`? Move your values into `.env.local` and run `git checkout common/config.js` before pulling.
 
-```text
-LANGUAGE=fr
-LAUNCH_SOUND_FILE=C:\PinballY\Media\Sounds\launch.mp3
-```
+## Your progress
 
-You can delete every line you don't change: missing settings keep their default. Save the file as **UTF-8**. `.env.local` is ignored by git, so updating the project never touches it. Without a `.env.local`, everything runs with the defaults (English, no launch sound).
+Saved in PinballY's `Settings.txt`, under keys starting with `custom.`. Close PinballY and delete lines to reset them (for example `custom.achievements.notified.*` announces every unlocked achievement again). Collection, completion and play-time achievements use PinballY's own statistics and count your past plays; the others count from installation onwards.
 
-**4. Restart PinballY**, then open `PinballY.log` in the PinballY folder. It lists the settings your `.env.local` changed:
+## Languages
 
-```text
-[Script] [Config] .env.local overrides: LANGUAGE, LAUNCH_SOUND_FILE.
-```
+Translations live in `lang\<code>.js`; English is the fallback, and missing keys are listed in `PinballY.log`. To add a language, copy `fr.js` (not `en.js`), translate it keeping the keys, `[Game.Xxx]` markers and `${...}` parameters, register it in `common\i18n.js` (an `import` and an `AVAILABLE_LANGUAGES` entry), and save it as UTF-8.
 
-A mistyped setting or an invalid value is logged with its line number, then ignored. Every add-on also writes a line like this:
+## Contributing
 
-```text
-[Script] [Startup] "achievements" initialized in 4 ms.
-```
+- `main.js` starts the add-ons listed in `SCRIPTS`. The root holds one file per add-on; shared code goes in `common\`, achievement definitions in `achievements\`, translations in `lang\`, tests in `tests\`.
+- Shared modules: `pinbally_host` (the only way to PinballY for testable modules), `period_table`, `random_game`, `wheel_dialog` (spontaneous dialogs, shown one at a time when the wheel is free), `main_menu` (entries after "Play").
+- Conventions: English code and comments, a header block per file, no JSDoc, no globals, every displayed text in all 6 languages, event handlers wrapped in `safeHandler`. Details in `.claude/rules/`.
+- Tests: `node --test` (Node.js 22+). `tests/persisted_data_pinning.test.js` locks saved keys and achievement IDs.
 
-A line containing `ERROR` names the add-on at fault. The other add-ons keep working.
-
-## Configuration
-
-Every setting is listed in `.env.example`, with a comment and its default. Set the ones you want to change in `.env.local`, one `KEY=value` per line. Quotes around values are optional, and lines starting with `#` are comments.
-
-| Setting | What it controls |
-|---|---|
-| **Set these for your setup** | |
-| `LANGUAGE` | Interface language. `en` for English. |
-| `LAUNCH_SOUND_FILE` | Sound played when a table launches. Empty for no sound. |
-| `COMMUNITY_TABLES_MANUFACTURER` | Name used for community-made tables. |
-| **Optional preferences** | |
-| `SKIP_RANDOM_GAME_ANIMATION` | `true` jumps straight to the random table, without the wheel animation. |
-| `ASK_TO_RATE_AFTER_MINUTES_PLAYED` | Total play time on a table before you're asked to rate it. |
-| **Add-ons** | |
-| `ADD_ON_<NAME>` | `false` turns an add-on off, for example `ADD_ON_FORCE_BACKGLASS=false` if you have no backglass screen. |
-
-**Already using an older version?** If you had edited `common\config.js`, move your values into `.env.local`, then undo your edits with `git checkout common/config.js` before pulling; otherwise git reports a conflict on that file.
-
-## Where your progress is stored
-
-Streaks, session records, table-of-the-day picks and "already notified" achievements are saved in PinballY's own `Settings.txt`, under keys starting with `custom.`. To reset one, close PinballY and delete the matching lines. For example, deleting the `custom.achievements.notified.*` lines shows every unlocked achievement again.
-
-Collection, completion and play-time achievements are computed from PinballY's own play statistics, so tables you had already played before installing count straight away. Streaks and session milestones (marathon, rage quit, grand comeback) only count from installation onwards.
-
-## Adding or improving a language
-
-Translations live in `lang\<code>.js`. English (`en.js`) is the fallback language.
-
-- **To improve a translation,** edit the text in that language's file.
-- **To add a language:**
-  1. Copy an existing translation such as `fr.js` (not `en.js`: its PinballY menu tables are empty, since PinballY's own texts are already in English) to a new file, for example `nl.js`, and translate it. Keep the keys, the `[Game.Xxx]` placeholders and the `${...}` parameters as they are.
-  2. Register it in `common\i18n.js`: add an `import` and an entry in `AVAILABLE_LANGUAGES`.
-  3. Select it with `LANGUAGE` in `.env.local`.
-
-If a text is missing from a language, the English text is shown instead, and the missing keys are listed once in `PinballY.log` at startup. Save language files as **UTF-8** so accented characters display correctly.
-
-## For contributors
-
-`main.js` starts each add-on in turn, in the order of its `SCRIPTS` list. The comment above the list explains which order constraints matter. Each add-on is a module whose default `init()` function sets it up, usually by registering PinballY event listeners.
-
-```text
-main.js                  entry point and add-on list
-*.js                     one file per add-on registered in main.js, and nothing else
-                         (ui_translation, session_stats_tracker, rating_prompt, ...)
-common\                  shared code, never an add-on: config, i18n, safe_handler,
-                         pinbally_host, period_table, wheel_dialog, random_game...
-achievements\            achievement definitions
-lang\                    translations
-tests\                   node tests (never loaded by PinballY)
-```
-
-To add an add-on, create its file at the root, then register it in `main.js` (`import` and `SCRIPTS`) and in `addOns` in `common\config.js`. Code shared by several add-ons goes in `common\`.
-
-Four shared modules carry most of the logic:
-- **PinballY host** (`common/pinbally_host.js`). Everything the Period Table and wheel dialog modules take from PinballY: settings, clock, visible tables, main window menus, UI mode and events, commands, table launch. It passes straight through to PinballY; the tests replace it with an in-memory fake. The other add-ons and helpers still use PinballY's globals directly.
-- **Period Table** (`common/period_table.js`). One module for both the table of the day and the table of the week: it picks the table once per period and keeps it, launches it, and keeps its streak and its total of periods played (never lower than the longest streak). A period counts in both when its table actually starts playing. Add-ons share one instance of each through `getTableOfTheDay()` and `getTableOfTheWeek()`.
-- **Wheel dialog** (`common/wheel_dialog.js`). Add-ons `submit()` a dialog description (message, buttons with their actions, priority) to the queue returned by `getWheelDialogs()`. It shows the dialogs one at a time, only when the wheel is free, in a fixed priority order (startup prompt, then achievements, then rating prompt), and moves on as soon as one closes. The order of add-ons in `main.js` never decides which dialog comes first.
-- **Main menu** (`common/main_menu.js`). Add-ons `add()` their main menu entries (label, action, position) to the module returned by `getMainMenu()`. It places them right after "Play" in a fixed position order, so the order of add-ons in `main.js` never decides where an entry lands.
-
-The conventions, enforced in review:
-- **Language.** Code, comments and log messages are in English.
-- **Style.** File names in `snake_case.js`. No global variables: only the globals PinballY provides.
-- **Comments.** Each file starts with a header block describing its role, when it runs and its side effects. Add short `//` comments for the *why* of non-obvious choices. No JSDoc.
-- **Displayed text.** Every text shown to the player goes through `common/i18n.js` and must exist in all 6 languages.
-- **Error handling.** Wrap every event handler with `safeHandler(SCRIPT_NAME, ...)` from `common/safe_handler.js`. An error is then logged with the add-on's name, and the other add-ons keep working.
-- **Settings.**
-  - Read typed values with `optionSettings.getInt` / `getFloat` / `getBool`, because `get()` always returns a string.
-  - Don't call `optionSettings.save()`: PinballY saves on its own.
-- **Dialogs.** Submit spontaneous dialogs (announcements, prompts) to the wheel dialog module, which waits for the wheel to be free. A menu the player opens (such as the Achievement List) opens directly. Any other menu opened directly must only open when `mainWindow.getUIMode().mode === "wheel"`; otherwise, wait for the `wheelmode` event.
-- **Main menu entries** are added through `getMainMenu().add(...)` with a position from `MAIN_MENU_POSITION`.
-- **Menu separators** are written `{ cmd: -1 }`.
-
-**Tests.** From the project folder, run `node --test` (Node.js 22 or later, nothing to install). The tests run the add-ons on an in-memory fake PinballY (`tests/fake_pinbally_host.js`), the test twin of `common/pinbally_host.js`. `tests/persisted_data_pinning.test.js` locks the saved settings keys and Achievement IDs: if it fails, a change would lose players' progress.
-
-The PinballY scripting reference is in PinballY's help (`PinballY\Help\Javascript.html`, also [online](https://mjrnet.org/pinscape/downloads/PinballY/Help/PinballY.html)). Official examples are in [PinballY-Addons-and-Examples](https://github.com/PinballY/PinballY-Addons-and-Examples).
-
-Bugs and ideas: [GitHub issues](https://github.com/F3L1X79/My-custom-PinballY-Addons-and-Plugins/issues).
+PinballY scripting reference: `PinballY\Help\Javascript.html` ([online](https://mjrnet.org/pinscape/downloads/PinballY/Help/PinballY.html)); examples in [PinballY-Addons-and-Examples](https://github.com/PinballY/PinballY-Addons-and-Examples). Bugs and ideas: [GitHub issues](https://github.com/F3L1X79/My-custom-PinballY-Addons-and-Plugins/issues).
 
 ## License
 

@@ -235,6 +235,12 @@ export default {
         rageQuitDescription: (seconds) => `Você saiu de uma mesa em menos de ${seconds} segundos...`,
         grandReturnTitle: () => "O grande retorno",
         grandReturnDescription: (days) => `Você voltou a jogar uma mesa depois de ${days} dias ou mais!`,
+        randomGamesTitles: {
+            10: "E por que não?",
+            50: "Jogador de dados",
+            100: "Eu adoooooro o acaso",
+        },
+        randomGamesDescription: (count) => `Você jogou ${count} mesas aleatórias!`,
         unlockedIntro: (title, description) => `[Conquista desbloqueada]\n\n${title}\n${description}`,
         acknowledge: "Incrível!",
     },

@@ -18,7 +18,7 @@ import {
 // announce the Achievement again to players who already earned it. Each
 // one also needs its title in every lang/ file.
 const MARATHON_THRESHOLDS_MINUTES = [30, 60];
-const RAGE_QUIT_THRESHOLD_SECONDS = 30;
+const RAGE_QUIT_THRESHOLD_SECONDS = 5;
 
 export function buildSessionMilestoneAchievements() {
     const { achievements: TEXT } = lang;

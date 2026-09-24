@@ -4,12 +4,19 @@
 // wheel to it and launches it. Created from the PinballY host and an
 // animator (skipped when the player turned the animation off); the "Start Random Game" menu command and the startup choice
 // prompt share one instance through getRandomGame(). Calls made while an
-// animation is already running are ignored.
+// animation is already running are ignored. Counts the Random Games
+// played in "custom.randomGame.launchCount" (on "gamestarted", never after
+// "launcherror").
 // ============================================================
 
 import { animateWheelTo, sleep } from "./wheel_navigator.js";
 import { createPinballYHost } from "./pinbally_host.js";
+import { safeHandler } from "./safe_handler.js";
 import config from "./config.js";
+
+const SCRIPT_NAME = "RandomGame";
+// Players' saved progress: must never change.
+const LAUNCH_COUNT_KEY = "custom.randomGame.launchCount";
 
 // Base speed (ms) of the "wheel of fortune" animation.
 const ANIMATION_BASE_SPEED_MS = 200;
@@ -33,6 +40,13 @@ function findLastPlayedTable(tables) {
 
 export function createRandomGame(host, { animateTo, skipAnimation = config.skipRandomGameAnimation }) {
     let launchInProgress = false;
+    // The table this module just launched, until it starts or fails to launch.
+    let pendingConfigId = null;
+
+    function playGame(game) {
+        pendingConfigId = game.configId;
+        host.playGame(game);
+    }
 
     async function launch() {
         if (launchInProgress) return;
@@ -52,7 +66,7 @@ export function createRandomGame(host, { animateTo, skipAnimation = config.skipR
             const drawnIndex = pool[randomIndex(pool.length)];
 
             if (skipAnimation) {
-                host.playGame(tables[drawnIndex]);
+                playGame(tables[drawnIndex]);
                 return;
             }
 
@@ -65,13 +79,31 @@ export function createRandomGame(host, { animateTo, skipAnimation = config.skipR
                 : drawnIndex;
 
             await animateTo(tables, landingIndex);
-            host.playGame(tables[landingIndex]);
+            playGame(tables[landingIndex]);
         } finally {
             launchInProgress = false;
         }
     }
 
-    return { launch };
+    function getRandomGamesPlayed() {
+        return host.settings.getInt(LAUNCH_COUNT_KEY, 0);
+    }
+
+    // Fires when a launched table's first window opens. Only one table runs
+    // at a time, so any start settles the pending Random Game: counted if it
+    // is that table, forgotten otherwise.
+    host.on("gamestarted", safeHandler(SCRIPT_NAME, ev => {
+        const isRandomGame = pendingConfigId !== null && ev.game && ev.game.configId === pendingConfigId;
+        pendingConfigId = null;
+        if (isRandomGame) host.settings.set(LAUNCH_COUNT_KEY, getRandomGamesPlayed() + 1);
+    }));
+
+    // Fires instead of "gamestarted" when the launch fails.
+    host.on("launcherror", safeHandler(SCRIPT_NAME, () => {
+        pendingConfigId = null;
+    }));
+
+    return { launch, getRandomGamesPlayed };
 }
 
 async function animateWheelThenPause(tables, index) {

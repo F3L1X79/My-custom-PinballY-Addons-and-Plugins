@@ -2,7 +2,7 @@
 // Pinning test: starts the add-ons through main.js on the fake PinballY
 // globals, plays a scripted session on a fixture collection, and locks the
 // exact settings keys written (Period Table locks, Streaks, Periods Played,
-// Notified flags, session stats) and every Achievement ID produced. These
+// Random Games played, Notified flags, session stats) and every Achievement ID produced. These
 // strings are players' saved progress: this test must keep passing unchanged.
 // ============================================================
 
@@ -68,6 +68,9 @@ const EXPECTED_ACHIEVEMENT_IDS = [
     "playTimeMilestone:50h",
     "playTimeMilestone:5h",
     "rageQuit",
+    "randomGames:10",
+    "randomGames:100",
+    "randomGames:50",
     "tableOfTheDayFirstPlay",
     "tableOfTheDayPeriodsPlayed:10",
     "tableOfTheDayPeriodsPlayed:100",
@@ -84,6 +87,7 @@ const EXPECTED_ACHIEVEMENT_IDS = [
 ];
 
 const EXPECTED_FIXED_KEYS = [
+    "custom.randomGame.launchCount",
     "custom.sessionStats.grandReturnUnlocked",
     "custom.sessionStats.longestSeconds",
     "custom.sessionStats.shortestSeconds",
@@ -119,6 +123,8 @@ function useFixtureConfig() {
         config.addOns[key] = ADD_ONS_UNDER_TEST.includes(key);
     }
     config.language = "en";
+    // The fake has no wheel buttons to animate.
+    config.skipRandomGameAnimation = true;
 }
 
 async function playLastLaunch(fake, durationSeconds) {
@@ -152,6 +158,8 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
         "custom.streaks.tableOfTheWeek.currentStreak": 11,
         "custom.streaks.tableOfTheWeek.longestStreak": 11,
         "custom.streaks.tableOfTheWeek.periodsPlayed": 51,
+        // One Random Game short of the last Random Game fan Achievement.
+        "custom.randomGame.launchCount": 99,
         // Every table last played two years ago, for the grand return.
         ...Object.fromEntries(TABLES.map(table =>
             [PREVIOUS_PLAY_KEY_PREFIX + table.configId, new Date(2024, 8, 1).toISOString()])),
@@ -180,7 +188,14 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
     fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }]);
     fake.selectMenuItem(lang.customMenuLabels.tableOfTheWeek);
     await settle();
-    const weekTable = await playLastLaunch(fake, 10);
+    const weekTable = await playLastLaunch(fake, 3);
+    await closeEveryDialog(fake, () => fake.closeMenu());
+
+    // Main menu again: a Random Game.
+    fake.openMenu("main", [{ title: "Play", cmd: globalThis.command.PlayGame }]);
+    fake.selectMenuItem(lang.customMenuLabels.randomGame);
+    await settle();
+    const randomTable = await playLastLaunch(fake, 3);
     await closeEveryDialog(fake, () => fake.closeMenu());
 
     const writtenKeys = [...fake.writtenSettingsKeys()];
@@ -191,7 +206,7 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
         .sort();
     assert.deepEqual(notifiedIds, EXPECTED_ACHIEVEMENT_IDS);
 
-    const expectedPreviousPlayKeys = [...new Set([dayTable.configId, weekTable.configId])]
+    const expectedPreviousPlayKeys = [...new Set([dayTable.configId, weekTable.configId, randomTable.configId])]
         .map(configId => PREVIOUS_PLAY_KEY_PREFIX + configId);
     const otherKeys = writtenKeys.filter(key => !key.startsWith(NOTIFIED_KEY_PREFIX)).sort();
     assert.deepEqual(otherKeys, [...EXPECTED_FIXED_KEYS, ...expectedPreviousPlayKeys].sort());
