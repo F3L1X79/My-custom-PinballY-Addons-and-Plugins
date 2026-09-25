@@ -30,13 +30,13 @@ test("with the startup prompt on, no greeting shows at startup", async () => {
 
     await import("../main.js");
     await settle();
-    fake.advanceTime(0);
+    fake.advanceTime(1000);
     assert.equal(fake.currentMenu().id, "startupChoicePrompt");
     assert.deepEqual(pickerTexts(fake), [], "never over the startup prompt");
 
     fake.closeMenu();
     await settle();
-    fake.advanceTime(0);
+    fake.advanceTime(1000);
     assert.deepEqual(pickerTexts(fake), [], "nor after it");
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
 });

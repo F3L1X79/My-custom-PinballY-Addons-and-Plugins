@@ -3,9 +3,11 @@
 // "Change Player" entry, right after "Play" in the main menu and right
 // after "Quit" in the exit menu, closes that menu and opens the drawn
 // carousel on the active Profile; the flipper buttons move through the
-// Profiles and wrap, every button is swallowed while it is open, Select or
-// Launch switches to the highlighted Profile, and Exit or attract mode
-// close it without switching. Folders added while PinballY runs show up on
+// Profiles and wrap (the name shows once the Avatars have glided into
+// place), every button is swallowed while it is open, Select or Launch
+// switches to the highlighted Profile and leaves the carousel still until
+// the greeting replaces it, and Exit or attract mode close it without
+// switching. Folders added while PinballY runs show up on
 // the next open.
 // ============================================================
 
@@ -17,6 +19,10 @@ import config from "../common/config.js";
 const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 const CABINET_FILE = `${PROFILES_FOLDER}\\cabinet.json`;
 const PICKER_Z = 6500;
+// Past the ~200 ms glide, past the pause before the greeting, and past the
+// whole greeting.
+const GLIDE_OVER_MS = 500;
+const PAUSE_OVER_MS = 500;
 const GREETING_OVER_MS = 2500;
 
 async function start({ enabled = true, activeProfile = "Bob" } = {}) {
@@ -69,10 +75,13 @@ test("the Profile picker moves, wraps, switches, cancels and sees new folders", 
 
     const next = press(fake, "Next");
     assert.equal(next.defaultPrevented, true, "the wheel does not move");
+    assert.deepEqual(names.filter(name => pickerTexts(fake).includes(name)), [], "no name while the Avatars glide");
+    fake.advanceTime(GLIDE_OVER_MS);
     assert.equal(highlightedName(fake, names), guest, "Next wraps from the last Profile to Guest");
     press(fake, "Prev");
     press(fake, "Prev");
-    assert.equal(highlightedName(fake, names), "Alice");
+    fake.advanceTime(GLIDE_OVER_MS);
+    assert.equal(highlightedName(fake, names), "Alice", "a press during a glide carries on");
     assert.equal(press(fake, "ExitGame").defaultPrevented, true, "every button is swallowed");
 
     assert.equal(press(fake, "Exit").defaultPrevented, true);
@@ -86,11 +95,14 @@ test("the Profile picker moves, wraps, switches, cancels and sees new folders", 
     await settle();
     assert.equal(highlightedName(fake, names), "Bob", "opens on the active Profile again");
     press(fake, "Next");
+    fake.advanceTime(GLIDE_OVER_MS);
     assert.equal(highlightedName(fake, names), "Chloé", "a folder added while PinballY runs shows up");
 
     press(fake, "Select");
-    assert.ok(!pickerTexts(fake).includes(lang.profiles.pickerTitle), "Select closes the carousel");
-    assert.equal(press(fake, "Next").defaultPrevented, false, "buttons reach PinballY during the greeting");
+    assert.ok(pickerTexts(fake).includes(lang.profiles.pickerTitle), "the carousel stays still for a moment");
+    assert.equal(press(fake, "Next").defaultPrevented, false, "buttons reach PinballY once picked");
+    fake.advanceTime(PAUSE_OVER_MS);
+    assert.ok(!pickerTexts(fake).includes(lang.profiles.pickerTitle), "then the greeting replaces the carousel");
     assert.equal(store.getActiveProfile().name, "Chloé");
     assert.equal(JSON.parse(fake.readFile(CABINET_FILE)).activeProfile, "Chloé", "the switch is saved");
 

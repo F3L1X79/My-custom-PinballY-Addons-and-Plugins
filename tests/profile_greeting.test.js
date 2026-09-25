@@ -1,8 +1,8 @@
 // ============================================================
 // Profile Greeting on pick, through main.js on the fake PinballY globals:
-// picking a Profile in the carousel greets it with its Avatar and name
-// (Guest with its own variant), plays the configured sound, then fades out
-// on its own. No sound plays when the setting is empty, and a missing sound
+// picking a Profile in the carousel leaves it still for a short pause,
+// then greets the Profile with its Avatar and name (Guest by its translated
+// name), plays the configured sound, then fades out on its own. No sound plays when the setting is empty, and a missing sound
 // file is logged and never stops the greeting.
 // ============================================================
 
@@ -15,7 +15,9 @@ const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 const ALICE_AVATAR = `${PROFILES_FOLDER}\\Alice\\avatar.png`;
 const SOUND_FILE = "C:\\Sounds\\hello.wav";
 const PICKER_Z = 6500;
-// Comfortably past the greeting's ~1.5 s.
+// Past the short pause before the greeting, and comfortably past the whole
+// greeting.
+const PAUSE_OVER_MS = 500;
 const GREETING_OVER_MS = 2500;
 
 // The picker layer, which the greeting shares with the carousel.
@@ -56,7 +58,11 @@ test("picking a Profile greets it with its Avatar and a sound, then fades out", 
     const soundsBefore = fake.soundsPlayed().length;
     pick(1);
     const greeting = lang.profiles.greeting("Alice");
-    assert.ok(visibleTexts(fake).includes(greeting), "greets the picked Profile by name");
+    assert.ok(visibleTexts(fake).includes(lang.profiles.pickerTitle), "the carousel stays still for a moment");
+    assert.ok(!visibleTexts(fake).includes(greeting));
+    assert.equal(fake.soundsPlayed().length, soundsBefore);
+    fake.advanceTime(PAUSE_OVER_MS);
+    assert.ok(visibleTexts(fake).includes(greeting), "then greets the picked Profile by name");
     assert.ok(pickerLayer(fake).images().includes(ALICE_AVATAR), "with its Avatar");
     assert.ok(!visibleTexts(fake).includes(lang.profiles.pickerTitle), "without the carousel");
     assert.deepEqual(fake.soundsPlayed().slice(soundsBefore), [SOUND_FILE], "the configured sound plays");
@@ -69,12 +75,14 @@ test("picking a Profile greets it with its Avatar and a sound, then fades out", 
 
     config.profileGreetingSoundFile = "";
     pick(1);
-    assert.ok(visibleTexts(fake).includes(lang.profiles.guestGreeting), "Guest has its own greeting");
+    fake.advanceTime(PAUSE_OVER_MS);
+    assert.ok(visibleTexts(fake).includes(lang.profiles.greeting(lang.profiles.guestName)), "Guest by its translated name");
     assert.equal(fake.soundsPlayed().length, soundsBefore + 1, "no sound when the setting is empty");
     fake.advanceTime(GREETING_OVER_MS);
 
     config.profileGreetingSoundFile = "C:\\Sounds\\missing.wav";
     pick(1);
+    fake.advanceTime(PAUSE_OVER_MS);
     assert.ok(visibleTexts(fake).includes(greeting), "a missing sound never stops the greeting");
     const errors = fake.logLines().filter(line => line.includes("ERROR"));
     assert.equal(errors.length, 1);

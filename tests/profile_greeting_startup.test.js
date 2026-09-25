@@ -1,7 +1,8 @@
 // ============================================================
 // Startup Profile Greeting, through main.js on the fake PinballY globals,
 // with the startup prompt turned off: the restored active Profile is
-// greeted once, on the wheel, then the greeting fades out.
+// greeted once, on the wheel, after a short pause, then the greeting fades
+// out.
 // ============================================================
 
 import { test } from "node:test";
@@ -11,6 +12,7 @@ import config from "../common/config.js";
 
 const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 const PICKER_Z = 6500;
+const PAUSE_OVER_MS = 500;
 const GREETING_OVER_MS = 2500;
 
 const pickerTexts = fake => fake.drawingLayers()
@@ -30,7 +32,9 @@ test("without the startup prompt, the active Profile is greeted once at startup"
     await import("../main.js");
     await settle();
     fake.advanceTime(0);
+    assert.deepEqual(pickerTexts(fake), [], "not right away");
 
+    fake.advanceTime(PAUSE_OVER_MS);
     assert.ok(pickerTexts(fake).includes(lang.profiles.greeting("Alice")), "greets the restored Profile");
     fake.advanceTime(GREETING_OVER_MS);
     assert.deepEqual(pickerTexts(fake), [], "then fades out");
@@ -38,7 +42,7 @@ test("without the startup prompt, the active Profile is greeted once at startup"
     fake.openMenu("main", [{ title: "Play", cmd: fake.getBuiltInCommand("PlayGame") }]);
     fake.closeMenu();
     await settle();
-    fake.advanceTime(0);
+    fake.advanceTime(GREETING_OVER_MS);
     assert.deepEqual(pickerTexts(fake), [], "only once");
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
 });

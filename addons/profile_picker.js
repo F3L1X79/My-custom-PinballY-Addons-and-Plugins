@@ -6,16 +6,18 @@
 // The flipper buttons move through it and wrap, Select or Launch switches
 // to the highlighted Profile, Exit closes it; while it is open every
 // button is swallowed through "commandbuttondown", so the wheel never moves
-// under it; attract mode closes it too. The Profiles are read again each
-// time it opens.
+// under it; attract mode closes it too. The Avatars glide to their new
+// places on each move, and the name shows once they arrive. The Profiles
+// are read again each time it opens.
 // A badge at the top right of the wheel screen shows the active Profile's
 // Avatar and name; it is redrawn on every switch, hidden on "gamestarted"
 // and shown again on "wheelmode".
 // A Profile Greeting (the Avatar growing slightly, a greeting below, then
 // a fade-out, with the optional profileGreetingSoundFile) follows every
-// pick. When the startup prompt Add-on is off, it also greets the restored
-// Profile once at startup, as soon as the wheel is free of menus and
-// dialogs; a game or the carousel started first cancels it.
+// pick after a short pause, the carousel staying still meanwhile. When the
+// startup prompt Add-on is off, it also greets the restored Profile once
+// at startup, after the same pause, as soon as the wheel is free of menus
+// and dialogs; a game or the carousel started first cancels it.
 // ============================================================
 
 import lang from "../common/i18n.js";
@@ -50,6 +52,12 @@ const SLOTS = Object.freeze([
     { size: 130, centerOffset: 210, dim: 0x70000000 },
     { size: 80, centerOffset: 340, dim: 0xA0000000 },
 ]);
+// Where an Avatar goes past the last slot while gliding: smaller, farther
+// and fully dark, so one entering from the edge fades in.
+const OFF_STAGE_SLOT = Object.freeze({ size: 40, centerOffset: 420, dim: 0xFF000000 });
+// The glide slows down as it arrives (exponential ease-out): about 200 ms.
+const GLIDE_TIME_CONSTANT_MS = 50;
+const GLIDE_SNAP = 0.02;
 const HIGHLIGHT_FRAME = 4;
 const NEIGHBOUR_FRAME = 1;
 // The Avatars' row sits at this fraction of the height; the texts are
@@ -68,9 +76,9 @@ const BADGE = Object.freeze({ width: 160, height: 170, avatarSize: 96, frame: 3,
 // proportion to the window's height on any other window.
 const BADGE_REFERENCE_HEIGHT = 1920;
 const BADGE_NAME = Object.freeze({ size: 14, weight: 600 });
-// The greeted Avatar grows from the highlighted size, holds, then the whole
-// layer fades out: about 1.5 s in all.
-const GREETING = Object.freeze({ grownSize: 260, growMs: 250, holdMs: 700, fadeMs: 550 });
+// After a pause, the greeted Avatar grows from the highlighted size, holds,
+// then the whole layer fades out: about 1.5 s once started.
+const GREETING = Object.freeze({ delayMs: 400, grownSize: 260, growMs: 250, holdMs: 700, fadeMs: 550 });
 const GREETING_TEXT = Object.freeze({ size: 28, weight: 700, gap: 24 });
 const FRAME_MS = 16;
 
@@ -86,7 +94,13 @@ export default function init() {
     // The Profiles shown and the highlighted one's index; null when closed.
     let profiles = null;
     let highlighted = 0;
-    // The greeting's animation frames; null when none is running.
+    // How far, in slots, the Avatars still sit from their places while they
+    // glide (positive: to the right); 0 at rest.
+    let glide = 0;
+    let glideTimer = null;
+    let glideLastMs = 0;
+    // The pause before the greeting and its animation frames; null when idle.
+    let greetingDelayTimer = null;
     let greetingTimer = null;
     // The startup prompt already greets the Profile by name: a second
     // greeting right after it would be too much.
@@ -121,15 +135,44 @@ export default function init() {
         return offsets;
     }
 
+    // The look of an Avatar at a fractional slot position, blended between
+    // the two slots around it.
+    function slotAt(position) {
+        const distance = Math.abs(position);
+        const last = SLOTS.length - 1;
+        const index = Math.min(last, Math.floor(distance));
+        const from = SLOTS[index];
+        const to = index === last ? OFF_STAGE_SLOT : SLOTS[index + 1];
+        const ratio = Math.min(1, distance - index);
+        const blend = (a, b) => a + (b - a) * ratio;
+        const dimAlpha = Math.round(blend(from.dim >>> 24, to.dim >>> 24));
+        return {
+            size: blend(from.size, to.size),
+            centerOffset: Math.sign(position) * blend(from.centerOffset, to.centerOffset),
+            dim: dimAlpha * 2 ** 24,
+        };
+    }
+
+    // offset: the Avatar's place from the highlighted one, drawn at
+    // offset + glide while it glides there.
     function drawAvatar(dc, profile, offset, centerY) {
-        const slot = SLOTS[Math.abs(offset)];
-        const x = dc.getSize().width / 2 + Math.sign(offset) * slot.centerOffset - slot.size / 2;
+        const slot = slotAt(offset + glide);
+        const x = dc.getSize().width / 2 + slot.centerOffset - slot.size / 2;
         const y = centerY - slot.size / 2;
         const frame = offset === 0 ? HIGHLIGHT_FRAME : NEIGHBOUR_FRAME;
         dc.fillRect(x - frame, y - frame, slot.size + 2 * frame, slot.size + 2 * frame,
             offset === 0 ? COLORS.gold : COLORS.neighbourFrame);
         dc.drawImage(profile.avatarPath, x, y, slot.size, slot.size);
         if (slot.dim) dc.fillRect(x, y, slot.size, slot.size, slot.dim);
+    }
+
+    // The places drawn, farthest first so the nearer Avatars cover the
+    // farther ones; while gliding, the Avatar leaving past the last slot is
+    // drawn too, when it is not already shown on the other side.
+    function drawnOffsets(count) {
+        const offsets = [...neighbourOffsets(count), 0];
+        if (glide !== 0 && count > 2 * SLOTS.length - 1) offsets.push(-Math.sign(glide) * SLOTS.length);
+        return offsets.sort((a, b) => Math.abs(b + glide) - Math.abs(a + glide));
     }
 
     function draw() {
@@ -140,12 +183,14 @@ export default function init() {
             const centerY = size.height * ROW_HEIGHT_RATIO;
             drawShadowedText(dc, TITLE, COLORS.text, TEXT.pickerTitle, centerY + TITLE.top);
             const count = profiles.length;
-            for (const offset of [...neighbourOffsets(count), 0]) {
-                drawAvatar(dc, profiles[(highlighted + offset + count) % count], offset, centerY);
+            for (const offset of drawnOffsets(count)) {
+                drawAvatar(dc, profiles[((highlighted + offset) % count + count) % count], offset, centerY);
             }
-            const current = profiles[highlighted];
-            const isActive = current.name === profileStore.getActiveProfile().name;
-            drawShadowedText(dc, NAME, isActive ? COLORS.gold : COLORS.text, displayNameOf(current), centerY + NAME.top);
+            if (glide === 0) {
+                const current = profiles[highlighted];
+                const isActive = current.name === profileStore.getActiveProfile().name;
+                drawShadowedText(dc, NAME, isActive ? COLORS.gold : COLORS.text, displayNameOf(current), centerY + NAME.top);
+            }
             drawShadowedText(dc, HINT, COLORS.hint, TEXT.pickerHint, centerY + HINT.top);
         });
     }
@@ -173,13 +218,16 @@ export default function init() {
             dc.fillRect(x - HIGHLIGHT_FRAME, y - HIGHLIGHT_FRAME,
                 avatarSize + 2 * HIGHLIGHT_FRAME, avatarSize + 2 * HIGHLIGHT_FRAME, COLORS.gold);
             dc.drawImage(profile.avatarPath, x, y, avatarSize, avatarSize);
-            const text = profile.isGuest ? TEXT.guestGreeting : TEXT.greeting(profile.name);
-            drawShadowedText(dc, GREETING_TEXT, COLORS.text, text, centerY + avatarSize / 2 + GREETING_TEXT.gap);
+            drawShadowedText(dc, GREETING_TEXT, COLORS.text, TEXT.greeting(displayNameOf(profile)),
+                centerY + avatarSize / 2 + GREETING_TEXT.gap);
         });
     }
 
+    // Stops the pause or the greeting, and clears the layer the greeting
+    // shares with the carousel.
     function stopGreeting() {
-        if (greetingTimer === null) return;
+        host.clearTimeout(greetingDelayTimer);
+        greetingDelayTimer = null;
         host.clearInterval(greetingTimer);
         greetingTimer = null;
         layer.clear(COLORS.transparent);
@@ -188,7 +236,6 @@ export default function init() {
 
     function greet(profile) {
         stopGreeting();
-        startupGreetingPending = false;
         const startSize = SLOTS[0].size;
         const { grownSize, growMs, holdMs, fadeMs } = GREETING;
         // Timed on the clock: Windows timers fire late, and a redraw takes a
@@ -209,12 +256,58 @@ export default function init() {
         playGreetingSound();
     }
 
+    const isWheelFree = () => host.getUIMode() === "wheel" && getWheelDialogs().isIdle();
+
+    // Greets the active Profile after a pause: right on the press or on the
+    // wheel's first frame, it felt abrupt. Whatever is drawn stays still
+    // meanwhile. A menu or dialog that opened during the pause cancels it;
+    // at startup the greeting then waits for the next free wheel.
+    function greetAfterPause({ atStartup = false } = {}) {
+        startupGreetingPending = false;
+        greetingDelayTimer = host.setTimeout(safeHandler(SCRIPT_NAME, () => {
+            greetingDelayTimer = null;
+            if (isWheelFree()) {
+                greet(profileStore.getActiveProfile());
+                return;
+            }
+            layer.clear(COLORS.transparent);
+            if (atStartup) startupGreetingPending = true;
+        }), GREETING.delayMs);
+    }
+
     // Greets the restored Profile once the wheel is free: no menu, no
     // dialog on screen or waiting, and no carousel.
     function greetAtStartupIfFree() {
-        if (!startupGreetingPending || profiles) return;
-        if (host.getUIMode() !== "wheel" || !getWheelDialogs().isIdle()) return;
-        greet(profileStore.getActiveProfile());
+        if (!startupGreetingPending || profiles || greetingDelayTimer !== null) return;
+        if (isWheelFree()) greetAfterPause({ atStartup: true });
+    }
+
+    function stopGlide() {
+        host.clearInterval(glideTimer);
+        glideTimer = null;
+        glide = 0;
+    }
+
+    // Runs every frame while the Avatars glide; timed on the clock, like the
+    // greeting.
+    function glideStep() {
+        const nowMs = host.now().getTime();
+        glide *= Math.exp(-(nowMs - glideLastMs) / GLIDE_TIME_CONSTANT_MS);
+        glideLastMs = nowMs;
+        if (Math.abs(glide) < GLIDE_SNAP) stopGlide();
+        draw();
+    }
+
+    // direction: 1 for Next, -1 for Prev. A press during a glide carries on
+    // from where the Avatars are.
+    function move(direction) {
+        highlighted = (highlighted + direction + profiles.length) % profiles.length;
+        glide += direction;
+        if (glideTimer === null) {
+            glideLastMs = host.now().getTime();
+            glideTimer = host.setInterval(safeHandler(SCRIPT_NAME, glideStep), FRAME_MS);
+        }
+        draw();
     }
 
     function open() {
@@ -231,9 +324,9 @@ export default function init() {
     }
 
     function close() {
+        stopGlide();
         stopGreeting();
         profiles = null;
-        layer.clear(COLORS.transparent);
     }
 
     getMainMenu().add({ name: "profilePicker", label: TEXT.menuEntry, position: MAIN_MENU_POSITION.PROFILE_PICKER, action: open });
@@ -259,13 +352,15 @@ export default function init() {
         // Swallowed first, so a failing switch still never reaches the wheel.
         ev.preventDefault();
         if (ev.command === "Next" || ev.command === "Prev") {
-            highlighted = (highlighted + (ev.command === "Next" ? 1 : -1) + profiles.length) % profiles.length;
-            draw();
+            move(ev.command === "Next" ? 1 : -1);
         } else if (ev.command === "Select" || ev.command === "Launch") {
             const chosen = profiles[highlighted];
-            close();
+            // The carousel stays drawn, at rest, until the greeting replaces it.
+            stopGlide();
+            draw();
+            profiles = null;
             profileStore.switchTo(chosen.name);
-            greet(profileStore.getActiveProfile());
+            greetAfterPause();
         } else if (ev.command === "Exit") {
             close();
         }
