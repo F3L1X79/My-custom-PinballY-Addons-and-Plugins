@@ -1,11 +1,13 @@
 ﻿// ============================================================
-// Entry point loaded by PinballY: initializes every project script listed in
-// SCRIPTS, in order, skipping those disabled in config.addOns.
+// Entry point loaded by PinballY: loads the Profile store, then initializes
+// every project script listed in SCRIPTS, in order, skipping those disabled
+// in config.addOns.
 // A script whose init() throws is logged to logfile.log and skipped so the
 // others still load; LOG_STARTUP_TIMING logs each init time.
 // ============================================================
 
 import config from "./common/config.js";
+import { getProfileStore } from "./common/profile_store.js";
 
 // Logs each script's init duration (ms), to help find a slow-starting script.
 const LOG_STARTUP_TIMING = true;
@@ -57,6 +59,14 @@ const SCRIPTS = [
 ];
 
 const ENABLED_SCRIPTS = config.addOns;
+
+// Before any Add-on, and whatever Add-ons are on: the store records every
+// play, and its "gameover" listener must run before the Add-ons' own.
+try {
+    getProfileStore();
+} catch (error) {
+    logfile.log(`[Startup] ERROR loading the Profiles: ${error.message}`);
+}
 
 for (const { key, module } of SCRIPTS) {
     if (ENABLED_SCRIPTS[key] === false) {

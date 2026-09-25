@@ -2,11 +2,71 @@
 // Production PinballY host: the single seam through which the deepened
 // modules reach PinballY (settings, clock, timers, visible tables, wheel
 // selection, main window menus / UI mode / events / drawing layers,
-// StyledText, commands, table launch, program folder, sound playback).
+// StyledText, commands, table launch, program folder, sound playback, and
+// the few file operations the Profile store needs).
 // Every call passes straight through to PinballY's globals; tests use the
 // in-memory fake host from tests/fake_pinbally_host.js instead. No side
 // effects on import.
 // ============================================================
+
+const ADODB_TEXT_TYPE = 2;
+const ADODB_READ_ALL = -1;
+const ADODB_SAVE_OVERWRITE = 2;
+
+// Text through ADODB.Stream, which encodes UTF-8 so accented names and paths
+// survive (Scripting.FileSystemObject only knows ANSI and UTF-16).
+function openUtf8Stream() {
+    const stream = createAutomationObject("ADODB.Stream");
+    stream.Type = ADODB_TEXT_TYPE;
+    stream.Charset = "utf-8";
+    stream.Open();
+    return stream;
+}
+
+function createFileSystem() {
+    let fileSystemObject = null;
+    const fso = () => {
+        if (!fileSystemObject) fileSystemObject = createAutomationObject("Scripting.FileSystemObject");
+        return fileSystemObject;
+    };
+
+    return {
+        // The names of the folder's sub-folders; none when it doesn't exist.
+        listFolders: (folderPath) => {
+            if (!fso().FolderExists(folderPath)) return [];
+            const names = [];
+            for (const folder of fso().GetFolder(folderPath).SubFolders) names.push(folder.Name);
+            return names;
+        },
+        fileExists: (path) => fso().FileExists(path),
+        readText: (path) => {
+            const stream = openUtf8Stream();
+            try {
+                stream.LoadFromFile(path);
+                // ADODB.Stream keeps the UTF-8 byte order mark it writes itself.
+                return stream.ReadText(ADODB_READ_ALL).replace(/^\uFEFF/, "");
+            } finally {
+                stream.Close();
+            }
+        },
+        writeText: (path, text) => {
+            const stream = openUtf8Stream();
+            try {
+                stream.WriteText(text);
+                stream.SaveToFile(path, ADODB_SAVE_OVERWRITE);
+            } finally {
+                stream.Close();
+            }
+        },
+        // Throws when the target already exists.
+        renameFile: (fromPath, toPath) => { fso().MoveFile(fromPath, toPath); },
+        deleteFile: (path) => { fso().DeleteFile(path); },
+        // Does nothing when the folder exists; its parent folder must exist.
+        createFolder: (folderPath) => {
+            if (!fso().FolderExists(folderPath)) fso().CreateFolder(folderPath);
+        },
+    };
+}
 
 export function createPinballYHost() {
     // Created on the first sound played: most sessions never play one.
@@ -63,5 +123,6 @@ export function createPinballYHost() {
             }
             mediaPlayer.URL = filePath;
         },
+        files: createFileSystem(),
     };
 }

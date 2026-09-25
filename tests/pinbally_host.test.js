@@ -227,6 +227,44 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
             assert.throws(() => host.playSound("C:\\Sounds\\missing.mp3"), /not found/);
             assert.deepEqual(fake.soundsPlayed(), ["C:\\Sounds\\achievement.mp3"]);
         });
+
+        test("creates folders, lists sub-folders, and writes, reads, renames and deletes UTF-8 files", () => {
+            const profiles = "C:\\PinballY\\Scripts\\profiles";
+            assert.deepEqual(host.files.listFolders(profiles), []);
+
+            host.files.createFolder(profiles);
+            host.files.createFolder(profiles);
+            host.files.createFolder(`${profiles}\\Chloé`);
+            assert.deepEqual(host.files.listFolders(profiles), ["Chloé"]);
+
+            const path = `${profiles}\\Chloé\\profile.json`;
+            assert.equal(host.files.fileExists(path), false);
+            host.files.writeText(path, "{\"name\":\"Émile\"}");
+            assert.equal(host.files.fileExists(path), true);
+            assert.equal(host.files.readText(path), "{\"name\":\"Émile\"}");
+
+            const renamedPath = `${profiles}\\Chloé\\profile.bak.json`;
+            host.files.renameFile(path, renamedPath);
+            assert.equal(host.files.fileExists(path), false);
+            assert.equal(host.files.readText(renamedPath), "{\"name\":\"Émile\"}");
+
+            host.files.writeText(path, "new");
+            assert.throws(() => host.files.renameFile(path, renamedPath), /exists/);
+
+            host.files.deleteFile(renamedPath);
+            assert.equal(host.files.fileExists(renamedPath), false);
+            assert.throws(() => host.files.readText(renamedPath), /not found/);
+            assert.deepEqual(fake.fileOperations(), [
+                { operation: "write", path },
+                { operation: "rename", path, to: renamedPath },
+                { operation: "write", path },
+                { operation: "delete", path: renamedPath },
+            ]);
+        });
+
+        test("writing into a missing folder fails", () => {
+            assert.throws(() => host.files.writeText("C:\\PinballY\\Scripts\\missing\\file.json", "{}"), /not found/);
+        });
     });
 }
 

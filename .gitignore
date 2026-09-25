@@ -10,3 +10,9 @@ System/
 
 # Player settings (see .env.example)
 .env.local
+
+# Players' Profiles and their progress; only the empty Guest folder ships
+profiles/*
+!profiles/guest/
+profiles/guest/*
+!profiles/guest/.gitkeep

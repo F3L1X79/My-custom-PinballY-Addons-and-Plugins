@@ -5,8 +5,10 @@
 // list, the wheel selection and the layout size, seed settings, fire
 // PinballY events, pick menu items, play launched games, and inspect shown
 // menus, launches, written settings keys, drawing layers, what was drawn
-// and sounds played, and add the files that exist. installGlobals() also
-// exposes it as PinballY's globals (and the global Date and timers), so
+// and sounds played. Its in-memory file system is seeded with files and
+// folders and inspected (file contents, writes, renames and deletes).
+// installGlobals() also exposes it as PinballY's globals (and the global
+// Date and timers, and the COM file objects over the same file system), so
 // code not yet on the host runs too. settle() waits on a real timer for
 // the deferred work to run.
 // Never loaded by PinballY.
@@ -36,6 +38,9 @@ function toStoredString(value) {
     if (typeof value === "boolean") return value ? "1" : "0";
     return String(value);
 }
+
+const withoutTrailingSlash = path => path.replace(/\\+$/, "");
+const parentFolder = path => path.slice(0, path.lastIndexOf("\\"));
 
 // Records its runs and gives a plausible measure; drawing it writes each
 // run's text (without its line break) to the drawing context, where the
@@ -79,8 +84,13 @@ export function createFakePinballYHost({
     // Every layer draw, in order: { zIndex, texts }.
     const drawingList = [];
     const sounds = [];
-    // Paths of the files that exist, for Scripting.FileSystemObject.
-    const existingFiles = new Set();
+    // In-memory file system: folder paths, and file contents by path. The
+    // program folder and its Scripts folder exist, as in PinballY.
+    const folders = new Set();
+    const files = new Map();
+    // Every write, rename and delete, in order: { operation, path, to? }.
+    const fileOperationList = [];
+    addFolder(`${withoutTrailingSlash(programFolder)}\\Scripts`);
     // Pending timers, run in due order by advanceTime(): { id, dueMs, callback, intervalMs }.
     let timers = [];
     let nextTimerId = 1;
@@ -210,8 +220,94 @@ export function createFakePinballYHost({
 
     // Like the production host: a file never added by addFile() is missing.
     function playSound(filePath) {
-        if (!existingFiles.has(filePath)) throw new Error(`Sound file not found: ${filePath}`);
+        if (!files.has(filePath)) throw new Error(`Sound file not found: ${filePath}`);
         sounds.push(filePath);
+    }
+
+    // Creates the folder and every missing parent folder.
+    function addFolder(folderPath) {
+        for (let path = withoutTrailingSlash(folderPath); path.includes("\\"); path = parentFolder(path)) {
+            folders.add(path);
+        }
+    }
+
+    function requireParentFolder(path) {
+        if (!folders.has(parentFolder(path))) throw new Error(`Folder not found: ${parentFolder(path)}`);
+    }
+
+    function requireFile(path) {
+        if (!files.has(path)) throw new Error(`File not found: ${path}`);
+    }
+
+    // Same rules as Scripting.FileSystemObject and ADODB.Stream: writing
+    // needs the folder, renaming never overwrites, a missing file throws.
+    const fileSystem = {
+        listFolders(folderPath) {
+            const parent = withoutTrailingSlash(folderPath);
+            return [...folders].filter(path => parentFolder(path) === parent).map(path => path.slice(parent.length + 1));
+        },
+        fileExists: (path) => files.has(path),
+        readText(path) {
+            requireFile(path);
+            return files.get(path);
+        },
+        writeText(path, text) {
+            requireParentFolder(path);
+            files.set(path, text);
+            fileOperationList.push({ operation: "write", path });
+        },
+        renameFile(fromPath, toPath) {
+            requireFile(fromPath);
+            requireParentFolder(toPath);
+            if (files.has(toPath)) throw new Error(`File already exists: ${toPath}`);
+            files.set(toPath, files.get(fromPath));
+            files.delete(fromPath);
+            fileOperationList.push({ operation: "rename", path: fromPath, to: toPath });
+        },
+        deleteFile(path) {
+            requireFile(path);
+            files.delete(path);
+            fileOperationList.push({ operation: "delete", path });
+        },
+        createFolder(folderPath) {
+            requireParentFolder(withoutTrailingSlash(folderPath));
+            folders.add(withoutTrailingSlash(folderPath));
+        },
+    };
+
+    // Scripting.FileSystemObject over the in-memory file system, for code
+    // that uses the COM object directly (the production host, config.js).
+    function createComFileSystem() {
+        return {
+            FileExists: fileSystem.fileExists,
+            FolderExists: (path) => folders.has(withoutTrailingSlash(path)),
+            GetFolder: (path) => {
+                if (!folders.has(withoutTrailingSlash(path))) throw new Error(`Folder not found: ${path}`);
+                return { SubFolders: fileSystem.listFolders(path).map(name => ({ Name: name })) };
+            },
+            CreateFolder: (path) => {
+                if (folders.has(withoutTrailingSlash(path))) throw new Error(`Folder already exists: ${path}`);
+                fileSystem.createFolder(path);
+            },
+            MoveFile: fileSystem.renameFile,
+            DeleteFile: fileSystem.deleteFile,
+        };
+    }
+
+    // ADODB.Stream in text mode: only what reading and writing a whole
+    // UTF-8 file needs.
+    function createComTextStream() {
+        let text = "";
+        return {
+            Type: 0,
+            Charset: "",
+            Open() { text = ""; },
+            LoadFromFile(path) { text = fileSystem.readText(path); },
+            ReadText: () => text,
+            WriteText(newText) { text += newText; },
+            SaveToFile(path) { fileSystem.writeText(path, text); },
+            Close() {},
+        };
     }
 
     function showMenu(id, items, options = {}) {
@@ -263,6 +359,7 @@ export function createFakePinballYHost({
         },
         getProgramFolder: () => programFolder,
         playSound,
+        files: fileSystem,
 
         // Moves the date without running the timers.
         setNow(date) { nowMs = date.getTime(); },
@@ -271,7 +368,22 @@ export function createFakePinballYHost({
         drawingLayers: () => [...layers],
         drawings: () => drawingList.map(drawing => ({ ...drawing, texts: [...drawing.texts] })),
         soundsPlayed: () => [...sounds],
-        addFile(filePath) { existingFiles.add(filePath); },
+        // Seeds a file (and its folders) without recording a write.
+        addFile(filePath, content = "") {
+            addFolder(parentFolder(filePath));
+            files.set(filePath, content);
+        },
+        addFolder,
+        // Removes the folder with everything in it, as a player would by hand.
+        removeFolder(folderPath) {
+            const folder = withoutTrailingSlash(folderPath);
+            const isInside = path => path === folder || path.startsWith(`${folder}\\`);
+            for (const path of [...folders]) if (isInside(path)) folders.delete(path);
+            for (const path of [...files.keys()]) if (isInside(path)) files.delete(path);
+        },
+        // The file's text, or undefined when it doesn't exist.
+        readFile: (filePath) => files.get(filePath),
+        fileOperations: () => fileOperationList.map(operation => ({ ...operation })),
         setTables(newTables) { allTables = newTables.map(table => ({ ...table })); },
         // The current wheel selection, in wheel order (index 0 is the current table).
         setWheelTables(configIds) {
@@ -405,16 +517,16 @@ export function createFakePinballYHost({
                 StyledText: FakeStyledText,
                 systemInfo: { programDir: programFolder },
                 // Only Windows Media Player, where setting the URL plays the
-                // file, and a file system that knows the files added by
-                // addFile() (no .env.local, so common/config.js imported after
-                // this keeps its defaults). Any other COM object throws.
+                // file, and the file objects over the in-memory file system
+                // (no .env.local unless a test adds one, so common/config.js
+                // imported after this keeps its defaults). Any other COM
+                // object throws.
                 createAutomationObject: (progId) => {
                     if (progId === "WMPlayer.OCX.7") {
                         return { settings: {}, set URL(filePath) { playSound(filePath); } };
                     }
-                    if (progId === "Scripting.FileSystemObject") {
-                        return { FileExists: (filePath) => existingFiles.has(filePath) };
-                    }
+                    if (progId === "Scripting.FileSystemObject") return createComFileSystem();
+                    if (progId === "ADODB.Stream") return createComTextStream();
                     throw new Error(`The fake host has no COM object "${progId}".`);
                 },
             });

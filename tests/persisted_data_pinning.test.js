@@ -2,8 +2,9 @@
 // Pinning test: starts the add-ons through main.js on the fake PinballY
 // globals, plays a scripted session on a fixture collection, and locks the
 // exact settings keys written (Period Table locks, Streaks, Periods Played,
-// Random Games played, Day's Manufacturers, Notified flags, session stats)
-// and every Achievement ID produced. These strings are players' saved
+// Random Games played, Day's Manufacturers, Notified flags, session stats),
+// every Achievement ID produced, and the Guest profile.json play record and
+// cabinet.json written by the Profile store. These strings are players' saved
 // progress: this test must keep passing unchanged.
 // ============================================================
 
@@ -117,6 +118,7 @@ const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
 // Enough for every waiting Achievement Toast to show, one after the other.
 const TOASTS_MS = 60 * 60 * 1000;
+const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 
 // The add-ons involved in persisted data; the others would need more
 // PinballY globals and write nothing that is pinned here.
@@ -221,6 +223,21 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
         .map(configId => PREVIOUS_PLAY_KEY_PREFIX + configId);
     const otherKeys = writtenKeys.filter(key => !key.startsWith(NOTIFIED_KEY_PREFIX)).sort();
     assert.deepEqual(otherKeys, [...EXPECTED_FIXED_KEYS, ...expectedPreviousPlayKeys].sort());
+
+    // Every game played for Guest, the only Profile of a fresh install.
+    const expectedPlays = {};
+    for (const [game, seconds, lastPlayed] of [
+        [dayTable, 61 * 60, "2026-09-23T11:01:00"],
+        [weekTable, 45, "2026-09-23T11:01:45"],
+        [randomTable, 3, "2026-09-23T11:01:48"],
+    ]) {
+        const play = expectedPlays[game.configId] || { count: 0, seconds: 0 };
+        expectedPlays[game.configId] = { count: play.count + 1, seconds: play.seconds + seconds, lastPlayed };
+    }
+    assert.deepEqual(JSON.parse(fake.readFile(`${PROFILES_FOLDER}\\guest\\profile.json`)),
+        { version: 1, plays: expectedPlays });
+    assert.deepEqual(JSON.parse(fake.readFile(`${PROFILES_FOLDER}\\cabinet.json`)),
+        { version: 1, activeProfile: "guest" });
 
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
 });
