@@ -55,7 +55,7 @@ Les traductions sont dans `lang\<code>.js` ; l'anglais sert de secours, et les c
 
 ## Contribuer
 
-- `main.js` démarre les add-ons listés dans `SCRIPTS`. La racine contient un fichier par add-on ; le code partagé va dans `common\`, les définitions de succès dans `achievements\`, les traductions dans `lang\`, les tests dans `tests\`.
+- `main.js` démarre les add-ons listés dans `SCRIPTS`. `addons\` contient un fichier par add-on ; le code partagé va dans `common\`, les définitions de succès dans `achievements\`, les traductions dans `lang\`, les tests dans `tests\`.
 - Modules partagés : `pinbally_host` (seul accès à PinballY pour les modules testables), `period_table`, `random_game`, `wheel_dialog` (dialogues spontanés, affichés un par un quand la roue est libre), `achievement_toast` (annonces de succès dessinées en bas à droite, image du trophée dans `assets\`), `main_menu` (entrées après « Jouer »).
 - Conventions : code et commentaires en anglais, un bloc d'en-tête par fichier, pas de JSDoc, pas de globales, chaque texte affiché dans les 6 langues, gestionnaires d'événements enveloppés dans `safeHandler`. Détails dans `.claude/rules/`.
 - Tests : `node --test` (Node.js 22+). `tests/persisted_data_pinning.test.js` fige les clés enregistrées et les ID des succès.

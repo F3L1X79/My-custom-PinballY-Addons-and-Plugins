@@ -35,10 +35,10 @@ const GUEST_PLAYS = {
 };
 
 const MODULE_PATHS = {
-    sessionStatsTracker: "../session_stats_tracker.js",
-    achievements: "../achievements_engine.js",
-    ratingPrompt: "../rating_prompt.js",
-    startupChoicePrompt: "../startup_choice_prompt.js",
+    sessionStatsTracker: "../addons/session_stats_tracker.js",
+    achievements: "../addons/achievements_engine.js",
+    ratingPrompt: "../addons/rating_prompt.js",
+    startupChoicePrompt: "../addons/startup_choice_prompt.js",
 };
 
 export async function runDialogPriorityScenario(initOrder) {

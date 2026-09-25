@@ -5,8 +5,8 @@
 // "launchoverlaymessage"; can log untranslated titles (LOG_UNKNOWN_TITLES).
 // ============================================================
 
-import lang from "./common/i18n.js";
-import { safeHandler } from "./common/safe_handler.js";
+import lang from "../common/i18n.js";
+import { safeHandler } from "../common/safe_handler.js";
 
 const SCRIPT_NAME = "UITranslation";
 

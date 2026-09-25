@@ -4,7 +4,7 @@
 // the wheel. Listens to "gamestarted" and "gameover".
 // ============================================================
 
-import { safeHandler } from "./common/safe_handler.js";
+import { safeHandler } from "../common/safe_handler.js";
 
 const SCRIPT_NAME = "ForceBackglass";
 

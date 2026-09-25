@@ -6,10 +6,10 @@
 // "gameover" and "wheelmode".
 // ============================================================
 
-import lang from "./common/i18n.js";
-import config from "./common/config.js";
-import { getWheelDialogs, DIALOG_PRIORITY } from "./common/wheel_dialog.js";
-import { safeHandler } from "./common/safe_handler.js";
+import lang from "../common/i18n.js";
+import config from "../common/config.js";
+import { getWheelDialogs, DIALOG_PRIORITY } from "../common/wheel_dialog.js";
+import { safeHandler } from "../common/safe_handler.js";
 
 const SCRIPT_NAME = "RatingPrompt";
 

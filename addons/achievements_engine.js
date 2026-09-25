@@ -8,23 +8,23 @@
 // Also adds the Achievement List entry to the main menu, right after "Play".
 // ============================================================
 
-import { evaluateAchievements, markNotified } from "./common/achievements.js";
-import { buildDayManufacturersAchievements } from "./achievements/day_manufacturers.js";
-import { buildManufacturerCompletionAchievements } from "./achievements/manufacturer_completion.js";
-import { buildCollectionCompletionAchievements } from "./achievements/collection_completion.js";
-import { buildPlayTimeTotalAchievements } from "./achievements/play_time_totals.js";
-import { buildPeriodTableAchievements } from "./achievements/period_tables.js";
-import { buildDecadeCompletionAchievements } from "./achievements/decade_completion.js";
-import { buildCategoryCompletionAchievements } from "./achievements/category_completion.js";
-import { buildSessionMilestoneAchievements } from "./achievements/session_milestones.js";
-import { buildRandomGameFanAchievements } from "./achievements/random_game_fans.js";
-import { getAchievementToasts } from "./common/achievement_toast.js";
-import { getMainMenu, MAIN_MENU_POSITION } from "./common/main_menu.js";
-import { createAchievementList } from "./common/achievement_list.js";
-import { createPinballYHost } from "./common/pinbally_host.js";
-import { getProfileStore } from "./common/profile_store.js";
-import lang from "./common/i18n.js";
-import { safeHandler } from "./common/safe_handler.js";
+import { evaluateAchievements, markNotified } from "../common/achievements.js";
+import { buildDayManufacturersAchievements } from "../achievements/day_manufacturers.js";
+import { buildManufacturerCompletionAchievements } from "../achievements/manufacturer_completion.js";
+import { buildCollectionCompletionAchievements } from "../achievements/collection_completion.js";
+import { buildPlayTimeTotalAchievements } from "../achievements/play_time_totals.js";
+import { buildPeriodTableAchievements } from "../achievements/period_tables.js";
+import { buildDecadeCompletionAchievements } from "../achievements/decade_completion.js";
+import { buildCategoryCompletionAchievements } from "../achievements/category_completion.js";
+import { buildSessionMilestoneAchievements } from "../achievements/session_milestones.js";
+import { buildRandomGameFanAchievements } from "../achievements/random_game_fans.js";
+import { getAchievementToasts } from "../common/achievement_toast.js";
+import { getMainMenu, MAIN_MENU_POSITION } from "../common/main_menu.js";
+import { createAchievementList } from "../common/achievement_list.js";
+import { createPinballYHost } from "../common/pinbally_host.js";
+import { getProfileStore } from "../common/profile_store.js";
+import lang from "../common/i18n.js";
+import { safeHandler } from "../common/safe_handler.js";
 
 const SCRIPT_NAME = "AchievementsEngine";
 

@@ -6,10 +6,10 @@
 // at startup, whatever the add-on order in main.js.
 // ============================================================
 
-import { getRandomGame } from "./common/random_game.js";
-import { getTableOfTheDay, getTableOfTheWeek } from "./common/period_table.js";
-import { getWheelDialogs, DIALOG_PRIORITY } from "./common/wheel_dialog.js";
-import lang from "./common/i18n.js";
+import { getRandomGame } from "../common/random_game.js";
+import { getTableOfTheDay, getTableOfTheWeek } from "../common/period_table.js";
+import { getWheelDialogs, DIALOG_PRIORITY } from "../common/wheel_dialog.js";
+import lang from "../common/i18n.js";
 
 // Drops parenthetical suffixes from table titles to keep the intro message short.
 function stripParentheticals(title) {

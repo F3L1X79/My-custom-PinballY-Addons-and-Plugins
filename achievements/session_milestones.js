@@ -12,7 +12,7 @@ import {
     RAGE_QUIT_MIN_SECONDS,
     RAGE_QUIT_MAX_SECONDS,
     GRAND_RETURN_THRESHOLD_DAYS,
-} from "../session_stats_tracker.js";
+} from "../addons/session_stats_tracker.js";
 
 // Each marathon value is part of an Achievement ID: changing one would
 // announce the Achievement again to players who already earned it. Each

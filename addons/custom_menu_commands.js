@@ -5,10 +5,10 @@
 // selected.
 // ============================================================
 
-import { getRandomGame } from "./common/random_game.js";
-import { getTableOfTheDay, getTableOfTheWeek } from "./common/period_table.js";
-import { getMainMenu, MAIN_MENU_POSITION } from "./common/main_menu.js";
-import lang from "./common/i18n.js";
+import { getRandomGame } from "../common/random_game.js";
+import { getTableOfTheDay, getTableOfTheWeek } from "../common/period_table.js";
+import { getMainMenu, MAIN_MENU_POSITION } from "../common/main_menu.js";
+import lang from "../common/i18n.js";
 
 export default function init() {
     const { customMenuLabels: MENU_LABELS } = lang;

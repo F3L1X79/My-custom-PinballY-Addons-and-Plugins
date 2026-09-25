@@ -5,9 +5,9 @@
 // and "filterselect".
 // ============================================================
 
-import lang from "./common/i18n.js";
-import config from "./common/config.js";
-import { safeHandler } from "./common/safe_handler.js";
+import lang from "../common/i18n.js";
+import config from "../common/config.js";
+import { safeHandler } from "../common/safe_handler.js";
 
 const SCRIPT_NAME = "StatusLineInfo";
 

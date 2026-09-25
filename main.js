@@ -12,18 +12,18 @@ import { getProfileStore } from "./common/profile_store.js";
 // Logs each script's init duration (ms), to help find a slow-starting script.
 const LOG_STARTUP_TIMING = true;
 
-import * as uiTranslation from "./ui_translation.js";
-import * as statusLineInfo from "./status_line_info.js";
-import * as customMenuCommands from "./custom_menu_commands.js";
-import * as customFilter from "./custom_filter.js";
-import * as hallOfFame from "./hall_of_fame.js";
-import * as seamlessLaunchOverlay from "./seamless_launch_overlay.js";
-import * as forceBackglass from "./force_backglass.js";
-import * as playLaunchSound from "./play_launch_sound.js";
-import * as sessionStatsTracker from "./session_stats_tracker.js";
-import * as achievementsEngine from "./achievements_engine.js";
-import * as ratingPrompt from "./rating_prompt.js";
-import * as startupChoicePrompt from "./startup_choice_prompt.js";
+import * as uiTranslation from "./addons/ui_translation.js";
+import * as statusLineInfo from "./addons/status_line_info.js";
+import * as customMenuCommands from "./addons/custom_menu_commands.js";
+import * as customFilter from "./addons/custom_filter.js";
+import * as hallOfFame from "./addons/hall_of_fame.js";
+import * as seamlessLaunchOverlay from "./addons/seamless_launch_overlay.js";
+import * as forceBackglass from "./addons/force_backglass.js";
+import * as playLaunchSound from "./addons/play_launch_sound.js";
+import * as sessionStatsTracker from "./addons/session_stats_tracker.js";
+import * as achievementsEngine from "./addons/achievements_engine.js";
+import * as ratingPrompt from "./addons/rating_prompt.js";
+import * as startupChoicePrompt from "./addons/startup_choice_prompt.js";
 
 // Scripts are initialized in this order, which is also the order their event
 // listeners are registered in, and listeners for the same event run in that

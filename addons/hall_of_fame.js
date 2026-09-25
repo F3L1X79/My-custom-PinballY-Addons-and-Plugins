@@ -5,9 +5,9 @@
 // ranking is recomputed each time the filter is activated.
 // ============================================================
 
-import lang from "./common/i18n.js";
-import { getHallOfFame } from "./common/hall_of_fame.js";
-import { safeHandler } from "./common/safe_handler.js";
+import lang from "../common/i18n.js";
+import { getHallOfFame } from "../common/hall_of_fame.js";
+import { safeHandler } from "../common/safe_handler.js";
 
 const SCRIPT_NAME = "HallOfFame";
 

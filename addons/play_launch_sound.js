@@ -6,8 +6,8 @@
 // config.launchSoundFile is empty.
 // ============================================================
 
-import config from "./common/config.js";
-import { safeHandler } from "./common/safe_handler.js";
+import config from "../common/config.js";
+import { safeHandler } from "../common/safe_handler.js";
 
 // Playback volume, 0-100.
 const VOLUME_PERCENT = 100;

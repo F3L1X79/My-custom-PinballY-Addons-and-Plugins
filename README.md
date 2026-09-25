@@ -55,7 +55,7 @@ Translations live in `lang\<code>.js`; English is the fallback, and missing keys
 
 ## Contributing
 
-- `main.js` starts the add-ons listed in `SCRIPTS`. The root holds one file per add-on; shared code goes in `common\`, achievement definitions in `achievements\`, translations in `lang\`, tests in `tests\`.
+- `main.js` starts the add-ons listed in `SCRIPTS`. `addons\` holds one file per add-on; shared code goes in `common\`, achievement definitions in `achievements\`, translations in `lang\`, tests in `tests\`.
 - Shared modules: `pinbally_host` (the only way to PinballY for testable modules), `period_table`, `random_game`, `wheel_dialog` (spontaneous dialogs, shown one at a time when the wheel is free), `achievement_toast` (Achievement announcements drawn in the bottom-right corner, trophy image in `assets\`), `main_menu` (entries after "Play").
 - Conventions: English code and comments, a header block per file, no JSDoc, no globals, every displayed text in all 6 languages, event handlers wrapped in `safeHandler`. Details in `.claude/rules/`.
 - Tests: `node --test` (Node.js 22+). `tests/persisted_data_pinning.test.js` locks saved keys and achievement IDs.
