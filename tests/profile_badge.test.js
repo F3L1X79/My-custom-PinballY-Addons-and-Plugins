@@ -2,7 +2,9 @@
 // Active-Profile badge, through main.js on the fake PinballY globals: the
 // active Profile's Avatar and name drawn at the top right of the wheel
 // screen (Guest's name translated), redrawn right after a switch, hidden
-// while a game runs and shown again back on the wheel.
+// while a game runs and shown again back on the wheel. Its proportions
+// never depend on the window size at the time it was drawn (at startup the
+// window is not laid out yet).
 // ============================================================
 
 import { test } from "node:test";
@@ -44,6 +46,16 @@ test("the badge shows the active Profile, follows switches and hides during a ga
     await settle();
     const store = getProfileStore();
     const guest = lang.profiles.guestName;
+
+    // PinballY stretches a layer's canvas to the window: a canvas sized to
+    // the startup window would be distorted once the window takes its size.
+    const { width, height } = badge(fake).canvasSize();
+    fake.setLayoutSize({ width: 1080, height: 1920 });
+    const scale = badge(fake).scale();
+    assert.equal(Object.keys(scale).length, 1, "only one span set, so the badge keeps its proportions");
+    assert.ok(scale.ySpan > 0 && scale.ySpan < 0.2, "a small corner of the window");
+    assert.ok(width < 400 && height < 400, "its own canvas, not the window's");
+    assert.equal(badge(fake).position().align, "top right");
 
     assert.ok(shows(badge(fake), { name: guest, avatar: DEFAULT_AVATAR }), "Guest at startup, name translated");
 

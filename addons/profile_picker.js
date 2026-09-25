@@ -51,8 +51,15 @@ const ROW_HEIGHT_RATIO = 0.4;
 const TITLE = Object.freeze({ size: 26, weight: 700, top: -250 });
 const NAME = Object.freeze({ size: 24, weight: 700, top: 130 });
 const HINT = Object.freeze({ size: 12, weight: 400, top: 180 });
-// From the top right corner; the name is centred under the Avatar.
-const BADGE = Object.freeze({ avatarSize: 96, frame: 3, margin: 30, nameGap: 8, nameWidth: 200 });
+// The badge has its own canvas, pinned to the window's top right corner:
+// PinballY stretches a canvas to the window, and at startup the window is
+// not laid out yet, so a window-sized canvas drawn then ends up distorted.
+// The name is centred under the Avatar, across the canvas width, which also
+// leaves the Avatar ~30 px from the right edge.
+const BADGE = Object.freeze({ width: 160, height: 170, avatarSize: 96, frame: 3, top: 30, nameGap: 8 });
+// The size validated on the cabinet's 1920 px high playfield, kept in
+// proportion to the window's height on any other window.
+const BADGE_REFERENCE_HEIGHT = 1920;
 const BADGE_NAME = Object.freeze({ size: 14, weight: 600 });
 
 export default function init() {
@@ -61,6 +68,8 @@ export default function init() {
     const profileStore = getProfileStore();
     const layer = host.createDrawingLayer(PICKER_Z_INDEX);
     const badgeLayer = host.createDrawingLayer(BADGE_Z_INDEX);
+    badgeLayer.setScale({ ySpan: BADGE.height / BADGE_REFERENCE_HEIGHT });
+    badgeLayer.setPos(0, 0, "top right");
 
     // The Profiles shown and the highlighted one's index; null when closed.
     let profiles = null;
@@ -124,14 +133,12 @@ export default function init() {
         const profile = profileStore.getActiveProfile();
         badgeLayer.clear(COLORS.transparent);
         badgeLayer.draw(dc => {
-            const { avatarSize, frame, margin, nameGap, nameWidth } = BADGE;
-            const x = dc.getSize().width - avatarSize - margin;
-            const y = margin;
-            dc.fillRect(x - frame, y - frame, avatarSize + 2 * frame, avatarSize + 2 * frame, COLORS.gold);
-            dc.drawImage(profile.avatarPath, x, y, avatarSize, avatarSize);
-            drawShadowedText(dc, BADGE_NAME, COLORS.text, displayNameOf(profile), y + avatarSize + nameGap,
-                { x: x + avatarSize / 2 - nameWidth / 2, width: nameWidth });
-        });
+            const { width, avatarSize, frame, top, nameGap } = BADGE;
+            const x = (width - avatarSize) / 2;
+            dc.fillRect(x - frame, top - frame, avatarSize + 2 * frame, avatarSize + 2 * frame, COLORS.gold);
+            dc.drawImage(profile.avatarPath, x, top, avatarSize, avatarSize);
+            drawShadowedText(dc, BADGE_NAME, COLORS.text, displayNameOf(profile), top + avatarSize + nameGap);
+        }, BADGE.width, BADGE.height);
     }
 
     function open() {

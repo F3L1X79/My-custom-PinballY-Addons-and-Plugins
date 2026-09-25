@@ -196,13 +196,18 @@ export function createFakePinballYHost({
     }
 
     // A drawing layer that keeps only what the tests look at: the texts and
-    // image paths drawn since the last clear, its position and its alpha.
+    // image paths drawn since the last clear, the canvas size of the last
+    // draw, its position, scale and alpha. Like PinballY, a draw without a
+    // size gets a canvas the size of the window.
     function createDrawingLayer(zIndex) {
         let texts = [];
         let images = [];
+        let canvasSize = null;
         let position = { x: 0, y: 0 };
+        // PinballY's default: stretched to the whole window.
+        let scale = { xSpan: 1, ySpan: 1 };
         const dc = {
-            getSize: () => ({ ...currentLayoutSize }),
+            getSize: () => ({ ...canvasSize }),
             fillRect() {},
             frameRect() {},
             drawImage: (path) => { images.push(path); },
@@ -211,9 +216,10 @@ export function createFakePinballYHost({
         const layer = {
             zIndex,
             alpha: 1,
-            draw(drawFunction) {
+            draw(drawFunction, width, height) {
                 texts = [];
                 images = [];
+                canvasSize = width === undefined ? { ...currentLayoutSize } : { width, height };
                 drawFunction(dc);
                 drawingList.push({ zIndex, texts: [...texts] });
             },
@@ -221,10 +227,13 @@ export function createFakePinballYHost({
                 texts = [];
                 images = [];
             },
-            setPos(x, y) { position = { x, y }; },
+            setPos(x, y, align) { position = align === undefined ? { x, y } : { x, y, align }; },
+            setScale(options) { scale = { ...options }; },
             texts: () => [...texts],
             images: () => [...images],
+            canvasSize: () => ({ ...canvasSize }),
             position: () => ({ ...position }),
+            scale: () => ({ ...scale }),
         };
         layers.push(layer);
         return layer;
