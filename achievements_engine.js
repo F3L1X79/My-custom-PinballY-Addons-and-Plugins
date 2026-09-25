@@ -1,9 +1,10 @@
 ﻿// ============================================================
-// Checks all registered achievements at startup and after every
-// "gamestarted" and "gameover" event, and hands each newly unlocked one to
-// the Achievement Toast module, which announces it with a card in the
-// bottom-right corner once no game is running; an Achievement becomes
-// Notified when its toast starts.
+// Checks all registered achievements for the active Profile at startup,
+// after every "gamestarted" and "gameover" event and on every Profile
+// switch, and hands each newly unlocked one to the Achievement Toast
+// module, which announces it with a card in the bottom-right corner once no
+// game is running; an Achievement becomes Notified, for the Profile that
+// unlocked it, when its toast starts.
 // Also adds the Achievement List entry to the main menu, right after "Play".
 // ============================================================
 
@@ -21,6 +22,7 @@ import { getAchievementToasts } from "./common/achievement_toast.js";
 import { getMainMenu, MAIN_MENU_POSITION } from "./common/main_menu.js";
 import { createAchievementList } from "./common/achievement_list.js";
 import { createPinballYHost } from "./common/pinbally_host.js";
+import { getProfileStore } from "./common/profile_store.js";
 import lang from "./common/i18n.js";
 import { safeHandler } from "./common/safe_handler.js";
 
@@ -42,6 +44,7 @@ function getAllAchievements() {
 
 export default function init() {
     const achievementToasts = getAchievementToasts();
+    const profileStore = getProfileStore();
 
     const achievementList = createAchievementList(createPinballYHost(), getAllAchievements);
     getMainMenu().add({
@@ -50,19 +53,25 @@ export default function init() {
         position: MAIN_MENU_POSITION.ACHIEVEMENT_LIST,
         action: achievementList.open,
     });
-    // Achievements handed to the Achievement Toast module. They are not
-    // Notified until their toast starts, so later checks find the waiting
-    // ones again.
-    const submittedIds = new Set();
+    // Achievements handed to the Achievement Toast module, by Profile name
+    // in lower case (Profile names ignore case). They are not Notified until
+    // their toast starts, so later checks find the waiting ones again.
+    const submittedIdsByProfile = new Map();
 
     function checkForNewAchievements() {
-        evaluateAchievements(getAllAchievements(), (achievement) => {
+        // A toast may start after a switch: it is credited to the Profile
+        // active when it was unlocked.
+        const profileName = profileStore.getActiveProfile().name;
+        const profileKey = profileName.toLowerCase();
+        if (!submittedIdsByProfile.has(profileKey)) submittedIdsByProfile.set(profileKey, new Set());
+        const submittedIds = submittedIdsByProfile.get(profileKey);
+        evaluateAchievements(getAllAchievements(), profileStore, (achievement) => {
             if (submittedIds.has(achievement.id)) return;
             submittedIds.add(achievement.id);
             achievementToasts.submit({
                 title: achievement.getTitle(),
                 description: achievement.getDescription(),
-                onShown: () => markNotified(achievement.id),
+                onShown: () => markNotified(profileStore, profileName, achievement.id),
             });
         });
     }
@@ -81,6 +90,10 @@ export default function init() {
     mainWindow.on("gameover", safeHandler(SCRIPT_NAME, () => {
         setTimeout(safeCheckForNewAchievements, 0);
     }));
+
+    // Fires on every Profile switch: announces what the new Profile has
+    // unlocked but was never announced (for example after an update).
+    profileStore.onSwitch(safeCheckForNewAchievements);
 
     // Startup check: its toasts show alongside the startup prompt.
     checkForNewAchievements();

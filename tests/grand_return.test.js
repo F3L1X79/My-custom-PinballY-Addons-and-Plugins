@@ -14,8 +14,8 @@ const NOW = new Date(2026, 8, 23, 10, 0, 0);
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const SESSION_MS = 5 * 60 * 1000;
 
-// Without manufacturer and never counted as played, so the grand return is
-// the only Achievement these plays can unlock.
+// Without manufacturer or year, so with the collection milestones already
+// Notified, the grand return is the only Achievement these plays can unlock.
 function table(id, title) {
     return {
         id, configId: title, title, manufacturer: "", year: 0, categories: [],
@@ -30,6 +30,9 @@ const THIRTY_ONE_DAYS_AGO = table(2, "Thirty-One Days Ago");
 const PERIOD_TABLE = table(3, "Period Table");
 
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
+const GUEST_PROFILE_FILE = "C:\\PinballY\\Scripts\\profiles\\guest\\profile.json";
+const COLLECTION_MILESTONE_IDS = ["firstTable", "10percent", "25percent", "50percent", "75percent", "100percent"]
+    .map(milestone => `collectionMilestone:${milestone}`);
 
 test("the grand return needs a 31-day break and says so", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: [THIRTY_DAYS_AGO, THIRTY_ONE_DAYS_AGO, PERIOD_TABLE] });
@@ -41,6 +44,7 @@ test("the grand return needs a 31-day break and says so", async () => {
         "custom.tableOfTheWeek.period": "2026-09-21",
         "custom.tableOfTheWeek.configId": PERIOD_TABLE.configId,
     });
+    fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({ version: 1, plays: {}, notified: COLLECTION_MILESTONE_IDS }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
     for (const key of Object.keys(config.addOns)) {

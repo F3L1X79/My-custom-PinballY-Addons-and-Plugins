@@ -1,12 +1,13 @@
 ﻿// ============================================================
-// Generic "played every table in this group at least once" achievement
-// builder, used by the category and decade achievements. A game can belong
+// Generic "the active Profile played every table in this group at least
+// once" achievement builder, used by the category and decade achievements. A game can belong
 // to multiple groups (e.g. multiple categories), in which case it counts
 // toward each of them. The Achievements come sorted by group key. No side
 // effects.
 // ============================================================
 
 import { getVisibleTables } from "./visible_tables.js";
+import { getProfileStore } from "./profile_store.js";
 
 export function buildGroupedCompletionAchievements({ getGroupKeys, idPrefix, family, getTitle, getDescription }) {
     const allGames = getVisibleTables();
@@ -30,7 +31,7 @@ export function buildGroupedCompletionAchievements({ getGroupKeys, idPrefix, fam
             family,
             getTitle: () => getTitle(key),
             getDescription: () => getDescription(key, games.length),
-            checkUnlocked: () => games.every(game => game.playCount > 0),
+            checkUnlocked: () => games.every(game => getProfileStore().hasPlayed(game.configId)),
         });
     }
     return achievements;

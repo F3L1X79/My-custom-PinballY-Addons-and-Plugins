@@ -1,5 +1,6 @@
 ﻿// ============================================================
-// Achievements for the number of DISTINCT tables played at least once:
+// Achievements for the number of DISTINCT tables the active Profile played
+// at least once:
 // a special "first table ever" achievement, plus one per percentage of the
 // full collection in COLLECTION_PERCENT_THRESHOLDS.
 // Called by achievements_engine.js at each check; no side effects.
@@ -8,6 +9,7 @@
 import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 import { getVisibleTables } from "../common/visible_tables.js";
+import { getProfileStore } from "../common/profile_store.js";
 
 // Each value is part of an Achievement ID: changing one would announce the
 // Achievement again to players who already earned it. Each one also needs
@@ -20,7 +22,7 @@ export function buildCollectionCompletionAchievements() {
     const totalCount = getVisibleTables().length;
 
     function countPlayed() {
-        return getVisibleTables().filter(game => game.playCount > 0).length;
+        return getVisibleTables().filter(game => getProfileStore().hasPlayed(game.configId)).length;
     }
 
     const achievements = [

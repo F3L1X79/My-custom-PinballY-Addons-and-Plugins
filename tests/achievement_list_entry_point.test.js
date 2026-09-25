@@ -31,10 +31,16 @@ const TABLES = [
     table(5, "Space Shuttle", "Zaccaria", 1987, ["SciFi"], 0),
 ];
 
+// Guest's play record matches PinballY's play stats above.
+const GUEST_PROFILE_FILE = "C:\\PinballY\\Scripts\\profiles\\guest\\profile.json";
+const GUEST_PLAYS = Object.fromEntries(TABLES.filter(game => game.playCount > 0).map(game =>
+    [game.configId, { count: game.playCount, seconds: game.playTime, lastPlayed: "2026-09-01T20:00:00" }]));
+
 const ADD_ONS_UNDER_TEST = ["customMenuCommands", "achievements"];
 
 test("the Achievement List entry follows Play and lists the real Achievements by family", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
+    fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({ version: 1, plays: GUEST_PLAYS, notified: [] }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
     for (const key of Object.keys(config.addOns)) {

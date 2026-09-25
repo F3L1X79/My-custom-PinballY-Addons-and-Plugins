@@ -13,8 +13,9 @@ import config from "../common/config.js";
 const NOW = new Date(2026, 8, 23, 10, 0, 0);
 const SECONDS_PER_HOUR = 3600;
 
-// The first table unlocks Achievements at startup; the second, never
-// played nor rated, crosses the rating threshold in a marathon session.
+// Guest's plays of the first table unlock Achievements at startup; the
+// second, never played nor rated, crosses the rating threshold in a
+// marathon session.
 const TABLES = [
     {
         id: 1, configId: "Medieval Madness (Williams 1997)", title: "Medieval Madness (Williams 1997)",
@@ -28,6 +29,11 @@ const TABLES = [
     },
 ];
 
+const GUEST_PROFILE_FILE = "C:\\PinballY\\Scripts\\profiles\\guest\\profile.json";
+const GUEST_PLAYS = {
+    [TABLES[0].configId]: { count: 5, seconds: 2 * SECONDS_PER_HOUR, lastPlayed: "2026-09-01T20:00:00" },
+};
+
 const MODULE_PATHS = {
     sessionStatsTracker: "../session_stats_tracker.js",
     achievements: "../achievements_engine.js",
@@ -37,6 +43,7 @@ const MODULE_PATHS = {
 
 export async function runDialogPriorityScenario(initOrder) {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
+    fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({ version: 1, plays: GUEST_PLAYS, notified: [] }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
     config.language = "en";

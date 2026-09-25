@@ -1,6 +1,7 @@
 ﻿// ============================================================
 // Builds one achievement per release decade (from game.year): unlocked once
-// every visible table released in that decade has been played at least once.
+// the active Profile has played every visible table released in that decade
+// at least once.
 // Sorted chronologically; tables without a year are ignored. Called by
 // achievements_engine.js at each check; no side effects.
 // ============================================================

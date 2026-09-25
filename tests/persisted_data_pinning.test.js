@@ -2,10 +2,11 @@
 // Pinning test: starts the add-ons through main.js on the fake PinballY
 // globals, plays a scripted session on a fixture collection, and locks the
 // exact settings keys written (Period Table locks, Streaks, Periods Played,
-// Random Games played, Day's Manufacturers, Notified flags, session stats),
-// every Achievement ID produced, and the Guest profile.json play record and
-// cabinet.json written by the Profile store. These strings are players' saved
-// progress: this test must keep passing unchanged.
+// Random Games played, Day's Manufacturers, session stats), every
+// Achievement ID produced, and the Guest profile.json (play record and
+// Notified list) and cabinet.json written by the Profile store. These
+// strings are players' saved progress: this test must keep passing
+// unchanged.
 // ============================================================
 
 import { test } from "node:test";
@@ -114,11 +115,19 @@ const EXPECTED_FIXED_KEYS = [
     "custom.tableOfTheWeek.period",
 ];
 
-const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";
 const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
 // Enough for every waiting Achievement Toast to show, one after the other.
 const TOASTS_MS = 60 * 60 * 1000;
 const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
+const GUEST_PROFILE_FILE = `${PROFILES_FOLDER}\\guest\\profile.json`;
+// Guest's play record before the session matches PinballY's play stats of
+// the visible tables: every completion and play-time Achievement is in reach.
+const pad = number => String(number).padStart(2, "0");
+// The Profile store's local time format: "2026-09-24T21:10:00".
+const toLocalIsoString = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+    + `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+const SEEDED_PLAYS = Object.fromEntries(TABLES.filter(table => !table.isHidden).map(table =>
+    [table.configId, { count: table.playCount, seconds: table.playTime, lastPlayed: toLocalIsoString(table.lastPlayed) }]));
 
 // The add-ons involved in persisted data; the others would need more
 // PinballY globals and write nothing that is pinned here.
@@ -179,6 +188,7 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
         ...Object.fromEntries(TABLES.map(table =>
             [PREVIOUS_PLAY_KEY_PREFIX + table.configId, new Date(2024, 8, 1).toISOString()])),
     });
+    fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({ version: 1, plays: SEEDED_PLAYS, notified: [] }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
 
@@ -211,31 +221,27 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
     // Achievements are Notified when their toast starts, one toast after the other.
     fake.advanceTime(TOASTS_MS);
 
-    const writtenKeys = [...fake.writtenSettingsKeys()];
-
-    const notifiedIds = writtenKeys
-        .filter(key => key.startsWith(NOTIFIED_KEY_PREFIX))
-        .map(key => key.slice(NOTIFIED_KEY_PREFIX.length))
-        .sort();
-    assert.deepEqual(notifiedIds, EXPECTED_ACHIEVEMENT_IDS);
-
+    // No Notified flag among the settings keys any more.
     const expectedPreviousPlayKeys = [...new Set([dayTable.configId, weekTable.configId, randomTable.configId])]
         .map(configId => PREVIOUS_PLAY_KEY_PREFIX + configId);
-    const otherKeys = writtenKeys.filter(key => !key.startsWith(NOTIFIED_KEY_PREFIX)).sort();
-    assert.deepEqual(otherKeys, [...EXPECTED_FIXED_KEYS, ...expectedPreviousPlayKeys].sort());
+    assert.deepEqual([...fake.writtenSettingsKeys()].sort(), [...EXPECTED_FIXED_KEYS, ...expectedPreviousPlayKeys].sort());
 
-    // Every game played for Guest, the only Profile of a fresh install.
-    const expectedPlays = {};
+    // Every game played for Guest, the only Profile of a fresh install, and
+    // every Achievement Notified for Guest (in the order the toasts showed).
+    const expectedPlays = structuredClone(SEEDED_PLAYS);
     for (const [game, seconds, lastPlayed] of [
         [dayTable, 61 * 60, "2026-09-23T11:01:00"],
         [weekTable, 45, "2026-09-23T11:01:45"],
         [randomTable, 3, "2026-09-23T11:01:48"],
     ]) {
-        const play = expectedPlays[game.configId] || { count: 0, seconds: 0 };
+        const play = expectedPlays[game.configId];
         expectedPlays[game.configId] = { count: play.count + 1, seconds: play.seconds + seconds, lastPlayed };
     }
-    assert.deepEqual(JSON.parse(fake.readFile(`${PROFILES_FOLDER}\\guest\\profile.json`)),
-        { version: 1, plays: expectedPlays });
+    const guestProfile = JSON.parse(fake.readFile(GUEST_PROFILE_FILE));
+    assert.deepEqual(Object.keys(guestProfile), ["version", "plays", "notified"]);
+    assert.equal(guestProfile.version, 1);
+    assert.deepEqual(guestProfile.plays, expectedPlays);
+    assert.deepEqual([...guestProfile.notified].sort(), EXPECTED_ACHIEVEMENT_IDS);
     assert.deepEqual(JSON.parse(fake.readFile(`${PROFILES_FOLDER}\\cabinet.json`)),
         { version: 1, activeProfile: "guest" });
 

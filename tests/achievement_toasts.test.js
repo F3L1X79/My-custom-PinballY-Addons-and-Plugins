@@ -17,8 +17,8 @@ const SECONDS_PER_HOUR = 3600;
 const ONE_TOAST_MS = 6000;
 const ARRIVAL_GAP_MS = 350;
 
-// Two Williams tables, both played: unlocks at least the first-table,
-// Williams and 1990s Achievements at startup.
+// Two Williams tables, both played by Guest: unlocks at least the
+// first-table, Williams and 1990s Achievements at startup.
 const TABLES = [
     {
         id: 1, configId: "Medieval Madness (Williams 1997)", title: "Medieval Madness (Williams 1997)",
@@ -32,10 +32,15 @@ const TABLES = [
     },
 ];
 
-const NOTIFIED_KEY_PREFIX = "custom.achievements.notified.";
+const GUEST_PROFILE_FILE = "C:\\PinballY\\Scripts\\profiles\\guest\\profile.json";
+// Guest played both tables.
+const GUEST_PLAYS = {
+    [TABLES[0].configId]: { count: 5, seconds: 2 * SECONDS_PER_HOUR, lastPlayed: "2026-09-01T20:00:00" },
+    [TABLES[1].configId]: { count: 3, seconds: SECONDS_PER_HOUR, lastPlayed: "2026-09-02T20:00:00" },
+};
 
 function notifiedCount(fake) {
-    return [...fake.writtenSettingsKeys()].filter(key => key.startsWith(NOTIFIED_KEY_PREFIX)).length;
+    return JSON.parse(fake.readFile(GUEST_PROFILE_FILE)).notified.length;
 }
 
 function toasts(fake) {
@@ -44,6 +49,7 @@ function toasts(fake) {
 
 test("Achievement Toasts wait for the end of the game, arrive staggered and never take over a menu", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
+    fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({ version: 1, plays: GUEST_PLAYS, notified: [] }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
     for (const key of Object.keys(config.addOns)) {

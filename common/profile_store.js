@@ -32,7 +32,8 @@ function toLocalIsoString(date) {
         + `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-const emptyProfileData = () => ({ version: PROFILE_VERSION, plays: {} });
+const emptyProfileData = () => ({ version: PROFILE_VERSION, plays: {}, notified: [] });
+const NO_PLAY = Object.freeze({ count: 0, seconds: 0, lastPlayed: "" });
 
 export function createProfileStore(host) {
     const scriptsFolder = `${host.getProgramFolder().replace(/\\+$/, "")}\\Scripts`;
@@ -86,7 +87,8 @@ export function createProfileStore(host) {
         files.renameFile(tmpPath, path);
     }
 
-    const readProfileData = profile => readJson(`${profile.folder}\\profile.json`) || emptyProfileData();
+    // A file saved before a domain existed gets that domain empty.
+    const readProfileData = profile => ({ ...emptyProfileData(), ...readJson(`${profile.folder}\\profile.json`) });
     const saveProfileData = (profile, data) => saveJson(profile.folder, "profile", data);
     const saveCabinet = () => saveJson(profilesFolder, "cabinet", cabinet);
 
@@ -155,7 +157,7 @@ export function createProfileStore(host) {
         const seconds = running ? Math.round((now.getTime() - running.startMs) / 1000) : 0;
 
         updateProfileData(data => {
-            const play = data.plays[configId] || { count: 0, seconds: 0, lastPlayed: "" };
+            const play = data.plays[configId] || NO_PLAY;
             data.plays[configId] = {
                 count: play.count + 1,
                 seconds: play.seconds + seconds,
@@ -169,6 +171,9 @@ export function createProfileStore(host) {
         getActiveProfile: () => ({ ...publicProfile(activeProfile), data: activeData }),
         switchTo,
         getProfileData: () => activeData,
+        // The active Profile's play record of a table, all zero when never played.
+        getPlay: (configId) => activeData.plays[configId] || NO_PLAY,
+        hasPlayed: (configId) => (activeData.plays[configId] || NO_PLAY).count > 0,
         updateProfileData,
         getCabinetData: () => cabinet,
         updateCabinetData: (change) => {
