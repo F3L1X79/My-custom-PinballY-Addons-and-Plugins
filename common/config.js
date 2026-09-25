@@ -16,6 +16,8 @@ const DEFAULTS = {
     launchSoundFile: "",
     // ABSOLUTE path to the sound played with each Achievement Toast. Empty = no sound.
     achievementSoundFile: "",
+    // ABSOLUTE path to the sound played with each Profile Greeting. Empty = no sound.
+    profileGreetingSoundFile: "",
     // Manufacturer name you gave fictional/community VPX tables in PinballY.
     // Used by the status line and the "Original Tables" filter.
     communityTablesManufacturer: "VPX Community",

@@ -17,6 +17,7 @@ import config from "../common/config.js";
 const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 const CABINET_FILE = `${PROFILES_FOLDER}\\cabinet.json`;
 const PICKER_Z = 6500;
+const GREETING_OVER_MS = 2500;
 
 async function start({ enabled = true, activeProfile = "Bob" } = {}) {
     const fake = createFakePinballYHost();
@@ -32,6 +33,8 @@ async function start({ enabled = true, activeProfile = "Bob" } = {}) {
     const { getProfileStore } = await import("../common/profile_store.js");
     await import("../main.js");
     await settle();
+    // The startup greeting (~1.5 s), out of the way: it shares the picker layer.
+    fake.advanceTime(GREETING_OVER_MS);
 
     const openMainMenu = () => fake.openMenu("main", [{ title: "Play", cmd: fake.getBuiltInCommand("PlayGame") }]);
     return { fake, lang, store: getProfileStore(), openMainMenu };
@@ -86,7 +89,8 @@ test("the Profile picker moves, wraps, switches, cancels and sees new folders", 
     assert.equal(highlightedName(fake, names), "Chloé", "a folder added while PinballY runs shows up");
 
     press(fake, "Select");
-    assert.deepEqual(pickerTexts(fake), [], "Select closes the carousel");
+    assert.ok(!pickerTexts(fake).includes(lang.profiles.pickerTitle), "Select closes the carousel");
+    assert.equal(press(fake, "Next").defaultPrevented, false, "buttons reach PinballY during the greeting");
     assert.equal(store.getActiveProfile().name, "Chloé");
     assert.equal(JSON.parse(fake.readFile(CABINET_FILE)).activeProfile, "Chloé", "the switch is saved");
 

@@ -283,5 +283,7 @@ export default {
         pickerTitle: "¿Quién juega?",
         pickerHint: "Flippers: cambiar · Start: elegir · Exit: cancelar",
         guestName: "Invitado",
+        greeting: name => `¡Hola ${name}!`,
+        guestGreeting: "¡Bienvenido, invitado!",
     },
 };

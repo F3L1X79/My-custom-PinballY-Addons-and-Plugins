@@ -283,5 +283,7 @@ export default {
         pickerTitle: "Wer spielt?",
         pickerHint: "Flipper: blättern · Start: wählen · Exit: abbrechen",
         guestName: "Gast",
+        greeting: name => `Hallo ${name}!`,
+        guestGreeting: "Willkommen, lieber Gast!",
     },
 };

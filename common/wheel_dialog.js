@@ -5,7 +5,8 @@
 // add-on order in main.js never decides which dialog comes first. It owns
 // the dialog layout, the button commands and their dispatch, and advances
 // the queue on "menuclose", whether the dialog was acknowledged or
-// dismissed. Listens to "command", "menuclose" and "wheelmode".
+// dismissed; tells whether any dialog is on screen or waiting. Listens to
+// "command", "menuclose" and "wheelmode".
 // ============================================================
 
 import { safeHandler } from "./safe_handler.js";
@@ -96,7 +97,11 @@ export function createWheelDialogs(host) {
     // Fires on every return to the wheel (from a game, a menu or a popup).
     host.on("wheelmode", safeHandler(SCRIPT_NAME, scheduleShowNext));
 
-    return { submit };
+    // True when no dialog is on screen or waiting, so an add-on drawing over
+    // the wheel knows it would not cover one.
+    const isIdle = () => !shown && queue.length === 0;
+
+    return { submit, isIdle };
 }
 
 let sharedWheelDialogs = null;

@@ -9,7 +9,7 @@ Une sélection soignée d'add-ons JavaScript pour [PinballY](http://mjrnet.org/p
 - **Dialogue de démarrage** : rester sur la dernière table jouée, ou lancer la table du jour, la table de la semaine ou une table au hasard.
 - **Table du jour** (jamais jouée, ou à défaut jouée il y a le plus longtemps) et **table de la semaine** (au hasard, du lundi au dimanche).
 - **Table au hasard** : une animation « roue de la fortune », jamais la dernière table jouée.
-- **Entrées du menu principal** après « Jouer » : Changer de joueur (un carrousel d'Avatars piloté par les flippers, aussi dans le menu Quitter ; l'Avatar et le nom du Profile actif restent en haut à droite de l'écran de la roue), Succès personnels, Configuration de la table, table au hasard, table du jour, table de la semaine.
+- **Entrées du menu principal** après « Jouer » : Changer de joueur (un carrousel d'Avatars piloté par les flippers, aussi dans le menu Quitter ; l'Avatar et le nom du Profile actif restent en haut à droite de l'écran de la roue ; choisir un Profile, et démarrer PinballY, accueille le joueur), Succès personnels, Configuration de la table, table au hasard, table du jour, table de la semaine.
 - **Filtre « Tables Originales »** dans « Filtrer par fabricant » : toutes les tables sauf celles de la communauté.
 - **Filtre « Hall of Fame »** dans le menu principal : vos dix tables les plus jouées, classées par temps de jeu.
 - **Succès**, chacun annoncé une fois par une petite carte en bas à droite de l'écran du plateau, qui disparaît toute seule (jamais pendant une partie ; plusieurs cartes s'empilent, avec un son facultatif), et consultables par famille dans « Succès personnels » :
@@ -37,6 +37,7 @@ Nécessite **Windows** et **PinballY 1.1.0 Beta 10** ou plus récent (plus la fo
 | `LANGUAGE` | `en` | `en`, `fr`, `de`, `es`, `it` ou `pt`. |
 | `LAUNCH_SOUND_FILE` | vide | Chemin complet du son de lancement, par exemple `C:\PinballY\Media\Sounds\launch.mp3`. |
 | `ACHIEVEMENT_SOUND_FILE` | vide | Chemin complet d'un son joué avec chaque carte de succès. |
+| `PROFILE_GREETING_SOUND_FILE` | vide | Chemin complet d'un son joué quand un joueur est accueilli. |
 | `COMMUNITY_TABLES_MANUFACTURER` | `VPX Community` | Nom de fabricant de vos tables de la communauté. |
 | `SKIP_RANDOM_GAME_ANIMATION` | `false` | `true` saute l'animation de la roue. |
 | `ASK_TO_RATE_AFTER_MINUTES_PLAYED` | `60` | Temps de jeu avant le rappel de notation. |

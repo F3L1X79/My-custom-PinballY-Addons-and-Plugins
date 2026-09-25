@@ -9,7 +9,7 @@ A curated list of JavaScript add-ons for [PinballY](http://mjrnet.org/pinscape/P
 - **Startup dialog**: stay on the last played table, or launch the table of the day, the table of the week or a random table.
 - **Table of the day** (never played, or else played longest ago) and **table of the week** (random, Monday to Sunday).
 - **Random table**: a "wheel of fortune" animation, never the last played table.
-- **Main menu entries** after "Play": Change Player (a carousel of Avatars driven by the flipper buttons, also in the Exit menu; the active Profile's Avatar and name stay at the top right of the wheel screen), Achievement List, Table Setup, Random Game, Table of the Day, Table of the Week.
+- **Main menu entries** after "Play": Change Player (a carousel of Avatars driven by the flipper buttons, also in the Exit menu; the active Profile's Avatar and name stay at the top right of the wheel screen; picking a Profile, and starting PinballY, greets the player), Achievement List, Table Setup, Random Game, Table of the Day, Table of the Week.
 - **"Original Tables" filter** in "Filter by Manufacturer": every table except the community-made ones.
 - **"Hall of Fame" filter** in the main menu: your ten most played tables, ranked by play time.
 - **Achievements**, each announced once by a small card in the bottom-right corner of the playfield screen that disappears on its own (never during a game; several stack, with an optional sound), and browsable by family in the "Achievement List":
@@ -37,6 +37,7 @@ Requires **Windows** and **PinballY 1.1.0 Beta 10** or later (plus the *Windows 
 | `LANGUAGE` | `en` | `en`, `fr`, `de`, `es`, `it` or `pt`. |
 | `LAUNCH_SOUND_FILE` | empty | Full path to the launch sound, e.g. `C:\PinballY\Media\Sounds\launch.mp3`. |
 | `ACHIEVEMENT_SOUND_FILE` | empty | Full path to a sound played with each Achievement card. |
+| `PROFILE_GREETING_SOUND_FILE` | empty | Full path to a sound played when a player is greeted. |
 | `COMMUNITY_TABLES_MANUFACTURER` | `VPX Community` | Manufacturer name of your community-made tables. |
 | `SKIP_RANDOM_GAME_ANIMATION` | `false` | `true` skips the wheel animation. |
 | `ASK_TO_RATE_AFTER_MINUTES_PLAYED` | `60` | Play time before the rating reminder. |
