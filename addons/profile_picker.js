@@ -8,6 +8,9 @@
 // button is swallowed through "commandbuttondown", so the wheel never moves
 // under it; attract mode closes it too. The Profiles are read again each
 // time it opens.
+// A badge at the top right of the wheel screen shows the active Profile's
+// Avatar and name; it is redrawn on every switch, hidden on "gamestarted"
+// and shown again on "wheelmode".
 // ============================================================
 
 import lang from "../common/i18n.js";
@@ -21,6 +24,8 @@ const SCRIPT_NAME = "ProfilePicker";
 
 // Above PinballY's menus and popups.
 const PICKER_Z_INDEX = 6500;
+// Above the wheel and the game info box, under popups and menus.
+const BADGE_Z_INDEX = 4500;
 const FONT = "Segoe UI";
 const COLORS = Object.freeze({
     overlay: 0xD0080A0E,
@@ -46,25 +51,29 @@ const ROW_HEIGHT_RATIO = 0.4;
 const TITLE = Object.freeze({ size: 26, weight: 700, top: -250 });
 const NAME = Object.freeze({ size: 24, weight: 700, top: 130 });
 const HINT = Object.freeze({ size: 12, weight: 400, top: 180 });
+// From the top right corner; the name is centred under the Avatar.
+const BADGE = Object.freeze({ avatarSize: 96, frame: 3, margin: 30, nameGap: 8, nameWidth: 200 });
+const BADGE_NAME = Object.freeze({ size: 14, weight: 600 });
 
 export default function init() {
     const { profiles: TEXT } = lang;
     const host = createPinballYHost();
     const profileStore = getProfileStore();
     const layer = host.createDrawingLayer(PICKER_Z_INDEX);
+    const badgeLayer = host.createDrawingLayer(BADGE_Z_INDEX);
 
     // The Profiles shown and the highlighted one's index; null when closed.
     let profiles = null;
     let highlighted = 0;
 
-    // Text with a soft drop shadow, so it reads over any background video.
-    function drawShadowedText(dc, { size, weight }, color, text, y) {
-        const width = dc.getSize().width;
+    // Text with a soft drop shadow, so it reads over any background video;
+    // centred across the whole width unless given a column.
+    function drawShadowedText(dc, { size, weight }, color, text, y, { x = 0, width = dc.getSize().width } = {}) {
         for (const [offset, textColor] of [[2, COLORS.shadow], [0, color]]) {
             const styled = host.createStyledText({ textAlign: "center", textStyle: { font: FONT, size, weight, color: textColor } });
             styled.add(text);
             const height = styled.measure(width).height;
-            styled.draw(dc, { x: offset, y: y + offset, width, height });
+            styled.draw(dc, { x: x + offset, y: y + offset, width, height });
         }
     }
 
@@ -108,6 +117,20 @@ export default function init() {
             const isActive = current.name === profileStore.getActiveProfile().name;
             drawShadowedText(dc, NAME, isActive ? COLORS.gold : COLORS.text, displayNameOf(current), centerY + NAME.top);
             drawShadowedText(dc, HINT, COLORS.hint, TEXT.pickerHint, centerY + HINT.top);
+        });
+    }
+
+    function drawBadge() {
+        const profile = profileStore.getActiveProfile();
+        badgeLayer.clear(COLORS.transparent);
+        badgeLayer.draw(dc => {
+            const { avatarSize, frame, margin, nameGap, nameWidth } = BADGE;
+            const x = dc.getSize().width - avatarSize - margin;
+            const y = margin;
+            dc.fillRect(x - frame, y - frame, avatarSize + 2 * frame, avatarSize + 2 * frame, COLORS.gold);
+            dc.drawImage(profile.avatarPath, x, y, avatarSize, avatarSize);
+            drawShadowedText(dc, BADGE_NAME, COLORS.text, displayNameOf(profile), y + avatarSize + nameGap,
+                { x: x + avatarSize / 2 - nameWidth / 2, width: nameWidth });
         });
     }
 
@@ -159,7 +182,16 @@ export default function init() {
         }
     }));
 
+    profileStore.onSwitch(safeHandler(SCRIPT_NAME, drawBadge));
+
+    // The badge must never cover a game.
+    host.on("gamestarted", safeHandler(SCRIPT_NAME, () => { badgeLayer.alpha = 0; }));
+    // Fires back on the wheel, after a game among others.
+    host.on("wheelmode", safeHandler(SCRIPT_NAME, () => { badgeLayer.alpha = 1; }));
+
     // Fires when the cabinet sits idle: the player left without picking, so
     // the carousel must not stay drawn over attract mode or keep the buttons.
     host.on("attractmodestart", safeHandler(SCRIPT_NAME, close));
+
+    drawBadge();
 }

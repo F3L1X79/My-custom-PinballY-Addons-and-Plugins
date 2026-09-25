@@ -195,16 +195,17 @@ export function createFakePinballYHost({
         nowMs = targetMs;
     }
 
-    // A drawing layer that keeps only what the tests look at: the texts drawn
-    // since the last clear, its position and its alpha.
+    // A drawing layer that keeps only what the tests look at: the texts and
+    // image paths drawn since the last clear, its position and its alpha.
     function createDrawingLayer(zIndex) {
         let texts = [];
+        let images = [];
         let position = { x: 0, y: 0 };
         const dc = {
             getSize: () => ({ ...currentLayoutSize }),
             fillRect() {},
             frameRect() {},
-            drawImage() {},
+            drawImage: (path) => { images.push(path); },
             drawText: (text) => { texts.push(text); },
         };
         const layer = {
@@ -212,12 +213,17 @@ export function createFakePinballYHost({
             alpha: 1,
             draw(drawFunction) {
                 texts = [];
+                images = [];
                 drawFunction(dc);
                 drawingList.push({ zIndex, texts: [...texts] });
             },
-            clear() { texts = []; },
+            clear() {
+                texts = [];
+                images = [];
+            },
             setPos(x, y) { position = { x, y }; },
             texts: () => [...texts],
+            images: () => [...images],
             position: () => ({ ...position }),
         };
         layers.push(layer);
