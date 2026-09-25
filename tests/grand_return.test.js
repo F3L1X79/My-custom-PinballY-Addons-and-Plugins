@@ -11,7 +11,6 @@ import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 
 const NOW = new Date(2026, 8, 23, 10, 0, 0);
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const SESSION_MS = 5 * 60 * 1000;
 
 // Without manufacturer or year, so with the collection milestones already
@@ -29,7 +28,6 @@ const THIRTY_ONE_DAYS_AGO = table(2, "Thirty-One Days Ago");
 // count as a Period Table play.
 const PERIOD_TABLE = table(3, "Period Table");
 
-const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
 const GUEST_PROFILE_FILE = "C:\\PinballY\\Scripts\\profiles\\guest\\profile.json";
 const COLLECTION_MILESTONE_IDS = ["firstTable", "10percent", "25percent", "50percent", "75percent", "100percent"]
     .map(milestone => `collectionMilestone:${milestone}`);
@@ -37,14 +35,17 @@ const COLLECTION_MILESTONE_IDS = ["firstTable", "10percent", "25percent", "50per
 test("the grand return needs a 31-day break and says so", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: [THIRTY_DAYS_AGO, THIRTY_ONE_DAYS_AGO, PERIOD_TABLE] });
     fake.seedSettings({
-        [PREVIOUS_PLAY_KEY_PREFIX + THIRTY_DAYS_AGO.configId]: new Date(NOW.getTime() - 30 * MS_PER_DAY).toISOString(),
-        [PREVIOUS_PLAY_KEY_PREFIX + THIRTY_ONE_DAYS_AGO.configId]: new Date(NOW.getTime() - 31 * MS_PER_DAY).toISOString(),
         "custom.tableOfTheDay.period": "2026-09-23",
         "custom.tableOfTheDay.configId": PERIOD_TABLE.configId,
         "custom.tableOfTheWeek.period": "2026-09-21",
         "custom.tableOfTheWeek.configId": PERIOD_TABLE.configId,
     });
-    fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({ version: 1, plays: {}, notified: COLLECTION_MILESTONE_IDS }));
+    // Guest's own previous plays, in the Profile store's local time format.
+    const plays = {
+        [THIRTY_DAYS_AGO.configId]: { count: 1, seconds: 600, lastPlayed: "2026-08-24T10:00:00" },
+        [THIRTY_ONE_DAYS_AGO.configId]: { count: 1, seconds: 600, lastPlayed: "2026-08-23T10:00:00" },
+    };
+    fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({ version: 1, plays, notified: COLLECTION_MILESTONE_IDS }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
     for (const key of Object.keys(config.addOns)) {

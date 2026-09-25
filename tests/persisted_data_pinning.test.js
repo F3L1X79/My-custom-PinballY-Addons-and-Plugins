@@ -2,9 +2,9 @@
 // Pinning test: starts the add-ons through main.js on the fake PinballY
 // globals, plays a scripted session on a fixture collection, and locks the
 // exact settings keys written (Period Table locks, Streaks, Periods Played,
-// Random Games played, Day's Manufacturers, session stats), every
-// Achievement ID produced, and the Guest profile.json (play record and
-// Notified list) and cabinet.json written by the Profile store. These
+// Random Games played), every Achievement ID produced, and the Guest
+// profile.json (play record, session stats and Notified list) and
+// cabinet.json written by the Profile store. These
 // strings are players' saved progress: this test must keep passing
 // unchanged.
 // ============================================================
@@ -94,13 +94,6 @@ const EXPECTED_ACHIEVEMENT_IDS = [
 
 const EXPECTED_FIXED_KEYS = [
     "custom.randomGame.launchCount",
-    "custom.sessionStats.dayManufacturers.day",
-    "custom.sessionStats.dayManufacturers.list",
-    "custom.sessionStats.grandReturnUnlocked",
-    "custom.sessionStats.longestSeconds",
-    "custom.sessionStats.mostManufacturersInADay",
-    "custom.sessionStats.rageQuitUnlocked",
-    "custom.sessionStats.shortestSeconds",
     "custom.streaks.tableOfTheDay.currentStreak",
     "custom.streaks.tableOfTheDay.lastPeriod",
     "custom.streaks.tableOfTheDay.longestStreak",
@@ -115,19 +108,23 @@ const EXPECTED_FIXED_KEYS = [
     "custom.tableOfTheWeek.period",
 ];
 
-const PREVIOUS_PLAY_KEY_PREFIX = "custom.sessionStats.previousPlay.";
 // Enough for every waiting Achievement Toast to show, one after the other.
 const TOASTS_MS = 60 * 60 * 1000;
 const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 const GUEST_PROFILE_FILE = `${PROFILES_FOLDER}\\guest\\profile.json`;
-// Guest's play record before the session matches PinballY's play stats of
-// the visible tables: every completion and play-time Achievement is in reach.
-const pad = number => String(number).padStart(2, "0");
-// The Profile store's local time format: "2026-09-24T21:10:00".
-const toLocalIsoString = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-    + `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+// Guest's play record before the session matches PinballY's play counts and
+// play times of the visible tables, so every completion and play-time
+// Achievement is in reach, but every table was last played two years ago,
+// for the grand return (in the Profile store's local time format).
 const SEEDED_PLAYS = Object.fromEntries(TABLES.filter(table => !table.isHidden).map(table =>
-    [table.configId, { count: table.playCount, seconds: table.playTime, lastPlayed: toLocalIsoString(table.lastPlayed) }]));
+    [table.configId, { count: table.playCount, seconds: table.playTime, lastPlayed: "2024-09-01T20:00:00" }]));
+// Seven manufacturers outside the collection already played today: any
+// manufacturer played next unlocks the last multi-manufacturer Achievement.
+const SEEDED_DAY_MANUFACTURERS = ["A", "B", "C", "D", "E", "F", "G"];
+const SEEDED_SESSIONS = {
+    longestSeconds: 0, shortestSeconds: 0, rageQuit: false, grandReturn: false,
+    dayManufacturers: { day: "2026-09-23", list: SEEDED_DAY_MANUFACTURERS }, mostManufacturersInADay: 7,
+};
 
 // The add-ons involved in persisted data; the others would need more
 // PinballY globals and write nothing that is pinned here.
@@ -178,17 +175,8 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
         "custom.streaks.tableOfTheWeek.periodsPlayed": 51,
         // One Random Game short of the last Random Game fan Achievement.
         "custom.randomGame.launchCount": 99,
-        // Seven manufacturers outside the collection already played today:
-        // any manufacturer played next unlocks the last multi-manufacturer
-        // Achievement.
-        "custom.sessionStats.dayManufacturers.day": "2026-09-23",
-        "custom.sessionStats.dayManufacturers.list": JSON.stringify(["A", "B", "C", "D", "E", "F", "G"]),
-        "custom.sessionStats.mostManufacturersInADay": 7,
-        // Every table last played two years ago, for the grand return.
-        ...Object.fromEntries(TABLES.map(table =>
-            [PREVIOUS_PLAY_KEY_PREFIX + table.configId, new Date(2024, 8, 1).toISOString()])),
     });
-    fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({ version: 1, plays: SEEDED_PLAYS, notified: [] }));
+    fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({ version: 1, plays: SEEDED_PLAYS, sessions: SEEDED_SESSIONS, notified: [] }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
 
@@ -221,10 +209,8 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
     // Achievements are Notified when their toast starts, one toast after the other.
     fake.advanceTime(TOASTS_MS);
 
-    // No Notified flag among the settings keys any more.
-    const expectedPreviousPlayKeys = [...new Set([dayTable.configId, weekTable.configId, randomTable.configId])]
-        .map(configId => PREVIOUS_PLAY_KEY_PREFIX + configId);
-    assert.deepEqual([...fake.writtenSettingsKeys()].sort(), [...EXPECTED_FIXED_KEYS, ...expectedPreviousPlayKeys].sort());
+    // No Notified flag nor session stat among the settings keys any more.
+    assert.deepEqual([...fake.writtenSettingsKeys()].sort(), EXPECTED_FIXED_KEYS);
 
     // Every game played for Guest, the only Profile of a fresh install, and
     // every Achievement Notified for Guest (in the order the toasts showed).
@@ -238,9 +224,20 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
         expectedPlays[game.configId] = { count: play.count + 1, seconds: play.seconds + seconds, lastPlayed };
     }
     const guestProfile = JSON.parse(fake.readFile(GUEST_PROFILE_FILE));
-    assert.deepEqual(Object.keys(guestProfile), ["version", "plays", "notified"]);
+    assert.deepEqual(Object.keys(guestProfile), ["version", "plays", "sessions", "notified"]);
     assert.equal(guestProfile.version, 1);
     assert.deepEqual(guestProfile.plays, expectedPlays);
+    // The manufacturers of the tables played, in play order, once each.
+    const dayManufacturers = [...new Set([...SEEDED_DAY_MANUFACTURERS,
+        ...[dayTable, weekTable, randomTable].map(game => game.manufacturer).filter(Boolean)])];
+    assert.deepEqual(guestProfile.sessions, {
+        longestSeconds: 61 * 60,
+        shortestSeconds: 3,
+        rageQuit: true,
+        grandReturn: true,
+        dayManufacturers: { day: "2026-09-23", list: dayManufacturers },
+        mostManufacturersInADay: dayManufacturers.length,
+    });
     assert.deepEqual([...guestProfile.notified].sort(), EXPECTED_ACHIEVEMENT_IDS);
     assert.deepEqual(JSON.parse(fake.readFile(`${PROFILES_FOLDER}\\cabinet.json`)),
         { version: 1, activeProfile: "guest" });
