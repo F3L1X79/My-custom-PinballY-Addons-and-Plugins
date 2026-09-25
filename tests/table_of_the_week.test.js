@@ -1,7 +1,8 @@
 ﻿// ============================================================
 // Table of the Week behaviour, through the Period Table module's interface
-// with the fake PinballY host: the table is kept from Monday to Sunday,
-// replaced after the Sunday-to-Monday rollover, and the week Streak counts
+// with the fake PinballY host and the Profile store: the table is kept from
+// Monday to Sunday (locked in cabinet.json), replaced after the
+// Sunday-to-Monday rollover, and the active Profile's week Streak counts
 // once per week when the Table of the Week starts playing.
 // Run with "node --test" from the project folder.
 // ============================================================
@@ -10,6 +11,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createFakePinballYHost } from "./fake_pinbally_host.js";
 import { createPeriodTable, TABLE_OF_THE_WEEK } from "../common/period_table.js";
+import { createProfileStore } from "../common/profile_store.js";
 
 // Monday 21 September 2026, 00:00:01 local time.
 const MONDAY = new Date(2026, 8, 21, 0, 0, 1);
@@ -24,10 +26,20 @@ const TABLES = [
     { id: 3, configId: "Theatre of Magic (Bally 1995)", title: "Theatre of Magic", lastPlayed: null },
 ];
 
-function createTableOfTheWeek({ now = MONDAY, tables = TABLES, settings = {} } = {}) {
+const PROFILES = "C:\\PinballY\\Scripts\\profiles";
+const CABINET_FILE = `${PROFILES}\\cabinet.json`;
+const GUEST_FILE = `${PROFILES}\\guest\\profile.json`;
+const readJson = (fake, path) => JSON.parse(fake.readFile(path));
+
+// lock: the Table of the Week stored in cabinet.json; streak: Guest's week
+// Streak stored in its profile.json.
+function createTableOfTheWeek({ now = MONDAY, tables = TABLES, lock, streak } = {}) {
     const fake = createFakePinballYHost({ now, tables });
-    fake.seedSettings(settings);
-    return { fake, tableOfTheWeek: createPeriodTable(fake, TABLE_OF_THE_WEEK) };
+    if (lock) {
+        fake.addFile(CABINET_FILE, JSON.stringify({ version: 1, activeProfile: "guest", tableOfTheWeek: lock }));
+    }
+    if (streak) fake.addFile(GUEST_FILE, JSON.stringify({ version: 1, streaks: { tableOfTheWeek: streak } }));
+    return { fake, tableOfTheWeek: createPeriodTable(fake, TABLE_OF_THE_WEEK, createProfileStore(fake)) };
 }
 
 function playLastLaunch(fake) {
@@ -52,10 +64,7 @@ test("picks a new Table of the Week after the Sunday-to-Monday rollover, never t
         const { fake, tableOfTheWeek } = createTableOfTheWeek({
             now: SUNDAY_NIGHT,
             tables: twoTables,
-            settings: {
-                "custom.tableOfTheWeek.period": "2026-09-14",
-                "custom.tableOfTheWeek.configId": lastWeekTable.configId,
-            },
+            lock: { configId: lastWeekTable.configId, period: "2026-09-14" },
         });
 
         const thisWeekTable = tableOfTheWeek.getTable();
@@ -70,12 +79,8 @@ test("offers the previous week's table again when it is the only visible table, 
     const onlyTable = TABLES[0];
     const { fake, tableOfTheWeek } = createTableOfTheWeek({
         tables: [onlyTable],
-        settings: {
-            "custom.tableOfTheWeek.period": "2026-09-14",
-            "custom.tableOfTheWeek.configId": onlyTable.configId,
-            "custom.streaks.tableOfTheWeek.lastPeriod": "2026-09-14",
-            "custom.streaks.tableOfTheWeek.currentStreak": 1,
-        },
+        lock: { configId: onlyTable.configId, period: "2026-09-14" },
+        streak: { current: 1, longest: 1, lastPeriod: "2026-09-14", periodsPlayed: 1 },
     });
 
     tableOfTheWeek.launch();
@@ -88,10 +93,7 @@ test("offers the previous week's table again when it is the only visible table, 
 test("keeps a Table of the Week stored earlier this week", () => {
     const { tableOfTheWeek } = createTableOfTheWeek({
         now: SUNDAY_NIGHT,
-        settings: {
-            "custom.tableOfTheWeek.period": "2026-09-21",
-            "custom.tableOfTheWeek.configId": "Attack from Mars (Bally 1995)",
-        },
+        lock: { configId: "Attack from Mars (Bally 1995)", period: "2026-09-21" },
     });
 
     assert.equal(tableOfTheWeek.getTable().configId, "Attack from Mars (Bally 1995)");
@@ -159,13 +161,9 @@ test("grows the week Streak across the rollover and resets it after a skipped we
     assert.equal(tableOfTheWeek.getStreak(), 1);
 });
 
-test("reads and extends a week Streak stored before", () => {
+test("reads and extends a week Streak stored in the active Profile", () => {
     const { fake, tableOfTheWeek } = createTableOfTheWeek({
-        settings: {
-            "custom.streaks.tableOfTheWeek.lastPeriod": "2026-09-14",
-            "custom.streaks.tableOfTheWeek.currentStreak": 11,
-            "custom.streaks.tableOfTheWeek.longestStreak": 11,
-        },
+        streak: { current: 11, longest: 11, lastPeriod: "2026-09-14", periodsPlayed: 20 },
     });
     assert.equal(tableOfTheWeek.getStreak(), 11);
 
@@ -173,9 +171,8 @@ test("reads and extends a week Streak stored before", () => {
     playLastLaunch(fake);
 
     assert.equal(tableOfTheWeek.getStreak(), 12);
-    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheWeek.currentStreak"], "12");
-    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheWeek.longestStreak"], "12");
-    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheWeek.lastPeriod"], "2026-09-21");
+    assert.deepEqual(readJson(fake, GUEST_FILE).streaks.tableOfTheWeek,
+        { current: 12, longest: 12, lastPeriod: "2026-09-21", periodsPlayed: 21 });
 });
 
 test("counts non-consecutive weeks once each in Periods Played", () => {
@@ -193,20 +190,13 @@ test("counts non-consecutive weeks once each in Periods Played", () => {
     assert.equal(tableOfTheWeek.getLongestStreak(), 1);
 });
 
-test("starts week Periods Played at the longest Streak stored before, and adds the next week to it", () => {
-    const { fake, tableOfTheWeek } = createTableOfTheWeek({
-        settings: {
-            "custom.streaks.tableOfTheWeek.lastPeriod": "2026-08-03",
-            "custom.streaks.tableOfTheWeek.currentStreak": 5,
-            "custom.streaks.tableOfTheWeek.longestStreak": 5,
-            "custom.streaks.tableOfTheWeek.periodsPlayed": 3,
-        },
-    });
-    assert.equal(tableOfTheWeek.getPeriodsPlayed(), 5, "never lower than the longest Streak");
+test("locks the Table of the Week in cabinet.json, never in PinballY's settings", () => {
+    const { fake, tableOfTheWeek } = createTableOfTheWeek();
 
+    const weekTable = tableOfTheWeek.getTable();
     tableOfTheWeek.launch();
     playLastLaunch(fake);
 
-    assert.equal(tableOfTheWeek.getPeriodsPlayed(), 6);
-    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheWeek.periodsPlayed"], "6");
+    assert.deepEqual(readJson(fake, CABINET_FILE).tableOfTheWeek, { configId: weekTable.configId, period: "2026-09-21" });
+    assert.deepEqual([...fake.writtenSettingsKeys()], []);
 });

@@ -44,12 +44,11 @@ test("three manufacturers in one calendar day unlock the first multi-manufacture
         now: NOW,
         tables: [WILLIAMS, OTHER_WILLIAMS, HOMEBREW, BALLY, HIDDEN_STERN, GOTTLIEB, DATA_EAST, PERIOD_TABLE],
     });
-    fake.seedSettings({
-        "custom.tableOfTheDay.period": "2026-09-23",
-        "custom.tableOfTheDay.configId": PERIOD_TABLE.configId,
-        "custom.tableOfTheWeek.period": "2026-09-21",
-        "custom.tableOfTheWeek.configId": PERIOD_TABLE.configId,
-    });
+    fake.addFile("C:\\PinballY\\Scripts\\profiles\\cabinet.json", JSON.stringify({
+        version: 1, activeProfile: "guest",
+        tableOfTheDay: { configId: PERIOD_TABLE.configId, period: "2026-09-23" },
+        tableOfTheWeek: { configId: PERIOD_TABLE.configId, period: "2026-09-21" },
+    }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
     for (const key of Object.keys(config.addOns)) {

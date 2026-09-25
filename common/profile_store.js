@@ -1,9 +1,10 @@
 // ============================================================
 // Profile store: the only module that knows the Profiles folder
 // (Scripts\profiles). Each Profile is a sub-folder named after it, with its
-// Avatar and its profile.json; cabinet.json, next to them, remembers the
-// active Profile. Files are read at startup and on each switch, kept in
-// memory, and rewritten whole on every change (tmp, backup, rename).
+// Avatar and its profile.json; cabinet.json, next to them, holds what the
+// household shares: the active Profile and the Period Table locks. Files
+// are read at startup and on each switch, kept in memory, and rewritten
+// whole on every change (tmp, backup, rename).
 // Listens to "gamestarted" / "gameover" to record every finished game for
 // the Profile active when it started; at startup, creates the Guest folder
 // and writes cabinet.json when they are missing.
@@ -42,7 +43,7 @@ const emptySessions = () => ({
     dayManufacturers: { day: "", list: [] },
     mostManufacturersInADay: 0,
 });
-const emptyProfileData = () => ({ version: PROFILE_VERSION, plays: {}, sessions: emptySessions(), notified: [] });
+const emptyProfileData = () => ({ version: PROFILE_VERSION, plays: {}, streaks: {}, sessions: emptySessions(), notified: [] });
 const NO_PLAY = Object.freeze({ count: 0, seconds: 0, lastPlayed: "" });
 
 export function createProfileStore(host) {

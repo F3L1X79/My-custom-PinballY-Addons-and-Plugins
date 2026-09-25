@@ -1,7 +1,8 @@
 ﻿// ============================================================
 // Table of the Day behaviour, through the Period Table module's interface
-// with the fake PinballY host: which table is picked and kept, what is
-// launched, and how the day Streak counts.
+// with the fake PinballY host and the Profile store: which table is picked
+// and kept for the whole household (locked in cabinet.json), what is
+// launched, and how the active Profile's day Streak counts.
 // Run with "node --test" from the project folder.
 // ============================================================
 
@@ -9,6 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createFakePinballYHost } from "./fake_pinbally_host.js";
 import { createPeriodTable, TABLE_OF_THE_DAY } from "../common/period_table.js";
+import { createProfileStore } from "../common/profile_store.js";
 
 // Wednesday 23 September 2026, 10:00 local time.
 const NOW = new Date(2026, 8, 23, 10, 0, 0);
@@ -21,10 +23,23 @@ const PLAYED_TABLES = [
     { id: 3, configId: "Theatre of Magic (Bally 1995)", title: "Theatre of Magic", lastPlayed: new Date(2026, 7, 1) },
 ];
 
-function createTableOfTheDay({ tables = PLAYED_TABLES, settings = {} } = {}) {
+const PROFILES = "C:\\PinballY\\Scripts\\profiles";
+const CABINET_FILE = `${PROFILES}\\cabinet.json`;
+const profileFile = name => `${PROFILES}\\${name}\\profile.json`;
+const readJson = (fake, path) => JSON.parse(fake.readFile(path));
+
+// lock: the Table of the Day stored in cabinet.json; streak: Guest's day
+// Streak stored in its profile.json.
+function createTableOfTheDay({ tables = PLAYED_TABLES, lock, streak } = {}) {
     const fake = createFakePinballYHost({ now: NOW, tables });
-    fake.seedSettings(settings);
-    return { fake, tableOfTheDay: createPeriodTable(fake, TABLE_OF_THE_DAY) };
+    if (lock) {
+        fake.addFile(CABINET_FILE, JSON.stringify({ version: 1, activeProfile: "guest", tableOfTheDay: lock }));
+    }
+    if (streak) {
+        fake.addFile(profileFile("guest"), JSON.stringify({ version: 1, streaks: { tableOfTheDay: streak } }));
+    }
+    const profileStore = createProfileStore(fake);
+    return { fake, profileStore, tableOfTheDay: createPeriodTable(fake, TABLE_OF_THE_DAY, profileStore) };
 }
 
 test("keeps the same Table of the Day all day", () => {
@@ -42,10 +57,7 @@ test("picks a new Table of the Day after midnight, never the previous day's tabl
     for (const yesterdayTable of twoTables) {
         const { fake, tableOfTheDay } = createTableOfTheDay({
             tables: twoTables,
-            settings: {
-                "custom.tableOfTheDay.period": "2026-09-22",
-                "custom.tableOfTheDay.configId": yesterdayTable.configId,
-            },
+            lock: { configId: yesterdayTable.configId, period: "2026-09-22" },
         });
 
         const todayTable = tableOfTheDay.getTable();
@@ -60,12 +72,8 @@ test("offers the previous day's table again when it is the only visible table, a
     const onlyTable = PLAYED_TABLES[0];
     const { fake, tableOfTheDay } = createTableOfTheDay({
         tables: [onlyTable],
-        settings: {
-            "custom.tableOfTheDay.period": "2026-09-22",
-            "custom.tableOfTheDay.configId": onlyTable.configId,
-            "custom.streaks.tableOfTheDay.lastPeriod": "2026-09-22",
-            "custom.streaks.tableOfTheDay.currentStreak": 1,
-        },
+        lock: { configId: onlyTable.configId, period: "2026-09-22" },
+        streak: { current: 1, longest: 1, lastPeriod: "2026-09-22", periodsPlayed: 1 },
     });
 
     tableOfTheDay.launch();
@@ -96,10 +104,7 @@ test("gives no table when the collection has none to offer", () => {
 
 test("keeps a Table of the Day already stored for today", () => {
     const { tableOfTheDay } = createTableOfTheDay({
-        settings: {
-            "custom.tableOfTheDay.period": "2026-09-23",
-            "custom.tableOfTheDay.configId": "Theatre of Magic (Bally 1995)",
-        },
+        lock: { configId: "Theatre of Magic (Bally 1995)", period: "2026-09-23" },
     });
 
     assert.equal(tableOfTheDay.getTable().configId, "Theatre of Magic (Bally 1995)");
@@ -188,10 +193,7 @@ test("grows the Streak on consecutive days and resets it after a skipped day", (
 
 test("does not count yesterday's table played today before today's is picked", () => {
     const { fake, tableOfTheDay } = createTableOfTheDay({
-        settings: {
-            "custom.tableOfTheDay.period": "2026-09-22",
-            "custom.tableOfTheDay.configId": "Theatre of Magic (Bally 1995)",
-        },
+        lock: { configId: "Theatre of Magic (Bally 1995)", period: "2026-09-22" },
     });
     const yesterdayTable = fake.getGameInfo("Theatre of Magic (Bally 1995)");
 
@@ -201,22 +203,18 @@ test("does not count yesterday's table played today before today's is picked", (
     assert.equal(tableOfTheDay.getStreak(), 0);
 });
 
-test("reads and extends a Streak stored before", () => {
-    const storedStreak = {
-        "custom.streaks.tableOfTheDay.lastPeriod": "2026-09-22",
-        "custom.streaks.tableOfTheDay.currentStreak": 29,
-        "custom.streaks.tableOfTheDay.longestStreak": 40,
-    };
-    const { fake, tableOfTheDay } = createTableOfTheDay({ settings: storedStreak });
+test("reads and extends a Streak stored in the active Profile", () => {
+    const { fake, tableOfTheDay } = createTableOfTheDay({
+        streak: { current: 29, longest: 40, lastPeriod: "2026-09-22", periodsPlayed: 45 },
+    });
     assert.equal(tableOfTheDay.getStreak(), 29);
 
     tableOfTheDay.launch();
     fake.gameStarted(fake.launches()[0]);
 
     assert.equal(tableOfTheDay.getStreak(), 30);
-    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheDay.currentStreak"], "30");
-    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheDay.longestStreak"], "40");
-    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheDay.lastPeriod"], "2026-09-23");
+    assert.deepEqual(readJson(fake, profileFile("guest")).streaks.tableOfTheDay,
+        { current: 30, longest: 40, lastPeriod: "2026-09-23", periodsPlayed: 46 });
 });
 
 test("counts the Table of the Day played by hand before anyone asked for it today", () => {
@@ -230,10 +228,7 @@ test("counts the Table of the Day played by hand before anyone asked for it toda
 
 test("replaces a Table of the Day hidden since it was picked", () => {
     const { fake, tableOfTheDay } = createTableOfTheDay({
-        settings: {
-            "custom.tableOfTheDay.period": "2026-09-23",
-            "custom.tableOfTheDay.configId": "Theatre of Magic (Bally 1995)",
-        },
+        lock: { configId: "Theatre of Magic (Bally 1995)", period: "2026-09-23" },
     });
     fake.setTables(PLAYED_TABLES.map(game =>
         game.configId === "Theatre of Magic (Bally 1995)" ? { ...game, isHidden: true } : game));
@@ -276,20 +271,48 @@ test("counts non-consecutive days in Periods Played, while the longest Streak ke
     assert.equal(tableOfTheDay.getLongestStreak(), 2);
 });
 
-test("starts Periods Played at the longest Streak stored before, and adds the next day to it", () => {
-    const { fake, tableOfTheDay } = createTableOfTheDay({
-        settings: {
-            "custom.streaks.tableOfTheDay.lastPeriod": "2026-09-01",
-            "custom.streaks.tableOfTheDay.currentStreak": 12,
-            "custom.streaks.tableOfTheDay.longestStreak": 12,
-        },
-    });
-    assert.equal(tableOfTheDay.getPeriodsPlayed(), 12);
+test("locks the Table of the Day in cabinet.json, never in PinballY's settings", () => {
+    const { fake, tableOfTheDay } = createTableOfTheDay();
 
+    const todayTable = tableOfTheDay.getTable();
     tableOfTheDay.launch();
-    fake.gameStarted(fake.launches()[0]);
+    fake.gameStarted(todayTable);
 
-    assert.equal(tableOfTheDay.getPeriodsPlayed(), 13);
-    assert.equal(fake.storedSettings()["custom.streaks.tableOfTheDay.periodsPlayed"], "13");
-    assert.equal(tableOfTheDay.getLongestStreak(), 12);
+    assert.deepEqual(readJson(fake, CABINET_FILE).tableOfTheDay, { configId: todayTable.configId, period: "2026-09-23" });
+    assert.deepEqual([...fake.writtenSettingsKeys()], []);
+});
+
+test("two Profiles see the same Table of the Day, and a play extends only the active Profile's Streak", () => {
+    const { fake, profileStore, tableOfTheDay } = createTableOfTheDay({
+        lock: { configId: "Theatre of Magic (Bally 1995)", period: "2026-09-23" },
+    });
+    fake.addFolder(`${PROFILES}\\Alice`);
+    fake.addFolder(`${PROFILES}\\Bob`);
+
+    profileStore.switchTo("Alice");
+    const aliceTable = tableOfTheDay.getTable();
+    tableOfTheDay.launch();
+    fake.gameStarted(aliceTable);
+    fake.gameOver(aliceTable);
+
+    profileStore.switchTo("Bob");
+    assert.equal(tableOfTheDay.getTable().configId, aliceTable.configId);
+    assert.equal(tableOfTheDay.getStreak(), 0);
+    assert.equal(tableOfTheDay.getPeriodsPlayed(), 0);
+
+    profileStore.switchTo("Alice");
+    assert.equal(tableOfTheDay.getStreak(), 1);
+    assert.equal(tableOfTheDay.getPeriodsPlayed(), 1);
+});
+
+test("keeps choosing from PinballY's own play stats, whatever the active Profile played", () => {
+    const neverPlayed = { id: 4, configId: "Homebrew Table", title: "Homebrew Table", lastPlayed: null };
+    const fake = createFakePinballYHost({ now: NOW, tables: [...PLAYED_TABLES, neverPlayed] });
+    // Guest played the table PinballY never recorded: it stays the household's pick.
+    fake.addFile(profileFile("guest"), JSON.stringify({
+        version: 1, plays: { [neverPlayed.configId]: { count: 4, seconds: 900, lastPlayed: "2026-09-22T20:00:00" } },
+    }));
+    const tableOfTheDay = createPeriodTable(fake, TABLE_OF_THE_DAY, createProfileStore(fake));
+
+    assert.equal(tableOfTheDay.getTable().configId, neverPlayed.configId);
 });

@@ -1,18 +1,18 @@
 ﻿// ============================================================
 // Period Table module: picks a table once per Period and keeps it for the
 // whole Period, launches it, and keeps its Streak and its Periods Played.
-// Created from the PinballY host and a Period definition (TABLE_OF_THE_DAY,
-// TABLE_OF_THE_WEEK); the add-ons share one instance of each through
-// getTableOfTheDay() and getTableOfTheWeek(). A Period counts in the Streak
-// and in Periods Played when its table starts playing ("gamestarted"),
-// however it was launched.
-// Writes "<tableKeyPrefix>.period" / ".configId" and
-// "<streakKeyPrefix>.lastPeriod" / ".currentStreak" / ".longestStreak" /
-// ".periodsPlayed".
+// Created from the PinballY host, a Period definition (TABLE_OF_THE_DAY,
+// TABLE_OF_THE_WEEK) and the Profile store; the add-ons share one instance
+// of each through getTableOfTheDay() and getTableOfTheWeek(). The table is
+// the same for the whole household and locked in cabinet.json; the Streak
+// and Periods Played belong to the active Profile (its profile.json). A
+// Period counts when its table starts playing ("gamestarted"), however it
+// was launched, for the Profile active then.
 // ============================================================
 
 import { safeHandler } from "./safe_handler.js";
 import { createPinballYHost } from "./pinbally_host.js";
+import { getProfileStore } from "./profile_store.js";
 
 const SCRIPT_NAME = "PeriodTable";
 
@@ -50,36 +50,35 @@ function pickNeverPlayedOrOldest(tables) {
     );
 }
 
-// The key strings are players' saved progress: they must never change.
+// The name keys the lock in cabinet.json and the Streak in profile.json:
+// it is players' saved progress and must never change.
 export const TABLE_OF_THE_DAY = {
-    tableKeyPrefix: "custom.tableOfTheDay",
-    streakKeyPrefix: "custom.streaks.tableOfTheDay",
+    name: "tableOfTheDay",
     getPeriodKey: formatDateKey,
     getPreviousPeriodKey: dayKey => shiftDateKey(dayKey, -1),
     pickTable: pickNeverPlayedOrOldest,
 };
 
 export const TABLE_OF_THE_WEEK = {
-    tableKeyPrefix: "custom.tableOfTheWeek",
-    streakKeyPrefix: "custom.streaks.tableOfTheWeek",
+    name: "tableOfTheWeek",
     getPeriodKey: getWeekKey,
     getPreviousPeriodKey: weekKey => shiftDateKey(weekKey, -7),
     pickTable: pickPurelyRandom,
 };
 
-export function createPeriodTable(host, definition) {
-    const { tableKeyPrefix, streakKeyPrefix, getPeriodKey, getPreviousPeriodKey, pickTable } = definition;
-    const lockedPeriodKey = `${tableKeyPrefix}.period`;
-    const lockedConfigIdKey = `${tableKeyPrefix}.configId`;
-    const lastPeriodKey = `${streakKeyPrefix}.lastPeriod`;
-    const currentStreakKey = `${streakKeyPrefix}.currentStreak`;
-    const longestStreakKey = `${streakKeyPrefix}.longestStreak`;
-    const periodsPlayedKey = `${streakKeyPrefix}.periodsPlayed`;
+const NO_LOCK = Object.freeze({ configId: "", period: "" });
+const NO_STREAK = Object.freeze({ current: 0, longest: 0, lastPeriod: "", periodsPlayed: 0 });
+
+export function createPeriodTable(host, definition, profileStore) {
+    const { name, getPeriodKey, getPreviousPeriodKey, pickTable } = definition;
+
+    // A record missing a field (hand-edited file) gets it empty, never NaN.
+    const getLock = () => ({ ...NO_LOCK, ...profileStore.getCabinetData()[name] });
+    const getStreakRecord = () => ({ ...NO_STREAK, ...profileStore.getProfileData().streaks[name] });
 
     function getTable() {
         const currentPeriod = getPeriodKey(host.now());
-        const lockedPeriod = host.settings.getString(lockedPeriodKey, "");
-        const lockedConfigId = host.settings.getString(lockedConfigIdKey, "");
+        const { period: lockedPeriod, configId: lockedConfigId } = getLock();
 
         if (lockedPeriod === currentPeriod && lockedConfigId) {
             const lockedGame = host.getGameInfo(lockedConfigId);
@@ -87,15 +86,17 @@ export function createPeriodTable(host, definition) {
         }
 
         // A new Period never repeats the previous Period's table, unless it
-        // is the only visible one.
+        // is the only visible one. The pick reads PinballY's own play stats,
+        // the household's history, whoever is active.
         const excludeConfigId = lockedPeriod !== currentPeriod ? lockedConfigId : "";
         const visibleTables = host.getVisibleTables();
         if (visibleTables.length === 0) return null;
         const otherTables = visibleTables.filter(game => game.configId !== excludeConfigId);
         const newPick = pickTable(otherTables.length > 0 ? otherTables : visibleTables);
 
-        host.settings.set(lockedPeriodKey, currentPeriod);
-        host.settings.set(lockedConfigIdKey, newPick.configId);
+        profileStore.updateCabinetData(cabinet => {
+            cabinet[name] = { configId: newPick.configId, period: currentPeriod };
+        });
         return newPick;
     }
 
@@ -104,41 +105,32 @@ export function createPeriodTable(host, definition) {
         if (game) host.playGame(game);
     }
 
-    function getLongestStreak() {
-        return host.settings.getInt(longestStreakKey, 0);
-    }
-
-    // Periods Played did not exist before the Streaks: reading it as at least
-    // the longest Streak gives earlier players their history without a
-    // migration step.
-    function getPeriodsPlayed() {
-        return Math.max(host.settings.getInt(periodsPlayedKey, 0), getLongestStreak());
-    }
+    const getLongestStreak = () => getStreakRecord().longest;
+    const getPeriodsPlayed = () => getStreakRecord().periodsPlayed;
 
     function recordPeriodPlayed(currentPeriod) {
-        const lastPeriod = host.settings.getString(lastPeriodKey, "");
+        const { current, longest, lastPeriod, periodsPlayed } = getStreakRecord();
         if (lastPeriod === currentPeriod) return;
 
-        const currentStreak = host.settings.getInt(currentStreakKey, 0);
-        const newStreak = lastPeriod === getPreviousPeriodKey(currentPeriod) ? currentStreak + 1 : 1;
-        // Both read before any write, so a seeded Periods Played counts once.
-        const longestStreak = getLongestStreak();
-        const periodsPlayed = getPeriodsPlayed();
-
-        host.settings.set(lastPeriodKey, currentPeriod);
-        host.settings.set(currentStreakKey, newStreak);
-        host.settings.set(longestStreakKey, Math.max(longestStreak, newStreak));
-        host.settings.set(periodsPlayedKey, periodsPlayed + 1);
+        const newStreak = lastPeriod === getPreviousPeriodKey(currentPeriod) ? current + 1 : 1;
+        profileStore.updateProfileData(data => {
+            data.streaks[name] = {
+                current: newStreak,
+                longest: Math.max(longest, newStreak),
+                lastPeriod: currentPeriod,
+                periodsPlayed: periodsPlayed + 1,
+            };
+        });
     }
 
     function getStreak() {
         const currentPeriod = getPeriodKey(host.now());
-        const lastPeriod = host.settings.getString(lastPeriodKey, "");
+        const { current, lastPeriod } = getStreakRecord();
 
         // The stored counter is only reset on the next play, so a Streak whose
         // last Period is older than the previous one is already broken.
         if (lastPeriod !== currentPeriod && lastPeriod !== getPreviousPeriodKey(currentPeriod)) return 0;
-        return host.settings.getInt(currentStreakKey, 0);
+        return current;
     }
 
     // Fires when a launched table's first window opens (never after a failed
@@ -162,11 +154,11 @@ let sharedTableOfTheWeek = null;
 // The first call starts listening for plays, so the Streak is only recorded
 // while at least one of those add-ons is enabled.
 export function getTableOfTheDay() {
-    if (!sharedTableOfTheDay) sharedTableOfTheDay = createPeriodTable(createPinballYHost(), TABLE_OF_THE_DAY);
+    if (!sharedTableOfTheDay) sharedTableOfTheDay = createPeriodTable(createPinballYHost(), TABLE_OF_THE_DAY, getProfileStore());
     return sharedTableOfTheDay;
 }
 
 export function getTableOfTheWeek() {
-    if (!sharedTableOfTheWeek) sharedTableOfTheWeek = createPeriodTable(createPinballYHost(), TABLE_OF_THE_WEEK);
+    if (!sharedTableOfTheWeek) sharedTableOfTheWeek = createPeriodTable(createPinballYHost(), TABLE_OF_THE_WEEK, getProfileStore());
     return sharedTableOfTheWeek;
 }

@@ -1,8 +1,8 @@
 ﻿// ============================================================
 // First play Achievements, started through main.js on the fake PinballY
-// globals: a player whose Table of the Day Streak was already recorded
-// before the update gets "first play" announced at startup, and never again
-// on later checks.
+// globals: a Profile whose Table of the Day Streak is already in its
+// profile.json, but was never announced, gets "first play" announced at
+// startup, and never again on later checks.
 // ============================================================
 
 import { test } from "node:test";
@@ -23,13 +23,12 @@ const TABLE = {
 // Longer than an Achievement Toast's whole life (rise, hold, fade).
 const TOAST_MS = 6000;
 
-test("a Streak recorded before the update announces the first play once", async () => {
+test("a Streak never announced announces the first play once", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: [TABLE] });
-    fake.seedSettings({
-        "custom.streaks.tableOfTheDay.lastPeriod": "2026-08-01",
-        "custom.streaks.tableOfTheDay.currentStreak": 1,
-        "custom.streaks.tableOfTheDay.longestStreak": 1,
-    });
+    fake.addFile("C:\\PinballY\\Scripts\\profiles\\guest\\profile.json", JSON.stringify({
+        version: 1,
+        streaks: { tableOfTheDay: { current: 1, longest: 1, lastPeriod: "2026-08-01", periodsPlayed: 1 } },
+    }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
     for (const key of Object.keys(config.addOns)) {

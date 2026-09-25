@@ -40,12 +40,11 @@ const sessionIdsOf = (fake, name) => (readProfile(fake, name).notified || []).fi
 
 test("session stats and their Achievements belong to the active Profile", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: [MEDIEVAL, MARS, TWILIGHT, PERIOD_TABLE] });
-    fake.seedSettings({
-        "custom.tableOfTheDay.period": "2026-09-23",
-        "custom.tableOfTheDay.configId": PERIOD_TABLE.configId,
-        "custom.tableOfTheWeek.period": "2026-09-21",
-        "custom.tableOfTheWeek.configId": PERIOD_TABLE.configId,
-    });
+    fake.addFile("C:\\PinballY\\Scripts\\profiles\\cabinet.json", JSON.stringify({
+        version: 1, activeProfile: "guest",
+        tableOfTheDay: { configId: PERIOD_TABLE.configId, period: "2026-09-23" },
+        tableOfTheWeek: { configId: PERIOD_TABLE.configId, period: "2026-09-21" },
+    }));
     // Alice last played Medieval Madness forty days ago, Bob Twilight Zone.
     fake.addFile(profileFile("Alice"), JSON.stringify({
         version: 1, plays: { [MEDIEVAL.configId]: { count: 1, seconds: 600, lastPlayed: FORTY_DAYS_AGO } },

@@ -34,12 +34,11 @@ const COLLECTION_MILESTONE_IDS = ["firstTable", "10percent", "25percent", "50per
 
 test("the grand return needs a 31-day break and says so", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: [THIRTY_DAYS_AGO, THIRTY_ONE_DAYS_AGO, PERIOD_TABLE] });
-    fake.seedSettings({
-        "custom.tableOfTheDay.period": "2026-09-23",
-        "custom.tableOfTheDay.configId": PERIOD_TABLE.configId,
-        "custom.tableOfTheWeek.period": "2026-09-21",
-        "custom.tableOfTheWeek.configId": PERIOD_TABLE.configId,
-    });
+    fake.addFile("C:\\PinballY\\Scripts\\profiles\\cabinet.json", JSON.stringify({
+        version: 1, activeProfile: "guest",
+        tableOfTheDay: { configId: PERIOD_TABLE.configId, period: "2026-09-23" },
+        tableOfTheWeek: { configId: PERIOD_TABLE.configId, period: "2026-09-21" },
+    }));
     // Guest's own previous plays, in the Profile store's local time format.
     const plays = {
         [THIRTY_DAYS_AGO.configId]: { count: 1, seconds: 600, lastPlayed: "2026-08-24T10:00:00" },

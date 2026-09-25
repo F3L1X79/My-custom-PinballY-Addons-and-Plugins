@@ -42,6 +42,7 @@ test("on a fresh install, a game is recorded for Guest and cabinet.json names Gu
     assert.deepEqual(readJson(fake, GUEST_FILE), {
         version: 1,
         plays: { [MEDIEVAL.configId]: { count: 1, seconds: 90, lastPlayed: "2026-09-24T21:01:30" } },
+        streaks: {},
         sessions: {
             longestSeconds: 0, shortestSeconds: 0, rageQuit: false, grandReturn: false,
             dayManufacturers: { day: "", list: [] }, mostManufacturersInADay: 0,
