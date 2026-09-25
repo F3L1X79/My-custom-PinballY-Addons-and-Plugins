@@ -143,8 +143,8 @@ export default {
     },
 
     startupPrompt: {
-        introWithPicks: (dayTitle, weekTitle) => {
-            const lines = ["¿Cómo quieres empezar?"];
+        introWithPicks: (playerName, dayTitle, weekTitle) => {
+            const lines = [`¡Hola, ${playerName}! ¿Cómo quieres empezar?`];
             if (dayTitle) lines.push(`Mesa del día: ${dayTitle}`);
             if (weekTitle) lines.push(`Mesa de la semana: ${weekTitle}`);
             return lines.join("\n");
@@ -277,7 +277,7 @@ export default {
         },
     },
 
-    // Profile picker. Guest's folder name is never shown: this is its name.
+    // Profiles. Guest's folder name is never shown: this is its name.
     profiles: {
         menuEntry: "Cambiar de jugador",
         pickerTitle: "¿Quién juega?",

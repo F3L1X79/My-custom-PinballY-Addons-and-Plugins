@@ -1,6 +1,7 @@
 // ============================================================
 // Profile picker, through main.js on the fake PinballY globals: the
-// "Change Player" main-menu entry closes the main menu and opens the drawn
+// "Change Player" entry, right after "Play" in the main menu and right
+// after "Quit" in the exit menu, closes that menu and opens the drawn
 // carousel on the active Profile; the flipper buttons move through the
 // Profiles and wrap, every button is swallowed while it is open, Select or
 // Launch switches to the highlighted Profile, and Exit or attract mode
@@ -103,6 +104,16 @@ test("the Profile picker moves, wraps, switches, cancels and sees new folders", 
     assert.deepEqual(pickerTexts(fake), [], "attract mode closes the carousel");
     assert.equal(press(fake, "Next").defaultPrevented, false);
     assert.equal(store.getActiveProfile().name, "Bob");
+
+    fake.openMenu("exit", [
+        { title: "Quit", cmd: fake.getBuiltInCommand("Quit") },
+        { title: "Cancel", cmd: fake.getBuiltInCommand("MenuReturn") },
+    ]);
+    assert.deepEqual(fake.currentMenu().items.map(item => item.title), ["Quit", menuEntry, "Cancel"]);
+    fake.selectMenuItem(menuEntry);
+    await settle();
+    assert.equal(highlightedName(fake, names), "Bob", "the exit menu opens the carousel too");
+    press(fake, "Exit");
 
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
 });

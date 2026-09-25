@@ -1,7 +1,8 @@
 // ============================================================
-// Profile picker: a "Change Player" main-menu entry opens a drawn carousel
-// of the Profiles' Avatars on a full-window layer above the menus, starting
-// on the active Profile.
+// Profile picker: a "Change Player" entry, right after "Play" in the main
+// menu and right after "Quit" in the exit menu, opens a drawn carousel of
+// the Profiles' Avatars on a full-window layer above the menus, starting on
+// the active Profile.
 // The flipper buttons move through it and wrap, Select or Launch switches
 // to the highlighted Profile, Exit closes it; while it is open every
 // button is swallowed through "commandbuttondown", so the wheel never moves
@@ -13,6 +14,7 @@ import lang from "../common/i18n.js";
 import { safeHandler } from "../common/safe_handler.js";
 import { createPinballYHost } from "../common/pinbally_host.js";
 import { getProfileStore } from "../common/profile_store.js";
+import { displayNameOf } from "../common/profile_name.js";
 import { getMainMenu, MAIN_MENU_POSITION } from "../common/main_menu.js";
 
 const SCRIPT_NAME = "ProfilePicker";
@@ -54,8 +56,6 @@ export default function init() {
     // The Profiles shown and the highlighted one's index; null when closed.
     let profiles = null;
     let highlighted = 0;
-
-    const displayName = profile => (profile.isGuest ? TEXT.guestName : profile.name);
 
     // Text with a soft drop shadow, so it reads over any background video.
     function drawShadowedText(dc, { size, weight }, color, text, y) {
@@ -106,7 +106,7 @@ export default function init() {
             }
             const current = profiles[highlighted];
             const isActive = current.name === profileStore.getActiveProfile().name;
-            drawShadowedText(dc, NAME, isActive ? COLORS.gold : COLORS.text, displayName(current), centerY + NAME.top);
+            drawShadowedText(dc, NAME, isActive ? COLORS.gold : COLORS.text, displayNameOf(current), centerY + NAME.top);
             drawShadowedText(dc, HINT, COLORS.hint, TEXT.pickerHint, centerY + HINT.top);
         });
     }
@@ -126,6 +126,21 @@ export default function init() {
     }
 
     getMainMenu().add({ name: "profilePicker", label: TEXT.menuEntry, position: MAIN_MENU_POSITION.PROFILE_PICKER, action: open });
+
+    // The main menu module only serves the main menu: the exit menu entry
+    // has its own command.
+    const exitMenuCommand = host.allocateCommand("profilePickerExitMenu");
+
+    // Fires when any menu opens, with a fresh item list each time.
+    host.on("menuopen", safeHandler(SCRIPT_NAME, ev => {
+        if (ev.id !== "exit") return;
+        ev.addMenuItem({ after: host.getBuiltInCommand("Quit") }, { title: TEXT.menuEntry, cmd: exitMenuCommand });
+    }));
+
+    // Fires on every command.
+    host.on("command", safeHandler(SCRIPT_NAME, ev => {
+        if (ev.id === exitMenuCommand) open();
+    }));
 
     // Fires on every mapped button press; drives the carousel while it is open.
     host.on("commandbuttondown", safeHandler(SCRIPT_NAME, ev => {

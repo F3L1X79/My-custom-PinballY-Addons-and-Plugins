@@ -143,8 +143,8 @@ export default {
     },
 
     startupPrompt: {
-        introWithPicks: (dayTitle, weekTitle) => {
-            const lines = ["Salut à toi, jeune chochodin des bois !"];
+        introWithPicks: (playerName, dayTitle, weekTitle) => {
+            const lines = [`Salut à toi, ${playerName} !`];
             lines.push('');
             lines.push('Choisis une option parmi celles-ci pour pouvoir démarrer ton pèlerinage de Geek.');
             lines.push('---');
@@ -280,7 +280,7 @@ export default {
         },
     },
 
-    // Profile picker. Guest's folder name is never shown: this is its name.
+    // Profiles. Guest's folder name is never shown: this is its name.
     profiles: {
         menuEntry: "Changer de joueur",
         pickerTitle: "Qui joue ?",

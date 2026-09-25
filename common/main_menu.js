@@ -13,12 +13,12 @@ const SCRIPT_NAME = "MainMenu";
 
 // Lower is closer to "Play".
 export const MAIN_MENU_POSITION = Object.freeze({
-    ACHIEVEMENT_LIST: 0,
-    TABLE_SETUP: 1,
-    RANDOM_GAME: 2,
-    TABLE_OF_THE_DAY: 3,
-    TABLE_OF_THE_WEEK: 4,
-    PROFILE_PICKER: 5,
+    PROFILE_PICKER: 0,
+    ACHIEVEMENT_LIST: 1,
+    TABLE_SETUP: 2,
+    RANDOM_GAME: 3,
+    TABLE_OF_THE_DAY: 4,
+    TABLE_OF_THE_WEEK: 5,
 });
 
 export function createMainMenu(host) {
