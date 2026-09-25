@@ -286,6 +286,6 @@ export default {
         pickerTitle: "Qui joue ?",
         pickerHint: "Flippers : changer · Start : choisir · Exit : annuler",
         guestName: "Invité",
-        greeting: name => `Bon retour ${name} !`,
+        greeting: name => `Salut ${name} !`,
     },
 };

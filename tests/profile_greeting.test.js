@@ -2,8 +2,9 @@
 // Profile Greeting on pick, through main.js on the fake PinballY globals:
 // picking a Profile in the carousel leaves it still for a short pause,
 // then greets the Profile with its Avatar and name (Guest by its translated
-// name), plays the configured sound, then fades out on its own. No sound plays when the setting is empty, and a missing sound
-// file is logged and never stops the greeting.
+// name), plays the configured sound, then fades out on its own, without
+// redrawing anything while it animates. No sound plays when the setting is
+// empty, and a missing sound file is logged and never stops the greeting.
 // ============================================================
 
 import { test } from "node:test";
@@ -15,9 +16,10 @@ const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 const ALICE_AVATAR = `${PROFILES_FOLDER}\\Alice\\avatar.png`;
 const SOUND_FILE = "C:\\Sounds\\hello.wav";
 const PICKER_Z = 6500;
+const AVATAR_Z = 6501;
 // Past the short pause before the greeting, and comfortably past the whole
 // greeting.
-const PAUSE_OVER_MS = 500;
+const PAUSE_OVER_MS = 600;
 const GREETING_OVER_MS = 2500;
 
 // The picker layer, which the greeting shares with the carousel.
@@ -28,6 +30,11 @@ function pickerLayer(fake) {
 }
 
 const visibleTexts = fake => (pickerLayer(fake).alpha > 0 ? pickerLayer(fake).texts() : []);
+
+// The Avatars shown, each on its own layer above the picker layer.
+const visibleAvatars = fake => fake.drawingLayers()
+    .filter(layer => layer.zIndex === AVATAR_Z && layer.alpha > 0)
+    .flatMap(layer => layer.images());
 
 const press = (fake, buttonCommand) => fake.fire("commandbuttondown", { command: buttonCommand, repeat: false });
 
@@ -63,14 +70,17 @@ test("picking a Profile greets it with its Avatar and a sound, then fades out", 
     assert.equal(fake.soundsPlayed().length, soundsBefore);
     fake.advanceTime(PAUSE_OVER_MS);
     assert.ok(visibleTexts(fake).includes(greeting), "then greets the picked Profile by name");
-    assert.ok(pickerLayer(fake).images().includes(ALICE_AVATAR), "with its Avatar");
+    assert.deepEqual(visibleAvatars(fake), [ALICE_AVATAR], "with its Avatar alone");
     assert.ok(!visibleTexts(fake).includes(lang.profiles.pickerTitle), "without the carousel");
     assert.deepEqual(fake.soundsPlayed().slice(soundsBefore), [SOUND_FILE], "the configured sound plays");
 
+    const drawingsBefore = fake.drawings().length;
     fake.advanceTime(600);
     assert.ok(visibleTexts(fake).includes(greeting), "still there after a moment");
+    assert.equal(fake.drawings().length, drawingsBefore, "it grows without being redrawn");
     fake.advanceTime(GREETING_OVER_MS);
     assert.deepEqual(visibleTexts(fake), [], "fades out on its own");
+    assert.deepEqual(visibleAvatars(fake), []);
     assert.equal(press(fake, "Next").defaultPrevented, false, "never keeps the buttons");
 
     config.profileGreetingSoundFile = "";

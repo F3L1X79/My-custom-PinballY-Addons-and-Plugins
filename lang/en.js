@@ -198,6 +198,6 @@ export default {
         pickerTitle: "Who's playing?",
         pickerHint: "Flippers: browse · Start: choose · Exit: cancel",
         guestName: "Guest",
-        greeting: name => `Welcome back, ${name}!`,
+        greeting: name => `Hi ${name}!`,
     },
 };

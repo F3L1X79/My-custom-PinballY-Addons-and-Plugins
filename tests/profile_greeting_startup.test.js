@@ -12,7 +12,7 @@ import config from "../common/config.js";
 
 const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 const PICKER_Z = 6500;
-const PAUSE_OVER_MS = 500;
+const PAUSE_OVER_MS = 600;
 const GREETING_OVER_MS = 2500;
 
 const pickerTexts = fake => fake.drawingLayers()

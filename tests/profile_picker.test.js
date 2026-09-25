@@ -4,7 +4,7 @@
 // after "Quit" in the exit menu, closes that menu and opens the drawn
 // carousel on the active Profile; the flipper buttons move through the
 // Profiles and wrap (the name shows once the Avatars have glided into
-// place), every button is swallowed while it is open, Select or Launch
+// place, without redrawing them), every button is swallowed while it is open, Select or Launch
 // switches to the highlighted Profile and leaves the carousel still until
 // the greeting replaces it, and Exit or attract mode close it without
 // switching. Folders added while PinballY runs show up on
@@ -22,7 +22,7 @@ const PICKER_Z = 6500;
 // Past the ~200 ms glide, past the pause before the greeting, and past the
 // whole greeting.
 const GLIDE_OVER_MS = 500;
-const PAUSE_OVER_MS = 500;
+const PAUSE_OVER_MS = 600;
 const GREETING_OVER_MS = 2500;
 
 async function start({ enabled = true, activeProfile = "Bob" } = {}) {
@@ -76,7 +76,9 @@ test("the Profile picker moves, wraps, switches, cancels and sees new folders", 
     const next = press(fake, "Next");
     assert.equal(next.defaultPrevented, true, "the wheel does not move");
     assert.deepEqual(names.filter(name => pickerTexts(fake).includes(name)), [], "no name while the Avatars glide");
+    const drawingsBefore = fake.drawings().length;
     fake.advanceTime(GLIDE_OVER_MS);
+    assert.equal(fake.drawings().length, drawingsBefore + 1, "the Avatars glide without redraws; only the name comes back");
     assert.equal(highlightedName(fake, names), guest, "Next wraps from the last Profile to Guest");
     press(fake, "Prev");
     press(fake, "Prev");
