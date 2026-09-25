@@ -1,22 +1,22 @@
 ﻿// ============================================================
 // Random Game module: draws a table from the current wheel selection,
-// never the Last Played Table unless it is the only one, animates the
-// wheel to it and launches it. Created from the PinballY host and an
-// animator (skipped when the player turned the animation off); the "Start Random Game" menu command and the startup choice
-// prompt share one instance through getRandomGame(). Calls made while an
-// animation is already running are ignored. Counts the Random Games
-// played in "custom.randomGame.launchCount" (on "gamestarted", never after
-// "launcherror").
+// never the active Profile's Last Played Table unless it is the only one,
+// animates the wheel to it and launches it. Created from the PinballY host,
+// the Profile store and an animator (skipped when the player turned the
+// animation off); the "Start Random Game" menu command and the startup
+// choice prompt share one instance through getRandomGame(). Calls made
+// while an animation is already running are ignored. Counts the Random
+// Games played in the active Profile's "randomGames" (on "gamestarted",
+// never after "launcherror").
 // ============================================================
 
 import { animateWheelTo, sleep } from "./wheel_navigator.js";
 import { createPinballYHost } from "./pinbally_host.js";
 import { safeHandler } from "./safe_handler.js";
+import { getProfileStore } from "./profile_store.js";
 import config from "./config.js";
 
 const SCRIPT_NAME = "RandomGame";
-// Players' saved progress: must never change.
-const LAUNCH_COUNT_KEY = "custom.randomGame.launchCount";
 
 // Base speed (ms) of the "wheel of fortune" animation.
 const ANIMATION_BASE_SPEED_MS = 200;
@@ -29,16 +29,17 @@ const POST_ANIMATION_DELAY_MS = 1000;
 
 const randomIndex = length => Math.floor(Math.random() * length);
 
-// The most recently played visible table of the whole collection, or null
-// when no table was ever played.
-function findLastPlayedTable(tables) {
-    return tables
-        .filter(game => game.lastPlayed)
-        .reduce((latest, game) =>
-            (!latest || game.lastPlayed.getTime() > latest.lastPlayed.getTime() ? game : latest), null);
-}
+export function createRandomGame(host, profileStore, { animateTo, skipAnimation = config.skipRandomGameAnimation }) {
+    // The active Profile's most recently played visible table, or null when
+    // it never played one. Its lastPlayed times are local ISO strings, which
+    // sort as text.
+    const lastPlayedOf = game => profileStore.getPlay(game.configId).lastPlayed;
+    function findLastPlayedTable() {
+        return host.getVisibleTables()
+            .filter(lastPlayedOf)
+            .reduce((latest, game) => (!latest || lastPlayedOf(game) > lastPlayedOf(latest) ? game : latest), null);
+    }
 
-export function createRandomGame(host, { animateTo, skipAnimation = config.skipRandomGameAnimation }) {
     let launchInProgress = false;
     // The table this module just launched, until it starts or fails to launch.
     let pendingConfigId = null;
@@ -56,7 +57,7 @@ export function createRandomGame(host, { animateTo, skipAnimation = config.skipR
 
         launchInProgress = true;
         try {
-            const lastPlayedTable = findLastPlayedTable(host.getVisibleTables());
+            const lastPlayedTable = findLastPlayedTable();
             const isLastPlayed = index =>
                 lastPlayedTable !== null && tables[index].configId === lastPlayedTable.configId;
 
@@ -86,7 +87,7 @@ export function createRandomGame(host, { animateTo, skipAnimation = config.skipR
     }
 
     function getRandomGamesPlayed() {
-        return host.settings.getInt(LAUNCH_COUNT_KEY, 0);
+        return profileStore.getProfileData().randomGames;
     }
 
     // Fires when a launched table's first window opens. Only one table runs
@@ -95,7 +96,7 @@ export function createRandomGame(host, { animateTo, skipAnimation = config.skipR
     host.on("gamestarted", safeHandler(SCRIPT_NAME, ev => {
         const isRandomGame = pendingConfigId !== null && ev.game && ev.game.configId === pendingConfigId;
         pendingConfigId = null;
-        if (isRandomGame) host.settings.set(LAUNCH_COUNT_KEY, getRandomGamesPlayed() + 1);
+        if (isRandomGame) profileStore.updateProfileData(data => { data.randomGames += 1; });
     }));
 
     // Fires instead of "gamestarted" when the launch fails.
@@ -120,7 +121,7 @@ let sharedRandomGame = null;
 // while the startup prompt's one is animating is ignored.
 export function getRandomGame() {
     if (!sharedRandomGame) {
-        sharedRandomGame = createRandomGame(createPinballYHost(), { animateTo: animateWheelThenPause });
+        sharedRandomGame = createRandomGame(createPinballYHost(), getProfileStore(), { animateTo: animateWheelThenPause });
     }
     return sharedRandomGame;
 }

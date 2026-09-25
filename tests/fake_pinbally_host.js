@@ -4,8 +4,9 @@
 // the date (a manual clock that also runs the host's timers), the table
 // list, the wheel selection and the layout size, seed settings, fire
 // PinballY events, pick menu items, play launched games, and inspect shown
-// menus, launches, written settings keys, drawing layers, what was drawn
-// and sounds played. Its in-memory file system is seeded with files and
+// menus, launches, written settings keys, drawing layers, what was drawn,
+// sounds played and the lower status line; script filters are shown with
+// selectFilter(). Its in-memory file system is seeded with files and
 // folders and inspected (file contents, writes, renames and deletes).
 // installGlobals() also exposes it as PinballY's globals (and the global
 // Date and timers, and the COM file objects over the same file system), so
@@ -97,6 +98,11 @@ export function createFakePinballYHost({
     let allTables = tables.map(table => ({ ...table }));
     // null = the wheel shows every visible table, in collection order.
     let wheelConfigIds = null;
+    // Script filters by full id ("User.<id>"), and the id of the one shown.
+    const filters = new Map();
+    let currentFilterId = "All";
+    // The lower status line's messages.
+    const lowerStatusLine = [];
     const storedSettings = new Map();
     const writtenKeys = new Set();
     const handlers = new Map();
@@ -325,6 +331,21 @@ export function createFakePinballYHost({
         return BUILT_IN_COMMANDS[name];
     }
 
+    // Runs the filter like PinballY: before(), then select() over the
+    // visible, configured tables, sorted with compareForSort(); the wheel
+    // then shows them from the first one.
+    function applyFilter(filterId) {
+        const filter = filters.get(filterId);
+        if (!filter) throw new Error(`The fake host has no filter "${filterId}".`);
+        currentFilterId = filterId;
+        if (filter.before) filter.before();
+        const selected = allTables
+            .filter(game => !game.isHidden && game.isConfigured !== false && filter.select(game));
+        if (filter.compareForSort) selected.sort(filter.compareForSort);
+        if (filter.after) filter.after();
+        wheelConfigIds = selected.map(game => game.configId);
+    }
+
     function allocateCommand(name) {
         const id = nextCommandId++;
         commandIds.set(name, id);
@@ -391,6 +412,9 @@ export function createFakePinballYHost({
             if (unknown.length > 0) throw new Error(`Unknown tables in the wheel: ${unknown.join(", ")}`);
             wheelConfigIds = [...configIds];
         },
+        // Shows a script filter, by its full id ("User.<id>").
+        selectFilter: applyFilter,
+        lowerStatusLine: () => [...lowerStatusLine],
         seedSettings(values) {
             for (const [key, value] of Object.entries(values)) storedSettings.set(key, toStoredString(value));
         },
@@ -491,6 +515,16 @@ export function createFakePinballYHost({
                 gameList: {
                     getAllGames: () => [...allTables],
                     getAllWheelGames: () => host.getWheelTables(),
+                    // "gameselect" and "filterselect", fired with fire() like the main window's events.
+                    on,
+                    getWheelGame: (offset) => host.getWheelTables()[offset] || null,
+                    getWheelCount: () => host.getWheelTables().length,
+                    createFilter: (filter) => {
+                        filters.set(`User.${filter.id}`, filter);
+                        return allocateCommand(`filter ${filter.id}`);
+                    },
+                    getCurFilter: () => ({ id: currentFilterId }),
+                    refreshFilter: () => { if (filters.has(currentFilterId)) applyFilter(currentFilterId); },
                     getGameInfo,
                 },
                 mainWindow: {
@@ -500,6 +534,13 @@ export function createFakePinballYHost({
                     playGame: host.playGame,
                     doCommand: (id) => { executedCommands.push(id); },
                     createDrawingLayer,
+                    statusLines: {
+                        lower: {
+                            getText: () => [...lowerStatusLine],
+                            add: (text) => { lowerStatusLine.push(text); },
+                            setText: (index, text) => { lowerStatusLine[index] = text; },
+                        },
+                    },
                 },
                 command: { ...BUILT_IN_COMMANDS, allocate: allocateCommand },
                 logfile: { log: (text) => { logLines.push(text); } },

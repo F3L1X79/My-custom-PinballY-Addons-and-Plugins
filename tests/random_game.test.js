@@ -9,25 +9,45 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createFakePinballYHost } from "./fake_pinbally_host.js";
+import { createProfileStore } from "../common/profile_store.js";
 import { createRandomGame } from "../common/random_game.js";
 
 const LAUNCH_COUNT = 200;
+const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 
-const MEDIEVAL_MADNESS = { id: 1, configId: "Medieval Madness (Williams 1997)", title: "Medieval Madness", lastPlayed: new Date(2025, 0, 1) };
-const ATTACK_FROM_MARS = { id: 2, configId: "Attack from Mars (Bally 1995)", title: "Attack from Mars", lastPlayed: new Date(2026, 5, 1) };
-const THEATRE_OF_MAGIC = { id: 3, configId: "Theatre of Magic (Bally 1995)", title: "Theatre of Magic", lastPlayed: new Date(2026, 7, 1) };
-const HOMEBREW_TABLE = { id: 4, configId: "Homebrew Table", title: "Homebrew Table", lastPlayed: undefined };
+// PinballY's own last plays point at Medieval Madness: the Random Game must
+// ignore them and follow the active Profile's play record.
+const MEDIEVAL_MADNESS = { id: 1, configId: "Medieval Madness (Williams 1997)", title: "Medieval Madness", lastPlayed: new Date(2026, 8, 20) };
+const ATTACK_FROM_MARS = { id: 2, configId: "Attack from Mars (Bally 1995)", title: "Attack from Mars" };
+const THEATRE_OF_MAGIC = { id: 3, configId: "Theatre of Magic (Bally 1995)", title: "Theatre of Magic" };
+const HOMEBREW_TABLE = { id: 4, configId: "Homebrew Table", title: "Homebrew Table" };
 
-// Theatre of Magic has the most recent play: it is the Last Played Table.
 const TABLES = [MEDIEVAL_MADNESS, ATTACK_FROM_MARS, THEATRE_OF_MAGIC, HOMEBREW_TABLE];
+
+// Guest's play record: Theatre of Magic has the most recent play, so it is
+// Guest's Last Played Table.
+const GUEST_PLAYS = {
+    [MEDIEVAL_MADNESS.configId]: { count: 1, seconds: 60, lastPlayed: "2025-01-01T20:00:00" },
+    [ATTACK_FROM_MARS.configId]: { count: 1, seconds: 60, lastPlayed: "2026-06-01T20:00:00" },
+    [THEATRE_OF_MAGIC.configId]: { count: 1, seconds: 60, lastPlayed: "2026-08-01T20:00:00" },
+};
 
 // Goes straight to the requested index, like the real animation without its delays.
 const noDelayAnimator = { animateTo: async () => {} };
 
-function createRandomGameOn({ tables = TABLES, wheel, skipAnimation = false }) {
-    const fake = createFakePinballYHost({ tables });
+const profileFile = name => `${PROFILES_FOLDER}\\${name}\\profile.json`;
+
+function seedProfile(fake, name, data) {
+    fake.addFile(profileFile(name), JSON.stringify({ version: 1, ...data }));
+}
+
+function createRandomGameOn({ wheel, skipAnimation = false, plays = GUEST_PLAYS, animator = noDelayAnimator, seed = () => {} }) {
+    const fake = createFakePinballYHost({ tables: TABLES });
     fake.setWheelTables(wheel.map(table => table.configId));
-    return { fake, randomGame: createRandomGame(fake, { ...noDelayAnimator, skipAnimation }) };
+    seedProfile(fake, "guest", { plays });
+    seed(fake);
+    const profileStore = createProfileStore(fake);
+    return { fake, profileStore, randomGame: createRandomGame(fake, profileStore, { ...animator, skipAnimation }) };
 }
 
 async function launchedConfigIds(fake, randomGame, times = LAUNCH_COUNT) {
@@ -58,16 +78,15 @@ test("never launches the Last Played Table when it sits just before other tables
 });
 
 test("never gives the same table twice in a row", async () => {
-    const tables = TABLES.map(table => ({ ...table }));
-    const { fake, randomGame } = createRandomGameOn({ tables, wheel: tables });
+    const { fake, randomGame } = createRandomGameOn({ wheel: TABLES });
 
     for (let i = 0; i < LAUNCH_COUNT; i++) {
         await randomGame.launch();
-        // PinballY records the play: the launched table becomes the Last Played Table.
-        const launchedConfigId = fake.launches()[i].configId;
-        fake.setTables(tables.map(table => (table.configId === launchedConfigId
-            ? { ...table, lastPlayed: new Date(2026, 8, 23, 10, i) }
-            : fake.getGameInfo(table.configId))));
+        // The play is recorded for Guest: the launched table becomes its Last Played Table.
+        const launched = fake.launches()[i];
+        fake.gameStarted(launched);
+        fake.advanceTime(60 * 1000);
+        fake.gameOver(launched);
     }
 
     const launchedConfigIds = fake.launches().map(game => game.configId);
@@ -93,8 +112,7 @@ test("draws over the whole selection when the Last Played Table is not in it", a
 });
 
 test("draws over the whole selection when no table was ever played", async () => {
-    const neverPlayed = TABLES.map(table => ({ ...table, lastPlayed: undefined }));
-    const { fake, randomGame } = createRandomGameOn({ tables: neverPlayed, wheel: neverPlayed.slice(1, 3) });
+    const { fake, randomGame } = createRandomGameOn({ wheel: [ATTACK_FROM_MARS, THEATRE_OF_MAGIC], plays: {} });
 
     const launched = await launchedConfigIds(fake, randomGame);
 
@@ -121,11 +139,10 @@ test("does nothing when the wheel selection is empty", async () => {
 });
 
 test("ignores a Random Game requested while the animation is running", async () => {
-    const fake = createFakePinballYHost({ tables: TABLES });
-    fake.setWheelTables([MEDIEVAL_MADNESS, ATTACK_FROM_MARS].map(table => table.configId));
     let finishAnimation;
-    const randomGame = createRandomGame(fake, {
-        animateTo: () => new Promise(resolve => { finishAnimation = resolve; }),
+    const { fake, randomGame } = createRandomGameOn({
+        wheel: [MEDIEVAL_MADNESS, ATTACK_FROM_MARS],
+        animator: { animateTo: () => new Promise(resolve => { finishAnimation = resolve; }) },
     });
 
     const firstLaunch = randomGame.launch();
@@ -189,15 +206,56 @@ test("a table started by hand does not count as a Random Game", () => {
     assert.equal(randomGame.getRandomGamesPlayed(), 0);
 });
 
-test("the Random Games played continue from the saved count", async () => {
-    const fake = createFakePinballYHost({ tables: TABLES });
-    fake.setWheelTables([MEDIEVAL_MADNESS.configId, ATTACK_FROM_MARS.configId]);
-    fake.seedSettings({ "custom.randomGame.launchCount": 9 });
-    const randomGame = createRandomGame(fake, { ...noDelayAnimator, skipAnimation: true });
+test("the Random Games played continue from the active Profile's saved count", async () => {
+    const { fake, randomGame } = createRandomGameOn({
+        wheel: [MEDIEVAL_MADNESS, ATTACK_FROM_MARS],
+        skipAnimation: true,
+        seed: fake => seedProfile(fake, "guest", { plays: GUEST_PLAYS, randomGames: 9 }),
+    });
 
     await randomGame.launch();
     fake.gameStarted(fake.launches()[0]);
 
     assert.equal(randomGame.getRandomGamesPlayed(), 10);
-    assert.equal(fake.storedSettings()["custom.randomGame.launchCount"], "10");
+    assert.equal(JSON.parse(fake.readFile(profileFile("guest"))).randomGames, 10);
+    assert.deepEqual([...fake.writtenSettingsKeys()], []);
+});
+
+test("each Profile has its own Random Games played", async () => {
+    const { fake, profileStore, randomGame } = createRandomGameOn({
+        wheel: [MEDIEVAL_MADNESS, ATTACK_FROM_MARS],
+        skipAnimation: true,
+        seed: fake => seedProfile(fake, "Alice", { randomGames: 4 }),
+    });
+
+    await randomGame.launch();
+    fake.gameStarted(fake.launches()[0]);
+    fake.gameOver(fake.launches()[0]);
+    assert.equal(randomGame.getRandomGamesPlayed(), 1, "Guest's first Random Game");
+
+    profileStore.switchTo("Alice");
+    assert.equal(randomGame.getRandomGamesPlayed(), 4, "Alice's own count");
+    await randomGame.launch();
+    fake.gameStarted(fake.launches()[1]);
+
+    assert.equal(randomGame.getRandomGamesPlayed(), 5);
+    assert.equal(JSON.parse(fake.readFile(profileFile("guest"))).randomGames, 1);
+});
+
+test("the Random Game avoids the active Profile's Last Played Table, not another Profile's", async () => {
+    const { fake, profileStore, randomGame } = createRandomGameOn({
+        wheel: [THEATRE_OF_MAGIC, MEDIEVAL_MADNESS, ATTACK_FROM_MARS],
+        // Alice last played Attack from Mars, after Guest's last play.
+        seed: fake => seedProfile(fake, "Alice", {
+            plays: {
+                [MEDIEVAL_MADNESS.configId]: { count: 1, seconds: 60, lastPlayed: "2026-01-01T20:00:00" },
+                [ATTACK_FROM_MARS.configId]: { count: 1, seconds: 60, lastPlayed: "2026-09-10T20:00:00" },
+            },
+        }),
+    });
+    profileStore.switchTo("Alice");
+
+    const launched = await launchedConfigIds(fake, randomGame);
+
+    assert.deepEqual([...launched].sort(), [MEDIEVAL_MADNESS.configId, THEATRE_OF_MAGIC.configId]);
 });

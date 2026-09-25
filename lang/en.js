@@ -2,6 +2,11 @@
 // English labels for UI elements added or translated by this project.
 // ============================================================
 
+// The active Profile's play time of a table, as PinballY writes its own.
+const formatPlayTime = (hours, minutes) => (hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")} hours`
+    : `${minutes} minute${minutes === 1 ? "" : "s"}`);
+
 export default {
     // Already in English natively.
     nativeMenuLabels: {},
@@ -68,8 +73,8 @@ export default {
     tableInfoStatusLines: {
         manufacturer: (position) => `Table ${position}/[Filter.Count] - made by [Game.Manuf].`,
         manufacturerFictional: (position) => `Table ${position}/[Filter.Count] - fictional pinball table.`,
-        playCount: (position) => `Table ${position}/[Filter.Count] - launched [Game.PlayCount] times.`,
-        playTime: (position) => `Table ${position}/[Filter.Count] - played for [Game.PlayTime].`,
+        playCount: (position, count) => `Table ${position}/[Filter.Count] - launched ${count} times.`,
+        playTime: (position, hours, minutes) => `Table ${position}/[Filter.Count] - played for ${formatPlayTime(hours, minutes)}.`,
         year: (position) => `Table ${position}/[Filter.Count] - released in [Game.Year].`,
     },
 

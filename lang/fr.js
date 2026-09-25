@@ -3,6 +3,11 @@
 // Save this file as UTF-8 with BOM so accented characters display correctly.
 // ============================================================
 
+// The active Profile's play time of a table, as PinballY writes its own.
+const formatPlayTime = (hours, minutes) => (hours > 0
+    ? `${hours} h ${String(minutes).padStart(2, "0")}`
+    : `${minutes} minute${minutes > 1 ? "s" : ""}`);
+
 export default {
     // Direct translations of PinballY's native menu titles.
     nativeMenuLabels: {
@@ -159,8 +164,8 @@ export default {
     tableInfoStatusLines: {
         manufacturer: (position) => `Table ${position}/[Filter.Count] - fabriqué par [Game.Manuf].`,
         manufacturerFictional: (position) => `Table ${position}/[Filter.Count] - Flipper fictif.`,
-        playCount: (position) => `Table ${position}/[Filter.Count] - lancé [Game.PlayCount] fois.`,
-        playTime: (position) => `Table ${position}/[Filter.Count] - joué pendant [Game.PlayTime].`,
+        playCount: (position, count) => `Table ${position}/[Filter.Count] - lancé ${count} fois.`,
+        playTime: (position, hours, minutes) => `Table ${position}/[Filter.Count] - joué pendant ${formatPlayTime(hours, minutes)}.`,
         year: (position) => `Table ${position}/[Filter.Count] - sorti en [Game.Year].`,
     },
 

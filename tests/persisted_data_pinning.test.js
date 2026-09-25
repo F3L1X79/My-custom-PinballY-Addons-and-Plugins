@@ -1,10 +1,10 @@
 ﻿// ============================================================
 // Pinning test: starts the add-ons through main.js on the fake PinballY
-// globals, plays a scripted session on a fixture collection, and locks the
-// exact settings keys written (Random Games played), every Achievement ID
-// produced, and the Guest profile.json (play record, Streaks and Periods
-// Played, session stats and Notified list) and cabinet.json (active
-// Profile, Period Table locks) written by the Profile store. These
+// globals, plays a scripted session on a fixture collection, and locks
+// every Achievement ID produced, and the Guest profile.json (play record,
+// Streaks and Periods Played, Random Games played, session stats and
+// Notified list) and cabinet.json (active Profile, Period Table locks)
+// written by the Profile store; no PinballY settings key is written. These
 // strings are players' saved progress: this test must keep passing
 // unchanged.
 // ============================================================
@@ -92,10 +92,6 @@ const EXPECTED_ACHIEVEMENT_IDS = [
     "tableOfTheWeekStreak:4",
 ];
 
-const EXPECTED_FIXED_KEYS = [
-    "custom.randomGame.launchCount",
-];
-
 // Enough for every waiting Achievement Toast to show, one after the other.
 const TOASTS_MS = 60 * 60 * 1000;
 const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
@@ -155,14 +151,13 @@ async function closeEveryDialog(fake) {
     assert.equal(fake.currentMenu(), null, "dialogs kept opening");
 }
 
-test("persisted settings keys and Achievement IDs stay byte-identical", async () => {
+test("persisted files and Achievement IDs stay byte-identical", async () => {
     const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
-    fake.seedSettings({
-        // One Random Game short of the last Random Game fan Achievement.
-        "custom.randomGame.launchCount": 99,
-    });
     fake.addFile(GUEST_PROFILE_FILE, JSON.stringify({
-        version: 1, plays: SEEDED_PLAYS, streaks: SEEDED_STREAKS, sessions: SEEDED_SESSIONS, notified: [],
+        version: 1, plays: SEEDED_PLAYS, streaks: SEEDED_STREAKS,
+        // One Random Game short of the last Random Game fan Achievement.
+        randomGames: 99,
+        sessions: SEEDED_SESSIONS, notified: [],
     }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
@@ -196,8 +191,8 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
     // Achievements are Notified when their toast starts, one toast after the other.
     fake.advanceTime(TOASTS_MS);
 
-    // No Notified flag nor session stat among the settings keys any more.
-    assert.deepEqual([...fake.writtenSettingsKeys()].sort(), EXPECTED_FIXED_KEYS);
+    // Nothing of the add-ons' own data in PinballY's settings any more.
+    assert.deepEqual([...fake.writtenSettingsKeys()], []);
 
     // Every game played for Guest, the only Profile of a fresh install, and
     // every Achievement Notified for Guest (in the order the toasts showed).
@@ -211,7 +206,7 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
         expectedPlays[game.configId] = { count: play.count + 1, seconds: play.seconds + seconds, lastPlayed };
     }
     const guestProfile = JSON.parse(fake.readFile(GUEST_PROFILE_FILE));
-    assert.deepEqual(Object.keys(guestProfile), ["version", "plays", "streaks", "sessions", "notified"]);
+    assert.deepEqual(Object.keys(guestProfile), ["version", "plays", "streaks", "randomGames", "sessions", "notified"]);
     assert.equal(guestProfile.version, 1);
     assert.deepEqual(guestProfile.plays, expectedPlays);
     // Both Period Tables played in the Period right after their last one.
@@ -222,6 +217,7 @@ test("persisted settings keys and Achievement IDs stay byte-identical", async ()
     // The manufacturers of the tables played, in play order, once each.
     const dayManufacturers = [...new Set([...SEEDED_DAY_MANUFACTURERS,
         ...[dayTable, weekTable, randomTable].map(game => game.manufacturer).filter(Boolean)])];
+    assert.equal(guestProfile.randomGames, 100);
     assert.deepEqual(guestProfile.sessions, {
         longestSeconds: 61 * 60,
         shortestSeconds: 3,

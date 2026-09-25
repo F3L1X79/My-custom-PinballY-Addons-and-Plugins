@@ -1,27 +1,38 @@
 ﻿// ============================================================
 // Fills PinballY's lower status line with rotating info about the selected
 // table: its alphabetical position within the active filter, release year,
-// manufacturer, play count and total play time. Refreshes on "gameselect"
-// and "filterselect".
+// manufacturer, and the active Profile's play count and total play time.
+// Refreshes on "gameselect", "filterselect", "wheelmode" (back from a game)
+// and on a Profile switch.
 // ============================================================
 
 import lang from "../common/i18n.js";
 import config from "../common/config.js";
 import { safeHandler } from "../common/safe_handler.js";
+import { getProfileStore } from "../common/profile_store.js";
 
 const SCRIPT_NAME = "StatusLineInfo";
+const SECONDS_PER_MINUTE = 60;
+const MINUTES_PER_HOUR = 60;
 
 export default function init() {
     const STATUS_LINE_TEXT = lang.tableInfoStatusLines;
     const COMMUNITY_MANUFACTURER_NAME = config.communityTablesManufacturer;
+    const profileStore = getProfileStore();
 
+    // PinballY's [Game.PlayCount] and [Game.PlayTime] would show its own
+    // figures, shared by every Profile: the active Profile's are written out.
     const STATUS_LINE_BUILDERS = [
         position => STATUS_LINE_TEXT.year(position),
-        (position, manufacturer) => manufacturer === COMMUNITY_MANUFACTURER_NAME
+        (position, game) => game && game.manufacturer === COMMUNITY_MANUFACTURER_NAME
             ? STATUS_LINE_TEXT.manufacturerFictional(position)
             : STATUS_LINE_TEXT.manufacturer(position),
-        position => STATUS_LINE_TEXT.playCount(position),
-        position => STATUS_LINE_TEXT.playTime(position),
+        (position, _game, play) => STATUS_LINE_TEXT.playCount(position, play.count),
+        (position, _game, play) => {
+            const totalMinutes = Math.floor(play.seconds / SECONDS_PER_MINUTE);
+            return STATUS_LINE_TEXT.playTime(position,
+                Math.floor(totalMinutes / MINUTES_PER_HOUR), totalMinutes % MINUTES_PER_HOUR);
+        },
     ];
 
     // Cache of the CURRENTLY FILTERED wheel titles, sorted alphabetically once
@@ -60,7 +71,7 @@ export default function init() {
         return -1;
     }
 
-    /** Returns the 1-based alphabetical rank of the currently selected table within the active filter. */
+    // The 1-based alphabetical rank of the selected table within the active filter.
     function getCurrentTablePosition(currentTitle) {
         if (gameList.getWheelCount() === 0 || !currentTitle) return 0;
 
@@ -77,7 +88,6 @@ export default function init() {
         return titleIndex >= 0 ? titleIndex + 1 : 0;
     }
 
-    /** Ensures the status line has at least `count` message slots allocated. */
     function ensureStatusLineSlotCount(statusLine, count) {
         const currentSlotCount = statusLine.getText().length;
         for (let i = currentSlotCount; i < count; i++) {
@@ -89,12 +99,12 @@ export default function init() {
         const currentGame = gameList.getWheelGame(0);
         const currentTitle = currentGame ? currentGame.title : null;
         const position = getCurrentTablePosition(currentTitle);
-        const manufacturer = currentGame ? currentGame.manufacturer ?? null : null;
+        const play = profileStore.getPlay(currentGame ? currentGame.configId : "");
 
         ensureStatusLineSlotCount(mainWindow.statusLines.lower, STATUS_LINE_BUILDERS.length);
 
         STATUS_LINE_BUILDERS.forEach((buildText, i) => {
-            mainWindow.statusLines.lower.setText(i, buildText(position, manufacturer));
+            mainWindow.statusLines.lower.setText(i, buildText(position, currentGame, play));
         });
     }
 
@@ -113,6 +123,16 @@ export default function init() {
     }));
 
     gameList.on("gameselect", safeHandler(SCRIPT_NAME, refreshStatusLine));
+    // Back on the wheel after a game, whose play the Profile store recorded on "gameover".
+    mainWindow.on("wheelmode", safeHandler(SCRIPT_NAME, refreshStatusLine));
+    // Deferred and rebuilt like a filter change: a switch can re-run the
+    // Hall of Fame filter, which then shows other tables.
+    profileStore.onSwitch(safeHandler(SCRIPT_NAME, () => {
+        setTimeout(safeHandler(SCRIPT_NAME, () => {
+            buildSortedTitles();
+            refreshStatusLine();
+        }), 0);
+    }));
 
     refreshStatusLine();
 }
