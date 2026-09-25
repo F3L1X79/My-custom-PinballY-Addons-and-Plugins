@@ -1,8 +1,8 @@
 // ============================================================
-// Startup Profile Greeting, through main.js on the fake PinballY globals:
-// when the player launches a table from the startup prompt, the greeting
-// never shows during the game nor after it (the prompt already greeted the
-// Profile by name).
+// Startup Profile Greeting, through main.js on the fake PinballY globals,
+// with the startup prompt on: the prompt already greets the Profile by
+// name, so no greeting shows at startup, neither over the prompt nor after
+// it.
 // ============================================================
 
 import { test } from "node:test";
@@ -12,14 +12,13 @@ import config from "../common/config.js";
 
 const PROFILES_FOLDER = "C:\\PinballY\\Scripts\\profiles";
 const PICKER_Z = 6500;
-const GAME = { id: 1, configId: "mm", title: "Medieval Madness" };
 
 const pickerTexts = fake => fake.drawingLayers()
     .filter(layer => layer.zIndex === PICKER_Z && layer.alpha > 0)
     .flatMap(layer => layer.texts());
 
-test("a table launched from the startup prompt skips the startup greeting", async () => {
-    const fake = createFakePinballYHost({ tables: [GAME] });
+test("with the startup prompt on, no greeting shows at startup", async () => {
+    const fake = createFakePinballYHost();
     fake.addFolder(`${PROFILES_FOLDER}\\Alice`);
     fake.addFile(`${PROFILES_FOLDER}\\cabinet.json`, JSON.stringify({ version: 1, activeProfile: "Alice" }));
     // Never uninstalled: node --test runs each test file in its own process.
@@ -29,19 +28,13 @@ test("a table launched from the startup prompt skips the startup greeting", asyn
     }
     config.language = "en";
 
-    const { default: lang } = await import("../common/i18n.js");
     await import("../main.js");
     await settle();
     fake.advanceTime(0);
+    assert.equal(fake.currentMenu().id, "startupChoicePrompt");
+    assert.deepEqual(pickerTexts(fake), [], "never over the startup prompt");
 
-    fake.selectMenuItem(lang.startupPrompt.tableOfTheDay);
-    await settle();
-    fake.advanceTime(0);
-    assert.equal(fake.launches().length, 1);
-    fake.gameStarted(GAME);
-    fake.advanceTime(0);
-    assert.deepEqual(pickerTexts(fake), [], "never during the game");
-    fake.gameOver(GAME);
+    fake.closeMenu();
     await settle();
     fake.advanceTime(0);
     assert.deepEqual(pickerTexts(fake), [], "nor after it");

@@ -1,7 +1,7 @@
 // ============================================================
-// Startup Profile Greeting, through main.js on the fake PinballY globals:
-// the restored active Profile is greeted once, on the wheel only, after the
-// startup prompt, never over a dialog, whatever the add-on order.
+// Startup Profile Greeting, through main.js on the fake PinballY globals,
+// with the startup prompt turned off: the restored active Profile is
+// greeted once, on the wheel, then the greeting fades out.
 // ============================================================
 
 import { test } from "node:test";
@@ -17,30 +17,21 @@ const pickerTexts = fake => fake.drawingLayers()
     .filter(layer => layer.zIndex === PICKER_Z && layer.alpha > 0)
     .flatMap(layer => layer.texts());
 
-test("the active Profile is greeted once at startup, after the startup prompt", async () => {
+test("without the startup prompt, the active Profile is greeted once at startup", async () => {
     const fake = createFakePinballYHost();
     fake.addFolder(`${PROFILES_FOLDER}\\Alice`);
     fake.addFile(`${PROFILES_FOLDER}\\cabinet.json`, JSON.stringify({ version: 1, activeProfile: "Alice" }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
-    for (const key of Object.keys(config.addOns)) {
-        config.addOns[key] = key === "profilePicker" || key === "startupChoicePrompt";
-    }
+    for (const key of Object.keys(config.addOns)) config.addOns[key] = key === "profilePicker";
     config.language = "en";
 
     const { default: lang } = await import("../common/i18n.js");
     await import("../main.js");
     await settle();
     fake.advanceTime(0);
-    const greeting = lang.profiles.greeting("Alice");
 
-    assert.equal(fake.currentMenu().id, "startupChoicePrompt");
-    assert.ok(!pickerTexts(fake).includes(greeting), "never over the startup prompt");
-
-    fake.closeMenu();
-    await settle();
-    fake.advanceTime(0);
-    assert.ok(pickerTexts(fake).includes(greeting), "greets the restored Profile once the prompt is gone");
+    assert.ok(pickerTexts(fake).includes(lang.profiles.greeting("Alice")), "greets the restored Profile");
     fake.advanceTime(GREETING_OVER_MS);
     assert.deepEqual(pickerTexts(fake), [], "then fades out");
 

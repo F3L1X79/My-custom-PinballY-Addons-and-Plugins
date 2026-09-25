@@ -13,9 +13,9 @@
 // and shown again on "wheelmode".
 // A Profile Greeting (the Avatar growing slightly, a greeting below, then
 // a fade-out, with the optional profileGreetingSoundFile) follows every
-// pick, and greets the restored Profile once at startup, as soon as the
-// wheel is free of menus and dialogs; a game or the carousel started first
-// cancels it.
+// pick. When the startup prompt Add-on is off, it also greets the restored
+// Profile once at startup, as soon as the wheel is free of menus and
+// dialogs; a game or the carousel started first cancels it.
 // ============================================================
 
 import lang from "../common/i18n.js";
@@ -88,7 +88,9 @@ export default function init() {
     let highlighted = 0;
     // The greeting's animation frames; null when none is running.
     let greetingTimer = null;
-    let startupGreetingPending = true;
+    // The startup prompt already greets the Profile by name: a second
+    // greeting right after it would be too much.
+    let startupGreetingPending = config.addOns.startupChoicePrompt === false;
     // A sound that cannot play is logged and never stops the greeting.
     const playGreetingSound = safeHandler(SCRIPT_NAME, () => {
         if (config.profileGreetingSoundFile) host.playSound(config.profileGreetingSoundFile);
