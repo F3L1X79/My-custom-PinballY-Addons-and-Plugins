@@ -275,4 +275,12 @@ export default {
             categories: "Categorie",
         },
     },
+
+    // Profile picker. Guest's folder name is never shown: this is its name.
+    profiles: {
+        menuEntry: "Cambia giocatore",
+        pickerTitle: "Chi gioca?",
+        pickerHint: "Flipper: scorri · Start: scegli · Exit: annulla",
+        guestName: "Ospite",
+    },
 };

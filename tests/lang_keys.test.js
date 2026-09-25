@@ -1,7 +1,8 @@
 // ============================================================
-// Every language file carries the same Achievement and Achievement List
-// keys as English, down to each threshold of the thresholded titles, so no
-// player sees an English fallback there. Reads the language files only.
+// Every language file carries the same Achievement, Achievement List and
+// Profile keys as English, down to each threshold of the thresholded
+// titles, so no player sees an English fallback there. Reads the language
+// files only.
 // ============================================================
 
 import { test } from "node:test";
@@ -9,7 +10,7 @@ import assert from "node:assert/strict";
 import en from "../lang/en.js";
 
 const LANGUAGE_CODES = ["fr", "de", "es", "it", "pt"];
-const CHECKED_SECTIONS = ["achievements", "achievementList"];
+const CHECKED_SECTIONS = ["achievements", "achievementList", "profiles"];
 
 function keyPaths(section, prefix) {
     return Object.entries(section).flatMap(([key, value]) => {

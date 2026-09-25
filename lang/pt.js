@@ -276,4 +276,12 @@ export default {
             categories: "Categorias",
         },
     },
+
+    // Profile picker. Guest's folder name is never shown: this is its name.
+    profiles: {
+        menuEntry: "Trocar de jogador",
+        pickerTitle: "Quem joga?",
+        pickerHint: "Flippers: mudar · Start: escolher · Exit: cancelar",
+        guestName: "Convidado",
+    },
 };

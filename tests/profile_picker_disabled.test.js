@@ -1,0 +1,26 @@
+// ============================================================
+// Profile picker turned off in addOns, through main.js on the fake
+// PinballY globals: the main menu has no "Change player" entry.
+// ============================================================
+
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
+import config from "../common/config.js";
+
+test("turning the Profile picker off removes its main-menu entry", async () => {
+    const fake = createFakePinballYHost();
+    // Never uninstalled: node --test runs each test file in its own process.
+    fake.installGlobals();
+    for (const key of Object.keys(config.addOns)) config.addOns[key] = key !== "profilePicker";
+    config.language = "en";
+
+    const { default: lang } = await import("../common/i18n.js");
+    await import("../main.js");
+    await settle();
+
+    fake.openMenu("main", [{ title: "Play", cmd: fake.getBuiltInCommand("PlayGame") }]);
+    const titles = fake.currentMenu().items.map(item => item.title);
+    assert.ok(titles.length > 1, "the other Add-ons' entries are there");
+    assert.ok(!titles.includes(lang.profiles.menuEntry));
+});

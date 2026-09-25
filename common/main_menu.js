@@ -18,6 +18,7 @@ export const MAIN_MENU_POSITION = Object.freeze({
     RANDOM_GAME: 2,
     TABLE_OF_THE_DAY: 3,
     TABLE_OF_THE_WEEK: 4,
+    PROFILE_PICKER: 5,
 });
 
 export function createMainMenu(host) {

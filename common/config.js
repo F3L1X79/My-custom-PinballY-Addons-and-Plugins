@@ -45,6 +45,7 @@ const DEFAULTS = {
         seamlessLaunchOverlay: true,
         playLaunchSound: true,
         ratingPrompt: true,
+        profilePicker: true,
     },
 };
 

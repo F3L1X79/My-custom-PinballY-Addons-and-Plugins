@@ -2,8 +2,8 @@
 // Production PinballY host: the single seam through which the deepened
 // modules reach PinballY (settings, clock, timers, visible tables, wheel
 // selection, main window menus / UI mode / events / drawing layers,
-// StyledText, commands, table launch, program folder, sound playback, and
-// the few file operations the Profile store needs).
+// StyledText, commands and running them, table launch, program folder,
+// sound playback, and the few file operations the Profile store needs).
 // Every call passes straight through to PinballY's globals; tests use the
 // in-memory fake host from tests/fake_pinbally_host.js instead. No side
 // effects on import.
@@ -105,6 +105,7 @@ export function createPinballYHost() {
         allocateCommand: (name) => command.allocate(name),
         // PinballY's own command IDs, such as "PlayGame" or "MenuReturn".
         getBuiltInCommand: (name) => command[name],
+        doCommand: (id) => { mainWindow.doCommand(id); },
         playGame: (game) => { mainWindow.playGame(game); },
 
         // drawImage resolves relative paths from this folder, not from Scripts/.

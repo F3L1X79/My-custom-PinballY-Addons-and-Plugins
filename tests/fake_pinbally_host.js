@@ -372,6 +372,7 @@ export function createFakePinballYHost({
         createStyledText: (options) => new FakeStyledText(options),
         allocateCommand,
         getBuiltInCommand,
+        doCommand: (id) => { executedCommands.push(id); },
         // PinballY leaves the wheel as soon as a launch starts.
         playGame: (game) => {
             launchList.push(game);
@@ -532,7 +533,7 @@ export function createFakePinballYHost({
                     showMenu,
                     getUIMode: getFullUIMode,
                     playGame: host.playGame,
-                    doCommand: (id) => { executedCommands.push(id); },
+                    doCommand: host.doCommand,
                     createDrawingLayer,
                     statusLines: {
                         lower: {
