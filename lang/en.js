@@ -95,37 +95,36 @@ export default {
     // Achievement ID (see achievements/).
     achievements: {
         dailyFirstPlayTitle: () => "Hello, Table of the Day!",
-        dailyFirstPlayDescription: () => "You've launched the table of the day for the first time!",
+        dailyFirstPlayDescription: () => "Launch the table of the day for the first time.",
         weeklyFirstPlayTitle: () => "Weekly Date",
-        weeklyFirstPlayDescription: () => "You've launched the table of the week for the first time!",
+        weeklyFirstPlayDescription: () => "Launch the table of the week for the first time.",
         dailyPeriodsPlayedTitles: {
             10: "Sunday Explorer",
             50: "Seasoned Explorer",
             100: "Indiana Flippers",
         },
-        dailyPeriodsPlayedDescription: (days) => `You've launched the table of the day on ${days} days in total!`,
+        dailyPeriodsPlayedDescription: (days) => `Launch the table of the day on ${days} different days.`,
         weeklyPeriodsPlayedTitles: {
             10: "Weekly Regular",
             26: "Six Months of Loyalty",
             52: "A Year Without a Wrinkle",
         },
-        weeklyPeriodsPlayedDescription: (weeks) => `You've launched the table of the week in ${weeks} weeks in total!`,
+        weeklyPeriodsPlayedDescription: (weeks) => `Launch the table of the week in ${weeks} different weeks.`,
         dailyStreakTitles: {
             3: "Third Time's the Charm",
             7: "Perfect Week",
             30: "Pinball Monk",
         },
-        dailyStreakDescription: (days) => `You've launched the table of the day ${days} days in a row!`,
+        dailyStreakDescription: (days) => `Launch the table of the day ${days} days in a row.`,
         weeklyStreakTitles: {
             4: "A Flawless Month",
             12: "Loyal Subscriber",
         },
-        weeklyStreakDescription: (weeks) => `You've launched the table of the week ${weeks} weeks in a row!`,
+        weeklyStreakDescription: (weeks) => `Launch the table of the week ${weeks} weeks in a row.`,
         manufacturerCompletionTitle: (manufacturer) => `Die-Hard ${manufacturer} Fan`,
-        manufacturerCompletionDescription: (manufacturer, count) =>
-            `You've played all ${count} ${manufacturer} tables at least once!`,
+        manufacturerCompletionDescription: (manufacturer, count) => `Play all ${count} ${manufacturer} tables at least once.`,
         firstTableTitle: () => "First Steps",
-        firstTableDescription: () => "You've played your very first table!",
+        firstTableDescription: () => "Play your very first table.",
         collectionPercentTitles: {
             10: "A Taste of Metal",
             25: "Budding Collector",
@@ -133,8 +132,7 @@ export default {
             75: "Seen Almost Everything",
             100: "Nothing Escapes Me",
         },
-        collectionPercentDescription: (percent, playedCount, totalCount) =>
-            `You've played ${playedCount} out of ${totalCount} tables (${percent}% of your collection)!`,
+        collectionPercentDescription: (percent, playedCount, totalCount) => `Play ${playedCount} of your ${totalCount} tables (${percent}% of your collection).`,
         playTimeMilestoneTitles: {
             1: "Warming Up",
             5: "Getting Serious",
@@ -142,34 +140,32 @@ export default {
             50: "Pinball in the Blood",
             100: "Tilt Legend",
         },
-        playTimeMilestoneDescription: (hours) =>
-            `You've racked up over ${hours} hour${hours > 1 ? "s" : ""} of total play time!`,
+        playTimeMilestoneDescription: (hours) => `Play for more than ${hours} hour${hours > 1 ? "s" : ""} in total.`,
         decadeCompletionTitle: (decadeStartYear) => `A Trip Back to the ${decadeStartYear}s`,
-        decadeCompletionDescription: (decadeStartYear, count) =>
-            `You've played all ${count} tables from the ${decadeStartYear}s at least once!`,
+        decadeCompletionDescription: (decadeStartYear, count) => `Play all ${count} tables from the ${decadeStartYear}s at least once.`,
         categoryCompletionTitle: (category) => `${category} Master`,
-        categoryCompletionDescription: (category, count) => `You've played all ${count} "${category}" tables at least once!`,
+        categoryCompletionDescription: (category, count) => `Play all ${count} "${category}" tables at least once.`,
         marathonTitles: {
             30: "Mini Marathon",
             60: "Marathoner",
         },
-        marathonDescription: (minutes) => `You played a single session lasting over ${minutes} minutes!`,
+        marathonDescription: (minutes) => `Play a single session lasting over ${minutes} minutes.`,
         rageQuitTitle: () => "Rage Quit?!",
-        rageQuitDescription: (minSeconds, maxSeconds) => `You quit a table after only ${minSeconds} to ${maxSeconds} seconds...`,
+        rageQuitDescription: (minSeconds, maxSeconds) => `Quit a table after only ${minSeconds} to ${maxSeconds} seconds...`,
         grandReturnTitle: () => "The Grand Comeback",
-        grandReturnDescription: (days) => `You replayed a table after ${days} or more days away!`,
+        grandReturnDescription: (days) => `Replay a table after ${days} or more days away.`,
         randomGamesTitles: {
             10: "Why Not?",
             50: "Dice Roller",
             100: "I Looooove Chance",
         },
-        randomGamesDescription: (count) => `You've played ${count} Random Games!`,
+        randomGamesDescription: (count) => `Play ${count} Random Games.`,
         dayManufacturersTitles: {
             3: "Express World Tour",
             5: "Pinball Butterfly",
             8: "Serial Unfaithful",
         },
-        dayManufacturersDescription: (count) => `You've played tables from ${count} different manufacturers on the same day!`,
+        dayManufacturersDescription: (count) => `Play tables from ${count} different manufacturers on the same day.`,
         // Header of the Achievement Toast card.
         toastHeader: "Achievement unlocked",
     },

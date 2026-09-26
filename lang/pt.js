@@ -180,37 +180,36 @@ export default {
 
     achievements: {
         dailyFirstPlayTitle: () => "Olá, mesa do dia!",
-        dailyFirstPlayDescription: () => "Você iniciou a mesa do dia pela primeira vez!",
+        dailyFirstPlayDescription: () => "Iniciar a mesa do dia pela primeira vez.",
         weeklyFirstPlayTitle: () => "Encontro semanal",
-        weeklyFirstPlayDescription: () => "Você iniciou a mesa da semana pela primeira vez!",
+        weeklyFirstPlayDescription: () => "Iniciar a mesa da semana pela primeira vez.",
         dailyPeriodsPlayedTitles: {
             10: "Explorador de domingo",
             50: "Explorador experiente",
             100: "Indiana Flippers",
         },
-        dailyPeriodsPlayedDescription: (days) => `Você iniciou a mesa do dia em ${days} dias no total!`,
+        dailyPeriodsPlayedDescription: (days) => `Iniciar a mesa do dia em ${days} dias diferentes.`,
         weeklyPeriodsPlayedTitles: {
             10: "Frequentador da semana",
             26: "Seis meses de fidelidade",
             52: "Um ano sem uma ruga",
         },
-        weeklyPeriodsPlayedDescription: (weeks) => `Você iniciou a mesa da semana em ${weeks} semanas no total!`,
+        weeklyPeriodsPlayedDescription: (weeks) => `Iniciar a mesa da semana em ${weeks} semanas diferentes.`,
         dailyStreakTitles: {
             3: "Não há dois sem três",
             7: "Semana perfeita",
             30: "Monge do pinball",
         },
-        dailyStreakDescription: (days) => `Você iniciou a mesa do dia ${days} dias seguidos!`,
+        dailyStreakDescription: (days) => `Iniciar a mesa do dia ${days} dias seguidos.`,
         weeklyStreakTitles: {
             4: "Um mês sem falhas",
             12: "Assinante fiel",
         },
-        weeklyStreakDescription: (weeks) => `Você iniciou a mesa da semana ${weeks} semanas seguidas!`,
+        weeklyStreakDescription: (weeks) => `Iniciar a mesa da semana ${weeks} semanas seguidas.`,
         manufacturerCompletionTitle: (manufacturer) => `Fã absoluto de ${manufacturer}`,
-        manufacturerCompletionDescription: (manufacturer, count) =>
-            `Você jogou todas as ${count} mesas da ${manufacturer} pelo menos uma vez!`,
+        manufacturerCompletionDescription: (manufacturer, count) => `Jogar pelo menos uma vez as ${count} mesas da ${manufacturer}.`,
         firstTableTitle: () => "Primeiros passos",
-        firstTableDescription: () => "Você jogou sua primeiríssima mesa!",
+        firstTableDescription: () => "Jogar sua primeiríssima mesa.",
         collectionPercentTitles: {
             10: "O gosto do metal",
             25: "Colecionador iniciante",
@@ -218,8 +217,7 @@ export default {
             75: "Quase tudo visto",
             100: "Nada me escapa",
         },
-        collectionPercentDescription: (percent, playedCount, totalCount) =>
-            `Você jogou ${playedCount} de ${totalCount} mesas (${percent}% da sua coleção)!`,
+        collectionPercentDescription: (percent, playedCount, totalCount) => `Jogar ${playedCount} de ${totalCount} mesas (${percent}% da sua coleção).`,
         playTimeMilestoneTitles: {
             1: "Aquecimento",
             5: "A coisa ficou séria",
@@ -227,35 +225,32 @@ export default {
             50: "Pinball no sangue",
             100: "Lenda do tilt",
         },
-        playTimeMilestoneDescription: (hours) =>
-            `Você acumulou mais de ${hours} hora${hours > 1 ? "s" : ""} de jogo no total!`,
+        playTimeMilestoneDescription: (hours) => `Acumular mais de ${hours} hora${hours > 1 ? "s" : ""} de jogo.`,
         decadeCompletionTitle: (decadeStartYear) => `Viagem aos anos ${decadeStartYear}`,
-        decadeCompletionDescription: (decadeStartYear, count) =>
-            `Você jogou todas as ${count} mesas dos anos ${decadeStartYear} pelo menos uma vez!`,
+        decadeCompletionDescription: (decadeStartYear, count) => `Jogar pelo menos uma vez as ${count} mesas dos anos ${decadeStartYear}.`,
         categoryCompletionTitle: (category) => `Mestre em ${category}`,
-        categoryCompletionDescription: (category, count) =>
-            `Você jogou todas as ${count} mesas "${category}" pelo menos uma vez!`,
+        categoryCompletionDescription: (category, count) => `Jogar pelo menos uma vez as ${count} mesas "${category}".`,
         marathonTitles: {
             30: "Pequena maratona",
             60: "Maratonista",
         },
-        marathonDescription: (minutes) => `Você jogou uma única sessão de mais de ${minutes} minutos!`,
+        marathonDescription: (minutes) => `Jogar uma única sessão de mais de ${minutes} minutos.`,
         rageQuitTitle: () => "Desistência por raiva?!",
-        rageQuitDescription: (minSeconds, maxSeconds) => `Você saiu de uma mesa após apenas ${minSeconds} a ${maxSeconds} segundos...`,
+        rageQuitDescription: (minSeconds, maxSeconds) => `Sair de uma mesa após apenas ${minSeconds} a ${maxSeconds} segundos...`,
         grandReturnTitle: () => "O grande retorno",
-        grandReturnDescription: (days) => `Você voltou a jogar uma mesa depois de ${days} dias ou mais!`,
+        grandReturnDescription: (days) => `Voltar a jogar uma mesa depois de ${days} dias ou mais.`,
         randomGamesTitles: {
             10: "E por que não?",
             50: "Jogador de dados",
             100: "Eu adoooooro o acaso",
         },
-        randomGamesDescription: (count) => `Você jogou ${count} mesas aleatórias!`,
+        randomGamesDescription: (count) => `Jogar ${count} mesas aleatórias.`,
         dayManufacturersTitles: {
             3: "Volta ao mundo expressa",
             5: "Borboleta do pinball",
             8: "Infiel em série",
         },
-        dayManufacturersDescription: (count) => `Você jogou mesas de ${count} fabricantes diferentes no mesmo dia!`,
+        dayManufacturersDescription: (count) => `Jogar mesas de ${count} fabricantes diferentes no mesmo dia.`,
         // Header of the Achievement Toast card.
         toastHeader: "Conquista desbloqueada",
     },

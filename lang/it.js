@@ -179,37 +179,36 @@ export default {
 
     achievements: {
         dailyFirstPlayTitle: () => "Ciao, tavolo del giorno!",
-        dailyFirstPlayDescription: () => "Hai avviato il tavolo del giorno per la prima volta!",
+        dailyFirstPlayDescription: () => "Avviare il tavolo del giorno per la prima volta.",
         weeklyFirstPlayTitle: () => "Appuntamento settimanale",
-        weeklyFirstPlayDescription: () => "Hai avviato il tavolo della settimana per la prima volta!",
+        weeklyFirstPlayDescription: () => "Avviare il tavolo della settimana per la prima volta.",
         dailyPeriodsPlayedTitles: {
             10: "Esploratore della domenica",
             50: "Esploratore esperto",
             100: "Indiana Flippers",
         },
-        dailyPeriodsPlayedDescription: (days) => `Hai avviato il tavolo del giorno in ${days} giorni in totale!`,
+        dailyPeriodsPlayedDescription: (days) => `Avviare il tavolo del giorno in ${days} giorni diversi.`,
         weeklyPeriodsPlayedTitles: {
             10: "Habitué della settimana",
             26: "Sei mesi di fedeltà",
             52: "Un anno e non sentirlo",
         },
-        weeklyPeriodsPlayedDescription: (weeks) => `Hai avviato il tavolo della settimana in ${weeks} settimane in totale!`,
+        weeklyPeriodsPlayedDescription: (weeks) => `Avviare il tavolo della settimana in ${weeks} settimane diverse.`,
         dailyStreakTitles: {
             3: "Non c'è due senza tre",
             7: "Settimana perfetta",
             30: "Monaco del flipper",
         },
-        dailyStreakDescription: (days) => `Hai avviato il tavolo del giorno per ${days} giorni di fila!`,
+        dailyStreakDescription: (days) => `Avviare il tavolo del giorno per ${days} giorni di fila.`,
         weeklyStreakTitles: {
             4: "Un mese senza errori",
             12: "Abbonato fedele",
         },
-        weeklyStreakDescription: (weeks) => `Hai avviato il tavolo della settimana per ${weeks} settimane di fila!`,
+        weeklyStreakDescription: (weeks) => `Avviare il tavolo della settimana per ${weeks} settimane di fila.`,
         manufacturerCompletionTitle: (manufacturer) => `Fan assoluto di ${manufacturer}`,
-        manufacturerCompletionDescription: (manufacturer, count) =>
-            `Hai giocato tutti i ${count} tavoli ${manufacturer} almeno una volta!`,
+        manufacturerCompletionDescription: (manufacturer, count) => `Giocare almeno una volta tutti i ${count} tavoli ${manufacturer}.`,
         firstTableTitle: () => "Primi passi",
-        firstTableDescription: () => "Hai giocato il tuo primissimo tavolo!",
+        firstTableDescription: () => "Giocare il tuo primissimo tavolo.",
         collectionPercentTitles: {
             10: "Il gusto del metallo",
             25: "Collezionista in erba",
@@ -217,8 +216,7 @@ export default {
             75: "Quasi tutto visto",
             100: "Non mi sfugge niente",
         },
-        collectionPercentDescription: (percent, playedCount, totalCount) =>
-            `Hai giocato ${playedCount} tavoli su ${totalCount} (${percent}% della tua collezione)!`,
+        collectionPercentDescription: (percent, playedCount, totalCount) => `Giocare ${playedCount} tavoli su ${totalCount} (${percent}% della tua collezione).`,
         playTimeMilestoneTitles: {
             1: "Riscaldamento",
             5: "Si fa sul serio",
@@ -226,35 +224,32 @@ export default {
             50: "Flipper nel sangue",
             100: "Leggenda del tilt",
         },
-        playTimeMilestoneDescription: (hours) =>
-            `Hai accumulato più di ${hours} or${hours > 1 ? "e" : "a"} di gioco in totale!`,
+        playTimeMilestoneDescription: (hours) => `Accumulare più di ${hours} or${hours > 1 ? "e" : "a"} di gioco.`,
         decadeCompletionTitle: (decadeStartYear) => `Viaggio negli anni ${decadeStartYear}`,
-        decadeCompletionDescription: (decadeStartYear, count) =>
-            `Hai giocato tutti i ${count} tavoli degli anni ${decadeStartYear} almeno una volta!`,
+        decadeCompletionDescription: (decadeStartYear, count) => `Giocare almeno una volta tutti i ${count} tavoli degli anni ${decadeStartYear}.`,
         categoryCompletionTitle: (category) => `Maestro ${category}`,
-        categoryCompletionDescription: (category, count) =>
-            `Hai giocato tutti i ${count} tavoli "${category}" almeno una volta!`,
+        categoryCompletionDescription: (category, count) => `Giocare almeno una volta tutti i ${count} tavoli "${category}".`,
         marathonTitles: {
             30: "Piccola maratona",
             60: "Maratoneta",
         },
-        marathonDescription: (minutes) => `Hai giocato una singola sessione di oltre ${minutes} minuti!`,
+        marathonDescription: (minutes) => `Giocare una singola sessione di oltre ${minutes} minuti.`,
         rageQuitTitle: () => "Abbandono per rabbia?!",
-        rageQuitDescription: (minSeconds, maxSeconds) => `Hai lasciato un tavolo dopo appena ${minSeconds}-${maxSeconds} secondi...`,
+        rageQuitDescription: (minSeconds, maxSeconds) => `Lasciare un tavolo dopo appena ${minSeconds}-${maxSeconds} secondi...`,
         grandReturnTitle: () => "Il grande ritorno",
-        grandReturnDescription: (days) => `Hai rigiocato un tavolo dopo ${days} o più giorni di assenza!`,
+        grandReturnDescription: (days) => `Rigiocare un tavolo dopo ${days} o più giorni di assenza.`,
         randomGamesTitles: {
             10: "E perché no?",
             50: "Giocatore di dadi",
             100: "Adoooooro il caso",
         },
-        randomGamesDescription: (count) => `Hai giocato ${count} tavoli a caso!`,
+        randomGamesDescription: (count) => `Giocare ${count} tavoli a caso.`,
         dayManufacturersTitles: {
             3: "Giro del mondo express",
             5: "Farfalla del flipper",
             8: "Infedele seriale",
         },
-        dayManufacturersDescription: (count) => `Hai giocato tavoli di ${count} produttori diversi nello stesso giorno!`,
+        dayManufacturersDescription: (count) => `Giocare tavoli di ${count} produttori diversi nello stesso giorno.`,
         // Header of the Achievement Toast card.
         toastHeader: "Obiettivo sbloccato",
     },
