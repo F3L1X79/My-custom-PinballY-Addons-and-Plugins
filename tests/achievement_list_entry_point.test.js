@@ -2,7 +2,8 @@
 // The Achievement List, started through main.js on the fake PinballY
 // globals: its main menu entry sits right after "Play", above the other
 // custom entries, and the real Achievements land in the right Achievement
-// Family, Unlocked ones first, each part in natural order.
+// Family, Unlocked ones first, each part in natural order, a missing one
+// with its Achievement Progress.
 // ============================================================
 
 import { test } from "node:test";
@@ -52,6 +53,8 @@ test("the Achievement List entry follows Play and lists the real Achievements by
     const TEXT = lang.achievementList;
     const ACHIEVEMENT = lang.achievements;
     const MENU_LABELS = lang.customMenuLabels;
+    const withProgress = (title, unit, current, target) =>
+        TEXT.titleWithProgress(title, TEXT.progressUnits[unit].short(current, target));
     await import("../main.js");
     await settle();
 
@@ -117,11 +120,12 @@ test("the Achievement List entry follows Play and lists the real Achievements by
     ]);
     assert.deepEqual(openFamily("decades"), [
         ...[1970, 2020].map(year => `✓ ${ACHIEVEMENT.decadeCompletionTitle(year)}`),
-        ...[1980, 1990].map(year => `  ${ACHIEVEMENT.decadeCompletionTitle(year)}`),
+        `  ${ACHIEVEMENT.decadeCompletionTitle(1980)}`,
+        `  ${withProgress(ACHIEVEMENT.decadeCompletionTitle(1990), "tables", 1, 2)}`,
     ]);
     assert.deepEqual(openFamily("categories"), [
         ...["Fantasy", "Monsters"].map(name => `✓ ${ACHIEVEMENT.categoryCompletionTitle(name)}`),
-        `  ${ACHIEVEMENT.categoryCompletionTitle("SciFi")}`,
+        `  ${withProgress(ACHIEVEMENT.categoryCompletionTitle("SciFi"), "tables", 1, 3)}`,
     ]);
 
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);

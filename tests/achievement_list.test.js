@@ -3,14 +3,15 @@
 // Achievements, checks what the player sees at each level (total line,
 // Achievement Families with their counts, a family's Achievements, Unlocked
 // ones first and checked, an Achievement's card) and the Back navigation.
-// Unlocked is computed live each time a level opens.
+// Unlocked is computed live each time a level opens, and so is the
+// Achievement Progress a missing Achievement shows.
 // ============================================================
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createFakePinballYHost } from "./fake_pinbally_host.js";
 import { createAchievementList } from "../common/achievement_list.js";
-import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
+import { ACHIEVEMENT_FAMILY, PROGRESS_UNIT } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 
 const TEXT = lang.achievementList;
@@ -18,15 +19,17 @@ const TEXT = lang.achievementList;
 // The families level: total line, separator, families, separator, Back.
 const FAMILY_ITEMS_START = 2;
 
-function fakeAchievement(id, family, unlocked = false) {
+function fakeAchievement(id, family, unlocked = false, progress = undefined) {
     const achievement = {
         id,
         family,
         unlocked,
+        progress,
         getTitle: () => `${id} title`,
         getDescription: () => `${id} description`,
         checkUnlocked: () => achievement.unlocked,
     };
+    if (progress !== undefined) achievement.getProgress = () => achievement.progress;
     return achievement;
 }
 
@@ -262,4 +265,75 @@ test("the Achievements are read again at each open, so a family that became empt
     const menu = fake.currentMenu();
     assert.equal(menu.items[0].title, TEXT.totalLine(0, 1));
     assert.deepEqual(familyItems(menu).map(item => item.title), [familyTitle(ACHIEVEMENT_FAMILY.PLAY_TIME, 0, 1)]);
+});
+
+// Williams: missing, 7 of 12 tables. Bally: Unlocked, with a progress still
+// given. Stern: missing, its progress says none. Gottlieb: no progress at all.
+function progressAchievements() {
+    const tables = (current, target) => ({ current, target, unit: PROGRESS_UNIT.TABLES });
+    return [
+        fakeAchievement("williams", ACHIEVEMENT_FAMILY.MANUFACTURERS, false, tables(7, 12)),
+        fakeAchievement("bally", ACHIEVEMENT_FAMILY.MANUFACTURERS, true, tables(12, 12)),
+        fakeAchievement("stern", ACHIEVEMENT_FAMILY.MANUFACTURERS, false, null),
+        fakeAchievement("gottlieb", ACHIEVEMENT_FAMILY.MANUFACTURERS, false),
+    ];
+}
+
+const tablesProgress = TEXT.progressUnits[PROGRESS_UNIT.TABLES];
+
+test("a missing Achievement with an Achievement Progress shows it after its title, the others show their bare title, order unchanged", () => {
+    const { fake } = setUp(progressAchievements());
+
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 1, 4));
+
+    assert.deepEqual(fake.currentMenu().items.slice(1, 5).map(({ title, checked }) => ({ title, checked })), [
+        { title: "bally title", checked: true },
+        { title: TEXT.titleWithProgress("williams title", tablesProgress.short(7, 12)), checked: false },
+        { title: "stern title", checked: false },
+        { title: "gottlieb title", checked: false },
+    ]);
+});
+
+test("the card of a missing Achievement shows its Achievement Progress between the description and the status", () => {
+    const { fake } = setUp(progressAchievements());
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 1, 4));
+
+    fake.selectMenuItem(TEXT.titleWithProgress("williams title", tablesProgress.short(7, 12)));
+
+    assert.equal(fake.currentMenu().items[0].title, TEXT.cardMessage("williams title", "williams description",
+        TEXT.notUnlocked, TEXT.progressLine(tablesProgress.long(7, 12))));
+});
+
+test("the card of an Unlocked Achievement or of one without an Achievement Progress shows none", () => {
+    const { fake } = setUp(progressAchievements());
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 1, 4));
+
+    fake.selectMenuItem("bally title");
+    assert.equal(fake.currentMenu().items[0].title,
+        TEXT.cardMessage("bally title", "bally description", TEXT.unlocked));
+
+    fake.selectMenuItem(TEXT.back);
+    fake.selectMenuItem("stern title");
+    assert.equal(fake.currentMenu().items[0].title,
+        TEXT.cardMessage("stern title", "stern description", TEXT.notUnlocked));
+});
+
+test("the Achievement Progress is read again each time a level opens", () => {
+    const achievements = progressAchievements();
+    const { fake } = setUp(achievements);
+    achievements[0].progress = { current: 8, target: 12, unit: PROGRESS_UNIT.TABLES };
+
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.MANUFACTURERS, 1, 4));
+
+    assert.ok(fake.currentMenu().items.some(item => item.title === TEXT.titleWithProgress("williams title", tablesProgress.short(8, 12))));
+});
+
+test("an Achievement Progress in an unknown unit is an error, not a blank", () => {
+    const { fake } = setUp([fakeAchievement("odd", ACHIEVEMENT_FAMILY.SESSIONS, false, { current: 1, target: 2, unit: "parsecs" })]);
+    // The error reaches PinballY's log file through the command handler.
+    fake.installGlobals();
+
+    fake.selectMenuItem(familyTitle(ACHIEVEMENT_FAMILY.SESSIONS, 0, 1));
+
+    assert.equal(fake.logLines().filter(line => line.includes("parsecs")).length, 1);
 });

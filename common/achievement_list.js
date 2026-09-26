@@ -5,7 +5,9 @@
 // Achievements, Unlocked ones first, then an Achievement's card) and the
 // Back navigation between them.
 // Created from the PinballY host and a function that returns the current
-// Achievements; Unlocked is computed again each time a level opens.
+// Achievements; Unlocked is computed again each time a level opens, and so
+// is the Achievement Progress a missing Achievement shows after its title
+// and on its card.
 // Listens to "command". Opens its menus directly, not through the wheel
 // dialog module: the player asked for them.
 // ============================================================
@@ -59,6 +61,22 @@ export function createAchievementList(host, getAchievements) {
         return families;
     }
 
+    // The short and long texts of a missing Achievement's Achievement
+    // Progress, or null when it has none.
+    function describeProgress(achievement, unlocked) {
+        if (unlocked || typeof achievement.getProgress !== "function") return null;
+        const progress = achievement.getProgress();
+        if (!progress) return null;
+        const unitTexts = TEXT.progressUnits[progress.unit];
+        if (!unitTexts) {
+            throw new Error(`Achievement "${achievement.id}" has an unknown progress unit "${progress.unit}".`);
+        }
+        return {
+            short: unitTexts.short(progress.current, progress.target),
+            long: unitTexts.long(progress.current, progress.target),
+        };
+    }
+
     const countUnlocked = entries => entries.filter(entry => entry.unlocked).length;
 
     function showFamilies(selectedFamily = null) {
@@ -86,6 +104,11 @@ export function createAchievementList(host, getAchievements) {
     // page to reopen: it relies on PinballY opening the paged section on the
     // page that holds the selected Achievement. The help doesn't document
     // this; to be checked in PinballY.
+    function titleWithProgress(achievement, unlocked) {
+        const progress = describeProgress(achievement, unlocked);
+        return progress ? TEXT.titleWithProgress(achievement.getTitle(), progress.short) : achievement.getTitle();
+    }
+
     function showFamily(family, selectedAchievementId = null) {
         const entries = readFamilies().get(family);
         const ordered = [...entries.filter(entry => entry.unlocked), ...entries.filter(entry => !entry.unlocked)];
@@ -93,7 +116,7 @@ export function createAchievementList(host, getAchievements) {
         host.showMenu(FAMILY_MENU_ID, [
             { cmd: host.getBuiltInCommand("MenuPageUp") },
             ...ordered.map(({ achievement, unlocked }, index) => ({
-                title: achievement.getTitle(),
+                title: titleWithProgress(achievement, unlocked),
                 cmd: getAchievementCommand(index),
                 checked: unlocked,
                 ...(achievement.id === selectedAchievementId ? { selected: true } : {}),
@@ -107,9 +130,14 @@ export function createAchievementList(host, getAchievements) {
     }
 
     function showCard(achievement) {
-        const status = achievement.checkUnlocked() ? TEXT.unlocked : TEXT.notUnlocked;
+        const unlocked = achievement.checkUnlocked();
+        const status = unlocked ? TEXT.unlocked : TEXT.notUnlocked;
+        const progress = describeProgress(achievement, unlocked);
+        const message = progress
+            ? TEXT.cardMessage(achievement.getTitle(), achievement.getDescription(), status, TEXT.progressLine(progress.long))
+            : TEXT.cardMessage(achievement.getTitle(), achievement.getDescription(), status);
         host.showMenu(CARD_MENU_ID, [
-            { title: TEXT.cardMessage(achievement.getTitle(), achievement.getDescription(), status), cmd: -1 },
+            { title: message, cmd: -1 },
             { cmd: -1 },
             { title: TEXT.back, cmd: backToFamilyCommand },
         ], { dialogStyle: true });

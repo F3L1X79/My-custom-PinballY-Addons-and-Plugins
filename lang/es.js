@@ -262,9 +262,23 @@ export default {
         totalLine: (unlockedCount, totalCount) => `Total: ${unlockedCount}/${totalCount}`,
         familyLine: (family, unlockedCount, totalCount) => `${family} (${unlockedCount}/${totalCount})`,
         back: "Volver",
-        cardMessage: (title, description, status) => `${title}\n${description}\n\n${status}`,
+        // The Achievement Progress line, when there is one, sits between the
+        // description and the status.
+        cardMessage: (title, description, status, progress) => (progress === undefined
+            ? `${title}\n${description}\n\n${status}`
+            : `${title}\n${description}\n\n${progress}\n${status}`),
         unlocked: "Desbloqueado",
         notUnlocked: "Aún no desbloqueado",
+        // A missing Achievement's Achievement Progress: short after its title
+        // in a family's list, long on its card.
+        titleWithProgress: (title, progress) => `${title} (${progress})`,
+        progressLine: progress => `Progreso: ${progress}`,
+        progressUnits: {
+            tables: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} de ${target} mesas`,
+            },
+        },
         families: {
             collection: "Colección",
             playTime: "Tiempo de juego",

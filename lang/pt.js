@@ -262,9 +262,23 @@ export default {
         totalLine: (unlockedCount, totalCount) => `Total: ${unlockedCount}/${totalCount}`,
         familyLine: (family, unlockedCount, totalCount) => `${family} (${unlockedCount}/${totalCount})`,
         back: "Voltar",
-        cardMessage: (title, description, status) => `${title}\n${description}\n\n${status}`,
+        // The Achievement Progress line, when there is one, sits between the
+        // description and the status.
+        cardMessage: (title, description, status, progress) => (progress === undefined
+            ? `${title}\n${description}\n\n${status}`
+            : `${title}\n${description}\n\n${progress}\n${status}`),
         unlocked: "Desbloqueada",
         notUnlocked: "Ainda não desbloqueada",
+        // A missing Achievement's Achievement Progress: short after its title
+        // in a family's list, long on its card.
+        titleWithProgress: (title, progress) => `${title} (${progress})`,
+        progressLine: progress => `Progresso: ${progress}`,
+        progressUnits: {
+            tables: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} de ${target} mesas`,
+            },
+        },
         families: {
             collection: "Coleção",
             playTime: "Tempo de jogo",
