@@ -337,10 +337,10 @@ export default {
         tableOfTheDayStreak: (count, longest) => `Tagesserie: ${count} (Rekord ${longest})`,
         tableOfTheWeekStreak: (count, longest) => `Wochenserie: ${count} (Rekord ${longest})`,
         // Most time spent, with that time; "—" before any play.
-        favouriteManufacturer: (name, hours, minutes) => `Lieblingshersteller: ${name} (${hours} Std. ${String(minutes).padStart(2, "0")})`,
-        noFavouriteManufacturer: "Lieblingshersteller: —",
-        favouriteDecade: (decadeStartYear, hours, minutes) => `Lieblingsjahrzehnt: ${decadeStartYear}er (${hours} Std. ${String(minutes).padStart(2, "0")})`,
-        noFavouriteDecade: "Lieblingsjahrzehnt: —",
+        favouriteManufacturer: (name, hours, minutes) => `Hersteller: ${name} (${hours} Std. ${String(minutes).padStart(2, "0")})`,
+        noFavouriteManufacturer: "Hersteller: —",
+        favouriteDecade: (decadeStartYear, hours, minutes) => `Jahrzehnt: ${decadeStartYear}er (${hours} Std. ${String(minutes).padStart(2, "0")})`,
+        noFavouriteDecade: "Jahrzehnt: —",
         // Sub-menu entries, with how many tables each list holds.
         mostPlayedTables: (count) => `Meistgespielte Tische (${count})`,
         neverPlayedTables: (count) => `Nie gespielte Tische (${count})`,
