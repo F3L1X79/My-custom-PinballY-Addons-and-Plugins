@@ -77,7 +77,7 @@ A small card in the bottom-right corner of the playfield screen that announces o
 _Avoid_: popup, notification, dialog (a dialog waits for the player)
 
 **Unlocked**:
-An Achievement whose condition holds right now. It can be lost again, for example when a table joins a completed group; losing it does not announce it a second time when it comes back.
+An Achievement whose condition holds right now. It can be lost again, for example when a table joins a completed group; losing it does not announce it a second time when it comes back. A Streak Achievement is the exception: the longest Streak unlocks it, so a broken Streak never takes it back.
 _Avoid_: earned, obtained
 
 **Achievement List**:
@@ -93,5 +93,5 @@ An Achievement whose Achievement Toast has started showing. Toasts still waiting
 _Avoid_: acknowledged, seen, unlocked (an Achievement can be unlocked but not yet Notified)
 
 **Achievement Progress**:
-How far the active Profile is from a missing Achievement: the very value its unlock condition tests, against the target that unlocks it (for a Streak, the current Streak, not the longest). Only Achievements with a counted target of at least 2 have one; an Unlocked Achievement shows none.
+How far the active Profile is from a missing Achievement: the very value its unlock condition tests, against the target that unlocks it (for a Streak, the current Streak: a missing Streak Achievement starts over from 0 when the Streak breaks). Only Achievements with a counted target of at least 2 have one; an Unlocked Achievement shows none.
 _Avoid_: progress (alone), completion (a completion Achievement covers a group of tables)

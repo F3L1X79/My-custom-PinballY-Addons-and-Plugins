@@ -1,8 +1,9 @@
 // ============================================================
 // Achievement Progress of the Period Tables Achievements, through main.js
-// on the fake PinballY globals: a Streak Achievement follows the current
-// Streak (0 after a break, then 1 on the next play), never the longest
-// one; Periods Played Achievements count every Period, for the day and the
+// on the fake PinballY globals: a Streak Achievement the record reached
+// stays Unlocked when the Streak breaks; a missing one follows the current
+// Streak (0 after a break, then 1 on the next play), never the record;
+// Periods Played Achievements count every Period, for the day and the
 // week; the first-play Achievements (a target of 1) show none.
 // ============================================================
 
@@ -13,7 +14,7 @@ import { startScenario, table, PROFILES_FOLDER } from "./achievement_progress_sc
 const TABLE_OF_THE_DAY = table(1, "Medieval Madness", "Williams", 1997);
 const TABLE_OF_THE_WEEK = table(2, "Attack from Mars", "Bally", 1995);
 
-test("Streaks show the current Streak and Periods Played every Period, for the day and the week", async () => {
+test("Streak Achievements stay Unlocked after a break, missing ones show the current Streak", async () => {
     const { fake, lang, play, familyTitles, cardText, withProgress, progressCard } = await startScenario({
         // Wednesday: its week started on Monday 21 September.
         now: new Date(2026, 8, 23, 10, 0, 0),
@@ -36,29 +37,31 @@ test("Streaks show the current Streak and Periods Played every Period, for the d
         },
     });
     const ACHIEVEMENT = lang.achievements;
-    const streakOfSeven = ACHIEVEMENT.dailyStreakTitles[7];
+    const streakOfThirty = ACHIEVEMENT.dailyStreakTitles[30];
 
-    assert.ok(familyTitles("periodTables").includes(withProgress(streakOfSeven, "daysInARow", 0, 7)),
-        "a broken Streak is back to 0, whatever the record");
+    const beforePlay = familyTitles("periodTables");
+    assert.ok(beforePlay.includes(ACHIEVEMENT.dailyStreakTitles[7]), "the 12-day record keeps 7 days in a row Unlocked");
+    assert.ok(beforePlay.includes(withProgress(streakOfThirty, "daysInARow", 0, 30)),
+        "a broken Streak is back to 0 for a missing Achievement, whatever the record");
 
     await play(TABLE_OF_THE_DAY);
     assert.deepEqual(familyTitles("periodTables"), [
         ACHIEVEMENT.dailyFirstPlayTitle(),
         ACHIEVEMENT.weeklyFirstPlayTitle(),
         ACHIEVEMENT.dailyPeriodsPlayedTitles[10],
+        ACHIEVEMENT.dailyStreakTitles[3],
+        ACHIEVEMENT.dailyStreakTitles[7],
         withProgress(ACHIEVEMENT.dailyPeriodsPlayedTitles[50], "daysPlayed", 41, 50),
         withProgress(ACHIEVEMENT.dailyPeriodsPlayedTitles[100], "daysPlayed", 41, 100),
         withProgress(ACHIEVEMENT.weeklyPeriodsPlayedTitles[10], "weeksPlayed", 9, 10),
         withProgress(ACHIEVEMENT.weeklyPeriodsPlayedTitles[26], "weeksPlayed", 9, 26),
         withProgress(ACHIEVEMENT.weeklyPeriodsPlayedTitles[52], "weeksPlayed", 9, 52),
-        withProgress(ACHIEVEMENT.dailyStreakTitles[3], "daysInARow", 1, 3),
-        withProgress(streakOfSeven, "daysInARow", 1, 7),
-        withProgress(ACHIEVEMENT.dailyStreakTitles[30], "daysInARow", 1, 30),
+        withProgress(streakOfThirty, "daysInARow", 1, 30),
         withProgress(ACHIEVEMENT.weeklyStreakTitles[4], "weeksInARow", 2, 4),
         withProgress(ACHIEVEMENT.weeklyStreakTitles[12], "weeksInARow", 2, 12),
     ]);
-    assert.equal(cardText("periodTables", withProgress(streakOfSeven, "daysInARow", 1, 7)),
-        progressCard(streakOfSeven, ACHIEVEMENT.dailyStreakDescription(7), "daysInARow", 1, 7));
+    assert.equal(cardText("periodTables", withProgress(streakOfThirty, "daysInARow", 1, 30)),
+        progressCard(streakOfThirty, ACHIEVEMENT.dailyStreakDescription(30), "daysInARow", 1, 30));
 
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);
 });

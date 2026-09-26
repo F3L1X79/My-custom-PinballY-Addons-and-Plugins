@@ -4,8 +4,9 @@
 // (10, 50 and 100 days; 10, 26 and 52 weeks, consecutive or not) and
 // Streaks (3, 7 and 30 consecutive days; 4 and 12 consecutive weeks).
 // Periods Played and Streaks show those counters as Achievement Progress,
-// the current Streak for a Streak. Reads the counters kept by
-// common/period_table.js; writes nothing.
+// the current Streak for a Streak; a Streak Achievement is unlocked by the
+// longest Streak, so a broken Streak never takes it back. Reads the
+// counters kept by common/period_table.js; writes nothing.
 // ============================================================
 
 import { ACHIEVEMENT_FAMILY, countedAchievement, PROGRESS_UNIT } from "../common/achievements.js";
@@ -73,6 +74,7 @@ export function buildPeriodTableAchievements() {
             target: days,
             unit: PROGRESS_UNIT.DAYS_IN_A_ROW,
             getCurrent: tableOfTheDay.getStreak,
+            getRecord: tableOfTheDay.getLongestStreak,
         }));
     }
 
@@ -85,6 +87,7 @@ export function buildPeriodTableAchievements() {
             target: weeks,
             unit: PROGRESS_UNIT.WEEKS_IN_A_ROW,
             getCurrent: tableOfTheWeek.getStreak,
+            getRecord: tableOfTheWeek.getLongestStreak,
         }));
     }
 

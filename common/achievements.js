@@ -3,7 +3,8 @@
 //   { id, family, getTitle(), getDescription(), checkUnlocked(), getProgress() }
 // where family is one of ACHIEVEMENT_FAMILY and the optional getProgress()
 // returns its Achievement Progress, { current, target, unit } with unit one
-// of PROGRESS_UNIT, or null. countedAchievement() builds both from one value.
+// of PROGRESS_UNIT, or null. countedAchievement() builds both from one value
+// (or from a value and its record, for a Streak).
 // "Unlocked" is computed live from the active Profile's progress; only the
 // fact that a Profile was Notified is persisted (its profile.json
 // "notified" list), so each Achievement is announced once per Profile.
@@ -40,14 +41,17 @@ export const PROGRESS_UNIT = Object.freeze({
 const MIN_PROGRESS_TARGET = 2;
 
 // An Achievement unlocked once getCurrent() reaches target, with that same
-// value as its Achievement Progress: the two can never disagree.
-export function countedAchievement({ id, family, getTitle, getDescription, target, unit, getCurrent }) {
+// value as its Achievement Progress: the two can never disagree. With
+// getRecord (the best value ever reached, never below getCurrent()), the
+// record unlocks it instead, so it stays Unlocked when the value drops
+// again, while a missing one still shows the value.
+export function countedAchievement({ id, family, getTitle, getDescription, target, unit, getCurrent, getRecord = getCurrent }) {
     return {
         id,
         family,
         getTitle,
         getDescription,
-        checkUnlocked: () => getCurrent() >= target,
+        checkUnlocked: () => getRecord() >= target,
         getProgress: () => (target >= MIN_PROGRESS_TARGET ? { current: getCurrent(), target, unit } : null),
     };
 }
