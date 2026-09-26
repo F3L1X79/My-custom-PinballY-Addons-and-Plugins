@@ -7,7 +7,8 @@
 // newest at the bottom, arrive staggered, at most five on screen, and
 // the oldest leaves first. Toasts wait while a game starts, runs or exits;
 // waiting ones start on "wheelmode". The hold duration and an optional
-// sound played with each card come from the player settings.
+// sound played with each card and the card's scale come from the player
+// settings.
 // ============================================================
 
 import lang from "./i18n.js";
@@ -28,17 +29,30 @@ const RISE_EASE = 0.2;
 const ARRIVAL_GAP_MS = 350;
 const MAX_CARDS = 5;
 
-// Card look, validated with a prototype in PinballY.
-const CARD_WIDTH = 440;
-const EDGE_MARGIN = 24;
-const STACK_GAP = 10;
-const PADDING_Y = 22;
-const PADDING_RIGHT = 14;
-const GOLD_BAR_WIDTH = 5;
-const TILE_SIZE = 64;
-const TILE_GAP = 20;
-const TROPHY_INSET = 10;
-const GLOW_RINGS = 10;
+// Card look at scale 1, validated with a prototype in PinballY; sizes in
+// pixels, fonts in points. The player's scale multiplies all of them.
+const BASE_LOOK = Object.freeze({
+    cardWidth: 440,
+    border: 1,
+    edgeMargin: 24,
+    stackGap: 10,
+    paddingY: 22,
+    paddingRight: 14,
+    goldBarWidth: 5,
+    tileSize: 64,
+    tileGap: 20,
+    tileFrame: 3,
+    trophyInset: 10,
+    // One-pixel frames, so the glow widens with the tile.
+    glowRings: 10,
+    smallFont: 11,
+    titleFont: 13,
+});
+// Readable on a cabinet playfield, while five stacked cards still fit a 1080-pixel-high one.
+const DEFAULT_TOAST_SCALE = 1.6;
+// Below it, the tile frame and the small font round down to nothing.
+const MIN_TOAST_SCALE = 0.5;
+const MAX_TOAST_SCALE = 3;
 const GLOW_MAX_ALPHA = 0x38;
 const FONT = "Segoe UI";
 const COLORS = Object.freeze({
@@ -72,39 +86,44 @@ function fillGradient(dc, x, y, width, height, topColor, bottomColor) {
     }
 }
 
+const scaleLook = scale => Object.freeze(Object.fromEntries(
+    Object.entries(BASE_LOOK).map(([name, size]) => [name, Math.round(size * scale)])));
+
 // Dark tile with a gold frame, a soft gold glow made of fading frames, and the trophy.
-function drawTile(dc, x, y, trophyPath) {
+function drawTile(dc, look, x, y, trophyPath) {
+    const { tileSize, glowRings, trophyInset } = look;
     const goldRgb = COLORS.gold & 0xFFFFFF;
-    for (let ring = GLOW_RINGS; ring >= 1; ring--) {
-        const alpha = Math.round(GLOW_MAX_ALPHA * (1 - ring / (GLOW_RINGS + 1)));
-        dc.frameRect(x - ring, y - ring, TILE_SIZE + 2 * ring, TILE_SIZE + 2 * ring, 1, alpha * 2 ** 24 + goldRgb);
+    for (let ring = glowRings; ring >= 1; ring--) {
+        const alpha = Math.round(GLOW_MAX_ALPHA * (1 - ring / (glowRings + 1)));
+        dc.frameRect(x - ring, y - ring, tileSize + 2 * ring, tileSize + 2 * ring, 1, alpha * 2 ** 24 + goldRgb);
     }
-    dc.fillRect(x, y, TILE_SIZE, TILE_SIZE, COLORS.tile);
-    dc.frameRect(x, y, TILE_SIZE, TILE_SIZE, 3, COLORS.gold);
-    dc.drawImage(trophyPath, x + TROPHY_INSET, y + TROPHY_INSET, TILE_SIZE - 2 * TROPHY_INSET, TILE_SIZE - 2 * TROPHY_INSET);
+    dc.fillRect(x, y, tileSize, tileSize, COLORS.tile);
+    dc.frameRect(x, y, tileSize, tileSize, look.tileFrame, COLORS.gold);
+    dc.drawImage(trophyPath, x + trophyInset, y + trophyInset, tileSize - 2 * trophyInset, tileSize - 2 * trophyInset);
 }
 
 // Draws the card flush with the bottom-right corner of the layer's layout
 // (rotation-aware) and returns its height and the layout height.
 // Backgrounds use fillRect and frameRect: a StyledText holding only a
 // space draws no background.
-function drawCard(host, dc, toast, trophyPath) {
+function drawCard(host, dc, look, toast, trophyPath) {
+    const { cardWidth, edgeMargin, goldBarWidth, tileSize, tileGap, smallFont } = look;
     const size = dc.getSize();
-    const textLeft = GOLD_BAR_WIDTH + TILE_GAP + TILE_SIZE + TILE_GAP;
-    const textWidth = CARD_WIDTH - textLeft - PADDING_RIGHT;
-    const text = host.createStyledText({ textStyle: { font: FONT, size: 11, color: COLORS.description } });
-    text.add({ size: 11, weight: 600, color: COLORS.gold, text: lang.achievements.toastHeader.toLocaleUpperCase() + "\n" });
-    text.add({ size: 13, weight: 600, color: COLORS.title, text: toast.title + "\n" });
+    const textLeft = goldBarWidth + tileGap + tileSize + tileGap;
+    const textWidth = cardWidth - textLeft - look.paddingRight;
+    const text = host.createStyledText({ textStyle: { font: FONT, size: smallFont, color: COLORS.description } });
+    text.add({ size: smallFont, weight: 600, color: COLORS.gold, text: lang.achievements.toastHeader.toLocaleUpperCase() + "\n" });
+    text.add({ size: look.titleFont, weight: 600, color: COLORS.title, text: toast.title + "\n" });
     text.add(toast.description);
     const textHeight = text.measure(textWidth).height;
-    const height = Math.max(textHeight, TILE_SIZE) + 2 * PADDING_Y;
-    const x = size.width - CARD_WIDTH - EDGE_MARGIN;
-    const y = size.height - height - EDGE_MARGIN;
+    const height = Math.max(textHeight, tileSize) + 2 * look.paddingY;
+    const x = size.width - cardWidth - edgeMargin;
+    const y = size.height - height - edgeMargin;
 
-    fillGradient(dc, x, y, CARD_WIDTH, height, COLORS.gradientTop, COLORS.gradientBottom);
-    dc.frameRect(x, y, CARD_WIDTH, height, 1, COLORS.border);
-    dc.fillRect(x, y, GOLD_BAR_WIDTH, height, COLORS.gold);
-    drawTile(dc, x + GOLD_BAR_WIDTH + TILE_GAP, y + (height - TILE_SIZE) / 2, trophyPath);
+    fillGradient(dc, x, y, cardWidth, height, COLORS.gradientTop, COLORS.gradientBottom);
+    dc.frameRect(x, y, cardWidth, height, look.border, COLORS.border);
+    dc.fillRect(x, y, goldBarWidth, height, COLORS.gold);
+    drawTile(dc, look, x + goldBarWidth + tileGap, y + (height - tileSize) / 2, trophyPath);
     text.draw(dc, { x: x + textLeft, y: y + (height - textHeight) / 2, width: textWidth, height: textHeight });
     return { height, layoutHeight: size.height };
 }
@@ -117,9 +136,20 @@ function toHoldMs(toastSeconds) {
     return DEFAULT_TOAST_SECONDS * 1000;
 }
 
+// An absurd scale falls back to the default.
+function toScale(scale) {
+    if (scale >= MIN_TOAST_SCALE && scale <= MAX_TOAST_SCALE) return scale;
+    logfile.log(`[${SCRIPT_NAME}] achievementToastScale must be from ${MIN_TOAST_SCALE} to ${MAX_TOAST_SCALE}, `
+        + `not ${scale}; using ${DEFAULT_TOAST_SCALE}.`);
+    return DEFAULT_TOAST_SCALE;
+}
+
 // soundFile: absolute path played at the start of each card, empty for none.
-export function createAchievementToasts(host, { toastSeconds = DEFAULT_TOAST_SECONDS, soundFile = "" } = {}) {
+export function createAchievementToasts(host, {
+    toastSeconds = DEFAULT_TOAST_SECONDS, soundFile = "", scale = DEFAULT_TOAST_SCALE,
+} = {}) {
     const holdMs = toHoldMs(toastSeconds);
+    const look = scaleLook(toScale(scale));
     // A sound that cannot play is logged and never stops the card.
     const playSound = safeHandler(SCRIPT_NAME, () => { if (soundFile) host.playSound(soundFile); });
     const waiting = [];
@@ -151,7 +181,7 @@ export function createAchievementToasts(host, { toastSeconds = DEFAULT_TOAST_SEC
     // Every card's slot sits above the newer cards below it.
     function targetLift(index) {
         let lift = 0;
-        for (let newer = index + 1; newer < cards.length; newer++) lift += cards[newer].height + STACK_GAP;
+        for (let newer = index + 1; newer < cards.length; newer++) lift += cards[newer].height + look.stackGap;
         return lift;
     }
 
@@ -199,11 +229,11 @@ export function createAchievementToasts(host, { toastSeconds = DEFAULT_TOAST_SEC
         const toast = waiting.shift();
         const layer = freeLayers.pop() || host.createDrawingLayer(TOAST_Z_INDEX);
         let drawn = null;
-        layer.draw(dc => { drawn = drawCard(host, dc, toast, trophyPath); });
+        layer.draw(dc => { drawn = drawCard(host, dc, look, toast, trophyPath); });
         // Starts just below the bottom edge, then rises into place.
         const card = {
             layer, height: drawn.height, layoutHeight: drawn.layoutHeight,
-            lift: -(drawn.height + EDGE_MARGIN), alpha: 1, leaving: false,
+            lift: -(drawn.height + look.edgeMargin), alpha: 1, leaving: false,
         };
         cards.push(card);
         placeLayer(card);
@@ -238,6 +268,7 @@ export function getAchievementToasts() {
         sharedAchievementToasts = createAchievementToasts(createPinballYHost(), {
             toastSeconds: config.achievementToastSeconds,
             soundFile: config.achievementSoundFile,
+            scale: config.achievementToastScale,
         });
     }
     return sharedAchievementToasts;

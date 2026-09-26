@@ -2,8 +2,9 @@
 // Achievement Toast module on the fake host: a batch stacks with the
 // newest card lowest, at most five cards on screen, the others arriving as
 // the oldest ones leave, on drawing layers reused from a pool. A card holds
-// for the configured duration (4 s when out of range, with a log line) and
-// the configured sound plays once per card, a failing one only logged.
+// for the configured duration (4 s when out of range, with a log line), the
+// configured scale enlarges the whole card (1.6 when out of range, logged)
+// and the configured sound plays once per card, a failing one only logged.
 // ============================================================
 
 import { test } from "node:test";
@@ -71,6 +72,28 @@ test("a card holds for the configured duration, 4 s when the setting is out of r
     assert.deepEqual(cardsOnScreen(fake), ["default"]);
     fake.advanceTime(SETTLE_MS);
     assert.deepEqual(cardsOnScreen(fake), []);
+});
+
+// The card's outer frame (the widest) and the trophy tile's frame (the narrowest).
+function cardAndTileWidths(scale) {
+    const fake = createFakePinballYHost();
+    fake.installGlobals();
+    submitOne(createAchievementToasts(fake, { scale }), "scaled");
+    const widths = fake.drawingLayers()[0].frames().map(frame => frame.width);
+    return { card: Math.max(...widths), tile: Math.min(...widths), logLines: fake.logLines() };
+}
+
+test("the configured scale enlarges the whole card, 1.6 when the setting is out of range", () => {
+    const normal = cardAndTileWidths(1);
+    const doubled = cardAndTileWidths(2);
+    assert.equal(doubled.card, 2 * normal.card);
+    assert.equal(doubled.tile, 2 * normal.tile);
+    assert.deepEqual(doubled.logLines, []);
+
+    const outOfRange = cardAndTileWidths(0);
+    assert.equal(outOfRange.card, cardAndTileWidths(1.6).card);
+    assert.equal(outOfRange.logLines.filter(line => line.includes("achievementToastScale")).length, 1);
+    assert.equal(cardAndTileWidths(undefined).card, cardAndTileWidths(1.6).card, "1.6 by default");
 });
 
 test("the configured sound plays once per card, and a failing one never stops the card", () => {

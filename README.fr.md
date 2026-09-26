@@ -42,6 +42,7 @@ Nécessite **Windows** et **PinballY 1.1.0 Beta 10** ou plus récent (plus la fo
 | `SKIP_RANDOM_GAME_ANIMATION` | `false` | `true` saute l'animation de la roue. |
 | `ASK_TO_RATE_AFTER_MINUTES_PLAYED` | `60` | Temps de jeu avant le rappel de notation. |
 | `ACHIEVEMENT_TOAST_SECONDS` | `4` | Secondes pendant lesquelles une carte de succès reste pleinement visible (plus de 0, au plus 60). |
+| `ACHIEVEMENT_TOAST_SCALE` | `1.6` | Taille d'une carte de succès : `1` = taille d'origine, `2` = deux fois plus grande (de 0,5 à 3, avec un point : `1.6`). |
 | `ADD_ON_<NOM>` | `true` | `false` désactive un add-on, par exemple `ADD_ON_FORCE_BACKGLASS=false`. |
 
 Vous aviez modifié `common\config.js` dans une ancienne version ? Reportez vos valeurs dans `.env.local` et lancez `git checkout common/config.js` avant de faire un pull.

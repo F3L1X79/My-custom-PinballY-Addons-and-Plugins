@@ -198,13 +198,15 @@ export function createFakePinballYHost({
         nowMs = targetMs;
     }
 
-    // A drawing layer that keeps only what the tests look at: the texts and
-    // image paths drawn since the last clear, the canvas size of the last
-    // draw, its position, scale and alpha. Like PinballY, a draw without a
-    // size gets a canvas the size of the window.
+    // A drawing layer that keeps only what the tests look at: the texts,
+    // image paths and frames (frameRect) drawn since the last draw or
+    // clear, the canvas size of the last draw, its position, scale and
+    // alpha. Like PinballY, a draw without a size gets a canvas the size of
+    // the window.
     function createDrawingLayer(zIndex) {
         let texts = [];
         let images = [];
+        let frames = [];
         let canvasSize = null;
         let position = { x: 0, y: 0 };
         // PinballY's default: stretched to the whole window.
@@ -212,7 +214,7 @@ export function createFakePinballYHost({
         const dc = {
             getSize: () => ({ ...canvasSize }),
             fillRect() {},
-            frameRect() {},
+            frameRect: (x, y, width, height) => { frames.push({ x, y, width, height }); },
             drawImage: (path) => { images.push(path); },
             // Like PinballY: throws on a missing or unreadable image.
             getImageSize: (path) => {
@@ -227,6 +229,7 @@ export function createFakePinballYHost({
             draw(drawFunction, width, height) {
                 texts = [];
                 images = [];
+                frames = [];
                 canvasSize = width === undefined ? { ...currentLayoutSize } : { width, height };
                 drawFunction(dc);
                 drawingList.push({ zIndex, texts: [...texts] });
@@ -234,11 +237,13 @@ export function createFakePinballYHost({
             clear() {
                 texts = [];
                 images = [];
+                frames = [];
             },
             setPos(x, y, align) { position = align === undefined ? { x, y } : { x, y, align }; },
             setScale(options) { scale = { ...options }; },
             texts: () => [...texts],
             images: () => [...images],
+            frames: () => frames.map(frame => ({ ...frame })),
             canvasSize: () => ({ ...canvasSize }),
             position: () => ({ ...position }),
             scale: () => ({ ...scale }),

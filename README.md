@@ -42,6 +42,7 @@ Requires **Windows** and **PinballY 1.1.0 Beta 10** or later (plus the *Windows 
 | `SKIP_RANDOM_GAME_ANIMATION` | `false` | `true` skips the wheel animation. |
 | `ASK_TO_RATE_AFTER_MINUTES_PLAYED` | `60` | Play time before the rating reminder. |
 | `ACHIEVEMENT_TOAST_SECONDS` | `4` | Seconds an Achievement card stays fully visible (above 0, at most 60). |
+| `ACHIEVEMENT_TOAST_SCALE` | `1.6` | Size of an Achievement card: `1` = the original size, `2` = twice as large (from 0.5 to 3, with a dot: `1.6`). |
 | `ADD_ON_<NAME>` | `true` | `false` turns an add-on off, e.g. `ADD_ON_FORCE_BACKGLASS=false`. |
 
 Upgrading from a version where you edited `common\config.js`? Move your values into `.env.local` and run `git checkout common/config.js` before pulling.
