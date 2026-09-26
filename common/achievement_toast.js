@@ -48,8 +48,8 @@ const BASE_LOOK = Object.freeze({
     smallFont: 11,
     titleFont: 13,
 });
-// Readable on a cabinet playfield, while five stacked cards still fit a 1080-pixel-high one.
-const DEFAULT_TOAST_SCALE = 1.6;
+// The validated card, unscaled; a player enlarges it with ACHIEVEMENT_TOAST_SCALE.
+const DEFAULT_TOAST_SCALE = 1;
 // Below it, the tile frame and the small font round down to nothing.
 const MIN_TOAST_SCALE = 0.5;
 const MAX_TOAST_SCALE = 3;
