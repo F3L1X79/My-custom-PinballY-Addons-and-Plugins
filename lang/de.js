@@ -8,6 +8,9 @@ const formatPlayTime = (hours, minutes) => (hours > 0
     ? `${hours}:${String(minutes).padStart(2, "0")} Stunden`
     : `${minutes} Minute${minutes === 1 ? "" : "n"}`);
 
+// Hours of play with one decimal, as an Achievement Progress shows them.
+const formatHours = hours => hours.toFixed(1).replace(".", ",");
+
 export default {
     // Direct translations of PinballY's native menu titles.
     nativeMenuLabels: {
@@ -277,6 +280,10 @@ export default {
             tables: {
                 short: (current, target) => `${current}/${target}`,
                 long: (current, target) => `${current} von ${target} Tischen`,
+            },
+            hours: {
+                short: (current, target) => `${formatHours(current)}/${target} h`,
+                long: (current, target) => `${formatHours(current)} von ${target} Stunden`,
             },
         },
         families: {

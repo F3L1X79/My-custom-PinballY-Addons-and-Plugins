@@ -7,6 +7,9 @@ const formatPlayTime = (hours, minutes) => (hours > 0
     ? `${hours}:${String(minutes).padStart(2, "0")} hours`
     : `${minutes} minute${minutes === 1 ? "" : "s"}`);
 
+// Hours of play with one decimal, as an Achievement Progress shows them.
+const formatHours = hours => hours.toFixed(1);
+
 export default {
     // Already in English natively.
     nativeMenuLabels: {},
@@ -192,6 +195,10 @@ export default {
             tables: {
                 short: (current, target) => `${current}/${target}`,
                 long: (current, target) => `${current} of ${target} tables`,
+            },
+            hours: {
+                short: (current, target) => `${formatHours(current)}/${target} h`,
+                long: (current, target) => `${formatHours(current)} of ${target} hours`,
             },
         },
         families: {

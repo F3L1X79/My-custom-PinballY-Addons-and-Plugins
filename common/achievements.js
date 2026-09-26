@@ -26,6 +26,7 @@ export const ACHIEVEMENT_FAMILY = Object.freeze({
 // Achievement List's progressUnits of every lang/ file.
 export const PROGRESS_UNIT = Object.freeze({
     TABLES: "tables",
+    HOURS: "hours",
 });
 
 // Below this target, an Achievement Progress would only ever read "0/1".

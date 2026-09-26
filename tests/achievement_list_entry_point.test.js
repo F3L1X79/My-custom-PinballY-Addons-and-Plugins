@@ -91,11 +91,12 @@ test("the Achievement List entry follows Play and lists the real Achievements by
     assert.deepEqual(openFamily("collection"), [
         `✓ ${ACHIEVEMENT.firstTableTitle()}`,
         ...[10, 25, 50].map(percent => `✓ ${ACHIEVEMENT.collectionPercentTitles[percent]}`),
-        ...[75, 100].map(percent => `  ${ACHIEVEMENT.collectionPercentTitles[percent]}`),
+        `  ${withProgress(ACHIEVEMENT.collectionPercentTitles[75], "tables", 3, 4)}`,
+        `  ${withProgress(ACHIEVEMENT.collectionPercentTitles[100], "tables", 3, 5)}`,
     ]);
     assert.deepEqual(openFamily("playTime"), [
         ...[1, 5].map(hours => `✓ ${ACHIEVEMENT.playTimeMilestoneTitles[hours]}`),
-        ...[10, 50, 100].map(hours => `  ${ACHIEVEMENT.playTimeMilestoneTitles[hours]}`),
+        ...[10, 50, 100].map(hours => `  ${withProgress(ACHIEVEMENT.playTimeMilestoneTitles[hours], "hours", 9, hours)}`),
     ]);
     assert.deepEqual(openFamily("periodTables"), [
         `  ${ACHIEVEMENT.dailyFirstPlayTitle()}`,

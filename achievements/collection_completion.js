@@ -2,11 +2,12 @@
 // Achievements for the number of DISTINCT tables the active Profile played
 // at least once:
 // a special "first table ever" achievement, plus one per percentage of the
-// full collection in COLLECTION_PERCENT_THRESHOLDS.
+// full collection in COLLECTION_PERCENT_THRESHOLDS, with the tables played
+// against the count the percentage needs as Achievement Progress.
 // Called by achievements_engine.js at each check; no side effects.
 // ============================================================
 
-import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
+import { ACHIEVEMENT_FAMILY, countedAchievement, PROGRESS_UNIT } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 import { getVisibleTables } from "../common/visible_tables.js";
 import { getProfileStore } from "../common/profile_store.js";
@@ -38,13 +39,15 @@ export function buildCollectionCompletionAchievements() {
     for (const percent of COLLECTION_PERCENT_THRESHOLDS) {
         const requiredCount = Math.ceil((percent / 100) * totalCount);
 
-        achievements.push({
+        achievements.push(countedAchievement({
             id: `collectionMilestone:${percent}percent`,
             family: ACHIEVEMENT_FAMILY.COLLECTION,
             getTitle: () => TEXT.collectionPercentTitles[percent],
             getDescription: () => TEXT.collectionPercentDescription(percent, requiredCount, totalCount),
-            checkUnlocked: () => countPlayed() >= requiredCount,
-        });
+            target: requiredCount,
+            unit: PROGRESS_UNIT.TABLES,
+            getCurrent: countPlayed,
+        }));
     }
 
     return achievements;
