@@ -107,16 +107,16 @@ test("the Achievement List entry follows Play and lists the real Achievements by
         ...[4, 12].map(weeks => `  ${withProgress(ACHIEVEMENT.weeklyStreakTitles[weeks], "weeksInARow", 0, weeks)}`),
     ]);
     assert.deepEqual(openFamily("sessions"), [
-        ...[30, 60].map(minutes => `  ${ACHIEVEMENT.marathonTitles[minutes]}`),
+        ...[30, 60].map(minutes => `  ${withProgress(ACHIEVEMENT.marathonTitles[minutes], "minutes", 0, minutes)}`),
         `  ${ACHIEVEMENT.rageQuitTitle()}`,
         `  ${ACHIEVEMENT.grandReturnTitle()}`,
     ]);
     assert.deepEqual(openFamily("randomGame"), [
-        ...[10, 50, 100].map(count => `  ${ACHIEVEMENT.randomGamesTitles[count]}`),
+        ...[10, 50, 100].map(count => `  ${withProgress(ACHIEVEMENT.randomGamesTitles[count], "randomGames", 0, count)}`),
     ]);
     assert.deepEqual(openFamily("manufacturers"), [
         ...["Gottlieb", "Stern", "Williams"].map(name => `✓ ${ACHIEVEMENT.manufacturerCompletionTitle(name)}`),
-        ...[3, 5, 8].map(count => `  ${ACHIEVEMENT.dayManufacturersTitles[count]}`),
+        ...[3, 5, 8].map(count => `  ${withProgress(ACHIEVEMENT.dayManufacturersTitles[count], "manufacturers", 0, count)}`),
         ...["Bally", "Zaccaria"].map(name => `  ${ACHIEVEMENT.manufacturerCompletionTitle(name)}`),
     ]);
     assert.deepEqual(openFamily("decades"), [

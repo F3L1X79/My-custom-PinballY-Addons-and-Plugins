@@ -301,6 +301,18 @@ export default {
                 short: (current, target) => `${current}/${target}`,
                 long: (current, target) => `${current} de ${target} semanas jugadas`,
             },
+            minutes: {
+                short: (current, target) => `${current}/${target} min`,
+                long: (current, target) => `${current} de ${target} minutos`,
+            },
+            randomGames: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} de ${target} mesas al azar`,
+            },
+            manufacturers: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} de ${target} fabricantes`,
+            },
         },
         families: {
             collection: "Colección",

@@ -4,7 +4,7 @@
 // same day unlock the first one, even after a very short session; a table
 // with no manufacturer and a repeated manufacturer don't count; a new
 // calendar day starts over, and the Achievement stays Unlocked in the
-// Achievement List.
+// Achievement List, the next ones showing the day's record.
 // ============================================================
 
 import { test } from "node:test";
@@ -103,13 +103,16 @@ test("three manufacturers in one calendar day unlock the first multi-manufacture
     const manufacturersLine = fake.currentMenu().items
         .find(item => item.title && item.title.includes(lang.achievementList.families.manufacturers));
     fake.selectMenuItem(manufacturersLine.title);
+    const LIST = lang.achievementList;
+    const withRecord = count => LIST.titleWithProgress(TEXT.dayManufacturersTitles[count], LIST.progressUnits.manufacturers.short(4, count));
+    const shownTitles = [TEXT.dayManufacturersTitles[3], withRecord(5), withRecord(8)];
     const dayManufacturersItems = fake.currentMenu().items
-        .filter(item => dayManufacturersTitles.includes(item.title))
+        .filter(item => shownTitles.includes(item.title))
         .map(({ title, checked }) => ({ title, checked }));
     assert.deepEqual(dayManufacturersItems, [
         { title: TEXT.dayManufacturersTitles[3], checked: true },
-        { title: TEXT.dayManufacturersTitles[5], checked: false },
-        { title: TEXT.dayManufacturersTitles[8], checked: false },
+        { title: withRecord(5), checked: false },
+        { title: withRecord(8), checked: false },
     ]);
 
     assert.deepEqual(fake.logLines().filter(line => line.includes("ERROR")), []);

@@ -1,10 +1,11 @@
 // ============================================================
 // Manufacturers family: Achievements for tables of 3, 5 and 8 different
 // manufacturers played on the same calendar day. Reads the active Profile's
-// one-day record, kept by session_stats_tracker.js; writes nothing.
+// one-day record, kept by session_stats_tracker.js, also shown as
+// Achievement Progress; writes nothing.
 // ============================================================
 
-import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
+import { ACHIEVEMENT_FAMILY, countedAchievement, PROGRESS_UNIT } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 import { getProfileStore } from "../common/profile_store.js";
 
@@ -16,11 +17,13 @@ const DAY_MANUFACTURERS_THRESHOLDS = [3, 5, 8];
 export function buildDayManufacturersAchievements() {
     const { achievements: TEXT } = lang;
 
-    return DAY_MANUFACTURERS_THRESHOLDS.map(count => ({
+    return DAY_MANUFACTURERS_THRESHOLDS.map(count => countedAchievement({
         id: `dayManufacturers:${count}`,
         family: ACHIEVEMENT_FAMILY.MANUFACTURERS,
         getTitle: () => TEXT.dayManufacturersTitles[count],
         getDescription: () => TEXT.dayManufacturersDescription(count),
-        checkUnlocked: () => getProfileStore().getProfileData().sessions.mostManufacturersInADay >= count,
+        target: count,
+        unit: PROGRESS_UNIT.MANUFACTURERS,
+        getCurrent: () => getProfileStore().getProfileData().sessions.mostManufacturersInADay,
     }));
 }

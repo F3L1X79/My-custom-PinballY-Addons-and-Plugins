@@ -216,6 +216,18 @@ export default {
                 short: (current, target) => `${current}/${target}`,
                 long: (current, target) => `${current} of ${target} weeks played`,
             },
+            minutes: {
+                short: (current, target) => `${current}/${target} min`,
+                long: (current, target) => `${current} of ${target} minutes`,
+            },
+            randomGames: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} of ${target} Random Games`,
+            },
+            manufacturers: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} of ${target} manufacturers`,
+            },
         },
         families: {
             collection: "Collection",

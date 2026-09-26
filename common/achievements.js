@@ -31,6 +31,9 @@ export const PROGRESS_UNIT = Object.freeze({
     WEEKS_IN_A_ROW: "weeksInARow",
     DAYS_PLAYED: "daysPlayed",
     WEEKS_PLAYED: "weeksPlayed",
+    MINUTES: "minutes",
+    RANDOM_GAMES: "randomGames",
+    MANUFACTURERS: "manufacturers",
 });
 
 // Below this target, an Achievement Progress would only ever read "0/1".

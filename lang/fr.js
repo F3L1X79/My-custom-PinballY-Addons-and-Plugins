@@ -304,6 +304,18 @@ export default {
                 short: (current, target) => `${current}/${target}`,
                 long: (current, target) => `${current} ${current > 1 ? "semaines jouées" : "semaine jouée"} sur ${target}`,
             },
+            minutes: {
+                short: (current, target) => `${current}/${target} min`,
+                long: (current, target) => `${current} min sur ${target} min`,
+            },
+            randomGames: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} table${current > 1 ? "s" : ""} au hasard sur ${target}`,
+            },
+            manufacturers: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} fabricant${current > 1 ? "s" : ""} sur ${target}`,
+            },
         },
         families: {
             collection: "Collection",

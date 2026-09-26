@@ -1,10 +1,11 @@
 // ============================================================
 // Random Game family: Achievements for playing 10, 50 and 100 Random Games.
-// Reads the count kept by common/random_game.js; writes nothing. None when
-// both Add-ons that offer a Random Game are disabled.
+// Reads the count kept by common/random_game.js, also shown as Achievement
+// Progress; writes nothing. None when both Add-ons that offer a Random Game
+// are disabled.
 // ============================================================
 
-import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
+import { ACHIEVEMENT_FAMILY, countedAchievement, PROGRESS_UNIT } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 import { getRandomGame } from "../common/random_game.js";
 import config from "../common/config.js";
@@ -22,11 +23,13 @@ export function buildRandomGameFanAchievements() {
     const { achievements: TEXT } = lang;
     const randomGame = getRandomGame();
 
-    return RANDOM_GAME_THRESHOLDS.map(count => ({
+    return RANDOM_GAME_THRESHOLDS.map(count => countedAchievement({
         id: `randomGames:${count}`,
         family: ACHIEVEMENT_FAMILY.RANDOM_GAME,
         getTitle: () => TEXT.randomGamesTitles[count],
         getDescription: () => TEXT.randomGamesDescription(count),
-        checkUnlocked: () => randomGame.getRandomGamesPlayed() >= count,
+        target: count,
+        unit: PROGRESS_UNIT.RANDOM_GAMES,
+        getCurrent: randomGame.getRandomGamesPlayed,
     }));
 }
