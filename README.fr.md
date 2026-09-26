@@ -12,6 +12,7 @@ Une sélection soignée d'add-ons JavaScript pour [PinballY](http://mjrnet.org/p
 - **Entrées du menu principal** après « Jouer » : Changer de joueur (un carrousel d'Avatars piloté par les flippers, aussi dans le menu Quitter et en deuxième choix du dialogue de démarrage ; l'Avatar et le nom du Profile actif restent en haut à droite de l'écran de la roue ; choisir un Profile accueille le joueur, et démarrer PinballY aussi quand le dialogue de démarrage est désactivé), Succès personnels, Configuration de la table, table au hasard, table du jour, table de la semaine.
 - **Filtre « Tables Originales »** dans « Filtrer par fabricant » : toutes les tables sauf celles de la communauté.
 - **Filtre « Hall of Fame »** dans le menu principal : vos dix tables les plus jouées, classées par temps de jeu.
+- **Horloge** en haut à gauche de l'écran de la roue, au format de votre langue (cachée pendant une partie).
 - **Succès**, chacun annoncé une fois par une petite carte en bas à droite de l'écran du plateau, qui disparaît toute seule (jamais pendant une partie ; plusieurs cartes s'empilent, avec un son facultatif), et consultables par famille dans « Succès personnels » :
   - collection : première table, puis de 10 à 100 % de la collection jouée ;
   - temps de jeu : de 1 à 100 heures ;

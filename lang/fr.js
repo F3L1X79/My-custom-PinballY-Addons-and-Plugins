@@ -288,4 +288,9 @@ export default {
         guestName: "Invité",
         greeting: name => `Salut ${name} !`,
     },
+
+    // The clock at the top left of the wheel screen.
+    clock: {
+        time: (hours, minutes) => `${hours}:${String(minutes).padStart(2, "0")}`,
+    },
 };

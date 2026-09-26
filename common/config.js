@@ -50,6 +50,7 @@ const DEFAULTS = {
         playLaunchSound: true,
         ratingPrompt: true,
         profilePicker: true,
+        clock: true,
     },
 };
 

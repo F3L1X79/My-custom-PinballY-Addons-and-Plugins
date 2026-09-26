@@ -12,6 +12,7 @@ A curated list of JavaScript add-ons for [PinballY](http://mjrnet.org/pinscape/P
 - **Main menu entries** after "Play": Change Player (a carousel of Avatars driven by the flipper buttons, also in the Exit menu and second in the startup dialog; the active Profile's Avatar and name stay at the top right of the wheel screen; picking a Profile greets the player, and so does starting PinballY when the startup dialog is off), Achievement List, Table Setup, Random Game, Table of the Day, Table of the Week.
 - **"Original Tables" filter** in "Filter by Manufacturer": every table except the community-made ones.
 - **"Hall of Fame" filter** in the main menu: your ten most played tables, ranked by play time.
+- **Clock** at the top left of the wheel screen, in your language's format (hidden during a game).
 - **Achievements**, each announced once by a small card in the bottom-right corner of the playfield screen that disappears on its own (never during a game; several stack, with an optional sound), and browsable by family in the "Achievement List":
   - collection: first table, then 10 to 100 % of your collection played;
   - play time: 1 to 100 hours;

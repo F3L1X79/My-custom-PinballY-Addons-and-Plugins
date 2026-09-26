@@ -200,4 +200,9 @@ export default {
         guestName: "Guest",
         greeting: name => `Hi ${name}!`,
     },
+
+    // The clock at the top left of the wheel screen.
+    clock: {
+        time: (hours, minutes) => `${hours % 12 || 12}:${String(minutes).padStart(2, "0")} ${hours < 12 ? "AM" : "PM"}`,
+    },
 };

@@ -29,6 +29,7 @@ import { displayNameOf } from "../common/profile_name.js";
 import { getMainMenu, MAIN_MENU_POSITION } from "../common/main_menu.js";
 import { getWheelDialogs } from "../common/wheel_dialog.js";
 import { registerChangePlayer } from "../common/change_player.js";
+import { drawShadowedText } from "../common/shadowed_text.js";
 import config from "../common/config.js";
 
 const SCRIPT_NAME = "ProfilePicker";
@@ -39,14 +40,12 @@ const PICKER_Z_INDEX = 6500;
 const AVATAR_Z_INDEX = 6501;
 // Above the wheel and the game info box, under popups and menus.
 const BADGE_Z_INDEX = 4500;
-const FONT = "Segoe UI";
 const COLORS = Object.freeze({
     overlay: 0xD0080A0E,
     gold: 0xFFE8B84A,
     neighbourFrame: 0xFF3E4C60,
     text: 0xFFFFFFFF,
     hint: 0xFFA9B4C2,
-    shadow: 0xC0000000,
     transparent: 0x00000000,
 });
 // By distance from the highlighted Avatar: its size, how far its centre
@@ -123,17 +122,6 @@ export default function init() {
     const playGreetingSound = safeHandler(SCRIPT_NAME, () => {
         if (config.profileGreetingSoundFile) host.playSound(config.profileGreetingSoundFile);
     });
-
-    // Text with a soft drop shadow, so it reads over any background video;
-    // centred across the whole width unless given a column.
-    function drawShadowedText(dc, { size, weight }, color, text, y, { x = 0, width = dc.getSize().width } = {}) {
-        for (const [offset, textColor] of [[2, COLORS.shadow], [0, color]]) {
-            const styled = host.createStyledText({ textAlign: "center", textStyle: { font: FONT, size, weight, color: textColor } });
-            styled.add(text);
-            const height = styled.measure(width).height;
-            styled.draw(dc, { x: x + offset, y: y + offset, width, height });
-        }
-    }
 
     // Slot offsets drawn around the highlighted Avatar, farthest first, so
     // each Profile shows once and the nearer ones cover the farther ones.
@@ -241,13 +229,13 @@ export default function init() {
             layout = dc.getSize();
             dc.fillRect(0, 0, layout.width, layout.height, COLORS.overlay);
             const centerY = layout.height * ROW_HEIGHT_RATIO;
-            drawShadowedText(dc, TITLE, COLORS.text, TEXT.pickerTitle, centerY + TITLE.top);
+            drawShadowedText(host, dc, TITLE, COLORS.text, TEXT.pickerTitle, centerY + TITLE.top);
             if (glide === 0) {
                 const current = profiles[highlighted];
                 const isActive = current.name === profileStore.getActiveProfile().name;
-                drawShadowedText(dc, NAME, isActive ? COLORS.gold : COLORS.text, displayNameOf(current), centerY + NAME.top);
+                drawShadowedText(host, dc, NAME, isActive ? COLORS.gold : COLORS.text, displayNameOf(current), centerY + NAME.top);
             }
-            drawShadowedText(dc, HINT, COLORS.hint, TEXT.pickerHint, centerY + HINT.top);
+            drawShadowedText(host, dc, HINT, COLORS.hint, TEXT.pickerHint, centerY + HINT.top);
         });
     }
 
@@ -264,7 +252,7 @@ export default function init() {
             const x = (width - avatarSize) / 2;
             dc.fillRect(x - frame, top - frame, avatarSize + 2 * frame, avatarSize + 2 * frame, COLORS.gold);
             dc.drawImage(profile.avatarPath, x, top, avatarSize, avatarSize);
-            drawShadowedText(dc, BADGE_NAME, COLORS.text, displayNameOf(profile), top + avatarSize + nameGap);
+            drawShadowedText(host, dc, BADGE_NAME, COLORS.text, displayNameOf(profile), top + avatarSize + nameGap);
         }, BADGE.width, BADGE.height);
     }
 
@@ -276,7 +264,7 @@ export default function init() {
             layout = dc.getSize();
             dc.fillRect(0, 0, layout.width, layout.height, COLORS.overlay);
             const textTop = layout.height * ROW_HEIGHT_RATIO + GREETING.grownSize / 2 + GREETING_TEXT.gap;
-            drawShadowedText(dc, GREETING_TEXT, COLORS.text, TEXT.greeting(displayNameOf(profile)), textTop);
+            drawShadowedText(host, dc, GREETING_TEXT, COLORS.text, TEXT.greeting(displayNameOf(profile)), textTop);
         });
     }
 

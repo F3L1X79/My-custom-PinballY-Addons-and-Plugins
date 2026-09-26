@@ -18,6 +18,7 @@ import * as customMenuCommands from "./addons/custom_menu_commands.js";
 import * as customFilter from "./addons/custom_filter.js";
 import * as hallOfFame from "./addons/hall_of_fame.js";
 import * as profilePicker from "./addons/profile_picker.js";
+import * as clock from "./addons/clock.js";
 import * as seamlessLaunchOverlay from "./addons/seamless_launch_overlay.js";
 import * as forceBackglass from "./addons/force_backglass.js";
 import * as playLaunchSound from "./addons/play_launch_sound.js";
@@ -43,13 +44,14 @@ import * as startupChoicePrompt from "./addons/startup_choice_prompt.js";
 // by non-blocking toasts.
 const SCRIPTS = [
     // Interface: translations, status line, menus, filters, Profile picker,
-    // launch overlay.
+    // clock, launch overlay.
     { key: "uiTranslation", module: uiTranslation },
     { key: "statusLineInfo", module: statusLineInfo },
     { key: "customMenuCommands", module: customMenuCommands },
     { key: "customFilter", module: customFilter },
     { key: "hallOfFame", module: hallOfFame },
     { key: "profilePicker", module: profilePicker },
+    { key: "clock", module: clock },
     { key: "seamlessLaunchOverlay", module: seamlessLaunchOverlay },
 
     // Game session: windows, sound, stats, achievements, rating.
