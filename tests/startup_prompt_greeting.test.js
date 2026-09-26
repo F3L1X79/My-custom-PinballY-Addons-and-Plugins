@@ -16,7 +16,7 @@ test("the startup prompt greets the active Profile by name", async () => {
     fake.addFile(`${PROFILES_FOLDER}\\cabinet.json`, JSON.stringify({ version: 1, activeProfile: "Chloé" }));
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
-    for (const key of Object.keys(config.addOns)) config.addOns[key] = key === "startupChoicePrompt";
+    for (const key of Object.keys(config.addOns)) config.addOns[key] = ["startupChoicePrompt", "profilePicker"].includes(key);
     config.language = "fr";
 
     await import("../main.js");

@@ -13,11 +13,11 @@ _Avoid_: plugin, script (a script is just a `.js` file)
 ### Profiles
 
 **Profile**:
-The identity a player picks so that their plays and Achievements count for them; no password, anyone can pick any Profile from the main menu. The active Profile stays active across restarts until another one is picked. Plays count only for the active Profile, even when several people share one game.
+The identity a player picks so that their plays and Achievements count for them; no password, anyone can pick any Profile from the main menu. The active Profile stays active across restarts until another one is picked, unless the Profile picker is turned off: Guest is then active at startup. Plays count only for the active Profile, even when several people share one game.
 _Avoid_: account, user, login
 
 **Guest**:
-The Profile that always exists and cannot be removed; it is the active Profile until another one is picked.
+The Profile that always exists and cannot be removed; it is the active Profile until another one is picked, and whenever the Profile picker is turned off.
 _Avoid_: default user, anonymous
 
 **Avatar**:

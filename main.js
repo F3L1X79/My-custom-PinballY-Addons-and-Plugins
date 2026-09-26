@@ -1,5 +1,6 @@
 ﻿// ============================================================
-// Entry point loaded by PinballY: loads the Profile store, then initializes
+// Entry point loaded by PinballY: loads the Profile store (switching to
+// Guest when the Profile picker is disabled), then initializes
 // every project script listed in SCRIPTS, in order, skipping those disabled
 // in config.addOns.
 // A script whose init() throws is logged to logfile.log and skipped so the
@@ -69,10 +70,26 @@ const ENABLED_SCRIPTS = config.addOns;
 
 // Before any Add-on, and whatever Add-ons are on: the store records every
 // play, and its "gameover" listener must run before the Add-ons' own.
+let store = null;
 try {
-    getProfileStore();
+    store = getProfileStore();
 } catch (error) {
     logfile.log(`[Startup] ERROR loading the Profiles: ${error.message}`);
+}
+
+// Without the picker nothing could switch away from the saved Profile, so
+// Guest takes over. Done before any Add-on subscribes to onSwitch, so no
+// greeting or toast follows.
+if (store && ENABLED_SCRIPTS.profilePicker === false) {
+    try {
+        const previousProfile = store.getActiveProfile();
+        if (!previousProfile.isGuest) {
+            store.switchTo(store.listProfiles().find(profile => profile.isGuest).name);
+            logfile.log(`[Startup] Profile picker disabled: switched from "${previousProfile.name}" to Guest.`);
+        }
+    } catch (error) {
+        logfile.log(`[Startup] ERROR switching to Guest: ${error.message}`);
+    }
 }
 
 for (const { key, module } of SCRIPTS) {
