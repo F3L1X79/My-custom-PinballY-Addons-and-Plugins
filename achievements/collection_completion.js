@@ -9,7 +9,7 @@
 
 import { ACHIEVEMENT_FAMILY, countedAchievement, PROGRESS_UNIT } from "../common/achievements.js";
 import lang from "../common/i18n.js";
-import { getVisibleTables } from "../common/visible_tables.js";
+import { countPlayedTables, getVisibleTables } from "../common/visible_tables.js";
 import { getProfileStore } from "../common/profile_store.js";
 
 // Each value is part of an Achievement ID: changing one would announce the
@@ -23,7 +23,7 @@ export function buildCollectionCompletionAchievements() {
     const totalCount = getVisibleTables().length;
 
     function countPlayed() {
-        return getVisibleTables().filter(game => getProfileStore().hasPlayed(game.configId)).length;
+        return countPlayedTables(getVisibleTables(), getProfileStore());
     }
 
     const achievements = [

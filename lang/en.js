@@ -241,6 +241,19 @@ export default {
         },
     },
 
+    profileStats: {
+        menuEntry: "Statistics",
+        title: (name) => `${name}'s stats`,
+        gamesPlayed: (count) => `Games played: ${count}`,
+        // Minutes on two digits: "42 h 05".
+        totalTime: (hours, minutes) => `Total time: ${hours} h ${String(minutes).padStart(2, "0")}`,
+        collection: (played, total, percent) => `Collection: ${played}/${total} tables (${percent}%)`,
+        achievements: (unlocked, total) => `Achievements: ${unlocked}/${total}`,
+        tableOfTheDayStreak: (count, longest) => `Table of the Day streak: ${count} (best ${longest})`,
+        tableOfTheWeekStreak: (count, longest) => `Table of the Week streak: ${count} (best ${longest})`,
+        back: "Back",
+    },
+
     // Profiles. Guest's folder name is never shown: this is its name.
     profiles: {
         menuEntry: "Change Player",

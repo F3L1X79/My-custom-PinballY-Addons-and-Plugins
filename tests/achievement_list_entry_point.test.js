@@ -62,6 +62,7 @@ test("the Achievement List entry follows Play and lists the real Achievements by
     assert.deepEqual(fake.currentMenu().items.map(item => item.title), [
         "Play",
         TEXT.menuEntry,
+        lang.profileStats.menuEntry,
         MENU_LABELS.tableSetup,
         MENU_LABELS.randomGame,
         MENU_LABELS.tableOfTheDay,

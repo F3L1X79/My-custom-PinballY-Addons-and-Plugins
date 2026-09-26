@@ -15,10 +15,11 @@ const SCRIPT_NAME = "MainMenu";
 export const MAIN_MENU_POSITION = Object.freeze({
     PROFILE_PICKER: 0,
     ACHIEVEMENT_LIST: 1,
-    TABLE_SETUP: 2,
-    RANDOM_GAME: 3,
-    TABLE_OF_THE_DAY: 4,
-    TABLE_OF_THE_WEEK: 5,
+    PROFILE_STATS: 2,
+    TABLE_SETUP: 3,
+    RANDOM_GAME: 4,
+    TABLE_OF_THE_DAY: 5,
+    TABLE_OF_THE_WEEK: 6,
 });
 
 export function createMainMenu(host) {

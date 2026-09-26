@@ -84,9 +84,16 @@ export function createAchievementList(host, getAchievements) {
 
     const countUnlocked = entries => entries.filter(entry => entry.unlocked).length;
 
+    // The total line's counts, also shown by the Profile Stats so the two
+    // screens never disagree.
+    function countAll(families = readFamilies()) {
+        const allEntries = [...families.values()].flat();
+        return { unlocked: countUnlocked(allEntries), total: allEntries.length };
+    }
+
     function showFamilies(selectedFamily = null) {
         const families = readFamilies();
-        const allEntries = [...families.values()].flat();
+        const totals = countAll(families);
 
         const familyItems = [...families]
             .filter(([, entries]) => entries.length > 0)
@@ -97,7 +104,7 @@ export function createAchievementList(host, getAchievements) {
             }));
 
         host.showMenu(FAMILIES_MENU_ID, [
-            { title: TEXT.totalLine(countUnlocked(allEntries), allEntries.length), cmd: -1 },
+            { title: TEXT.totalLine(totals.unlocked, totals.total), cmd: -1 },
             { cmd: -1 },
             ...familyItems,
             { cmd: -1 },
@@ -160,5 +167,5 @@ export function createAchievementList(host, getAchievements) {
         }
     }));
 
-    return { open: () => showFamilies() };
+    return { open: () => showFamilies(), countAll: () => countAll() };
 }

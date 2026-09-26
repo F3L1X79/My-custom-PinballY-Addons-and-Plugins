@@ -5,7 +5,8 @@
 // module, which announces it with a card in the bottom-right corner once no
 // game is running; an Achievement becomes Notified, for the Profile that
 // unlocked it, when its toast starts.
-// Also adds the Achievement List entry to the main menu, right after "Play".
+// Also adds the Achievement List entry to the main menu, right after "Play",
+// and the Profile Stats entry right after it.
 // ============================================================
 
 import { evaluateAchievements, markNotified } from "../common/achievements.js";
@@ -21,6 +22,8 @@ import { buildRandomGameFanAchievements } from "../achievements/random_game_fans
 import { getAchievementToasts } from "../common/achievement_toast.js";
 import { getMainMenu, MAIN_MENU_POSITION } from "../common/main_menu.js";
 import { createAchievementList } from "../common/achievement_list.js";
+import { createProfileStats } from "../common/profile_stats.js";
+import { getTableOfTheDay, getTableOfTheWeek } from "../common/period_table.js";
 import { createPinballYHost } from "../common/pinbally_host.js";
 import { getProfileStore } from "../common/profile_store.js";
 import lang from "../common/i18n.js";
@@ -52,6 +55,18 @@ export default function init() {
         label: lang.achievementList.menuEntry,
         position: MAIN_MENU_POSITION.ACHIEVEMENT_LIST,
         action: achievementList.open,
+    });
+    const profileStats = createProfileStats(createPinballYHost(), {
+        profileStore,
+        achievementList,
+        tableOfTheDay: getTableOfTheDay(),
+        tableOfTheWeek: getTableOfTheWeek(),
+    });
+    getMainMenu().add({
+        name: "profileStats",
+        label: lang.profileStats.menuEntry,
+        position: MAIN_MENU_POSITION.PROFILE_STATS,
+        action: profileStats.open,
     });
     // Achievements handed to the Achievement Toast module, by Profile name
     // in lower case (Profile names ignore case). They are not Notified until

@@ -26,11 +26,12 @@ test("entries sit right after Play, in position order, whatever order they were 
     mainMenu.add({ name: "setup", label: "Setup", position: MAIN_MENU_POSITION.TABLE_SETUP, action: () => {} });
     mainMenu.add({ name: "list", label: "List", position: MAIN_MENU_POSITION.ACHIEVEMENT_LIST, action: () => {} });
     mainMenu.add({ name: "random", label: "Random", position: MAIN_MENU_POSITION.RANDOM_GAME, action: () => {} });
+    mainMenu.add({ name: "stats", label: "Stats", position: MAIN_MENU_POSITION.PROFILE_STATS, action: () => {} });
     mainMenu.add({ name: "player", label: "Player", position: MAIN_MENU_POSITION.PROFILE_PICKER, action: () => {} });
 
     openMainMenu();
 
-    assert.deepEqual(titles(fake.currentMenu()), ["Play", "Player", "List", "Setup", "Random", "Week", "Exit"]);
+    assert.deepEqual(titles(fake.currentMenu()), ["Play", "Player", "List", "Stats", "Setup", "Random", "Week", "Exit"]);
 });
 
 test("the entries are added again each time the main menu opens, and only to the main menu", () => {

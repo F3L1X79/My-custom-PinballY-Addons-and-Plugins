@@ -325,6 +325,19 @@ export default {
         },
     },
 
+    profileStats: {
+        menuEntry: "Statistiche",
+        title: (name) => `Statistiche di ${name}`,
+        gamesPlayed: (count) => `Partite giocate: ${count}`,
+        // Minutes on two digits: "42 h 05".
+        totalTime: (hours, minutes) => `Tempo totale: ${hours} h ${String(minutes).padStart(2, "0")}`,
+        collection: (played, total, percent) => `Collezione: ${played}/${total} tavoli (${percent}%)`,
+        achievements: (unlocked, total) => `Obiettivi: ${unlocked}/${total}`,
+        tableOfTheDayStreak: (count, longest) => `Serie Tavolo del giorno: ${count} (record ${longest})`,
+        tableOfTheWeekStreak: (count, longest) => `Serie Tavolo della settimana: ${count} (record ${longest})`,
+        back: "Indietro",
+    },
+
     // Profiles. Guest's folder name is never shown: this is its name.
     profiles: {
         menuEntry: "Cambia giocatore",
