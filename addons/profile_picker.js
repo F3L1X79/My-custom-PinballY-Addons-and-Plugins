@@ -1,6 +1,7 @@
 // ============================================================
 // Profile picker: a "Change Player" entry, right after "Play" in the main
-// menu and right after "Quit" in the exit menu, opens a drawn carousel of
+// menu and right after "Quit" in the exit menu (and in the startup prompt,
+// through common/change_player.js), opens a drawn carousel of
 // the Profiles' Avatars above the menus, starting on the active Profile.
 // The flipper buttons move through it and wrap, Select or Launch switches
 // to the highlighted Profile, Exit closes it; while it is open every
@@ -27,6 +28,7 @@ import { getProfileStore } from "../common/profile_store.js";
 import { displayNameOf } from "../common/profile_name.js";
 import { getMainMenu, MAIN_MENU_POSITION } from "../common/main_menu.js";
 import { getWheelDialogs } from "../common/wheel_dialog.js";
+import { registerChangePlayer } from "../common/change_player.js";
 import config from "../common/config.js";
 
 const SCRIPT_NAME = "ProfilePicker";
@@ -454,6 +456,8 @@ export default function init() {
     // the carousel must not stay drawn over attract mode or keep the buttons.
     host.on("attractmodestart", safeHandler(SCRIPT_NAME, close));
 
+    // Last, so the startup prompt never opens a carousel whose listeners are missing.
+    registerChangePlayer(open);
     drawBadge();
     // One tick after the inits, so the dialogs every Add-on submits at
     // startup are already waiting, whatever the order in main.js.

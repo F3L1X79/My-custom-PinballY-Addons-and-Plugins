@@ -35,6 +35,8 @@ import * as startupChoicePrompt from "./addons/startup_choice_prompt.js";
 //   achievement checks after a game are deferred by one tick, so the stats
 //   are recorded first either way (the startup check needs no stats from
 //   this session).
+// - profilePicker must come before startupChoicePrompt, which offers
+//   "Change Player" only when the picker registered itself at init.
 // The other scripts don't depend on each other's order. In particular, the
 // startup prompt and rating dialogs go through the wheel dialog module,
 // which shows them in a fixed priority order, and Achievements are announced

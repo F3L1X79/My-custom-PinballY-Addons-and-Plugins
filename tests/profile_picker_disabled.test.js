@@ -1,6 +1,7 @@
 // ============================================================
 // Profile picker turned off in addOns, through main.js on the fake
-// PinballY globals: the main menu has no "Change player" entry.
+// PinballY globals: neither the main menu nor the startup prompt has a
+// "Change player" entry.
 // ============================================================
 
 import { test } from "node:test";
@@ -8,7 +9,7 @@ import assert from "node:assert/strict";
 import { createFakePinballYHost, settle } from "./fake_pinbally_host.js";
 import config from "../common/config.js";
 
-test("turning the Profile picker off removes its main-menu entry", async () => {
+test("turning the Profile picker off removes its main-menu and startup prompt entries", async () => {
     const fake = createFakePinballYHost();
     // Never uninstalled: node --test runs each test file in its own process.
     fake.installGlobals();
@@ -18,6 +19,10 @@ test("turning the Profile picker off removes its main-menu entry", async () => {
     const { default: lang } = await import("../common/i18n.js");
     await import("../main.js");
     await settle();
+
+    assert.equal(fake.currentMenu().id, "startupChoicePrompt");
+    const promptTitles = fake.currentMenu().items.map(item => item.title);
+    assert.ok(!promptTitles.includes(lang.profiles.menuEntry));
 
     fake.openMenu("main", [{ title: "Play", cmd: fake.getBuiltInCommand("PlayGame") }]);
     const titles = fake.currentMenu().items.map(item => item.title);

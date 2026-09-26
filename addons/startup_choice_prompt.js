@@ -1,6 +1,7 @@
 ﻿// ============================================================
 // At startup, hands the wheel dialog module a dialog that greets the active
-// Profile and offers to stay on the last played table or to launch today's
+// Profile and offers to stay on the last played table, to change player
+// (when the Profile picker is on) or to launch today's
 // table, this week's table or a random one (picking the day / week tables
 // here locks them in cabinet.json). Its priority puts it before any other
 // dialog submitted at startup, whatever the add-on order in main.js.
@@ -12,6 +13,7 @@ import { getWheelDialogs, DIALOG_PRIORITY } from "../common/wheel_dialog.js";
 import lang from "../common/i18n.js";
 import { getProfileStore } from "../common/profile_store.js";
 import { displayNameOf } from "../common/profile_name.js";
+import { getChangePlayer } from "../common/change_player.js";
 
 // Drops parenthetical suffixes from table titles to keep the intro message short.
 function stripParentheticals(title) {
@@ -23,6 +25,9 @@ export default function init() {
     const tableOfTheDay = getTableOfTheDay();
     const tableOfTheWeek = getTableOfTheWeek();
     const randomGame = getRandomGame();
+
+    // Null when the Profile picker is off; main.js starts it before this Add-on.
+    const changePlayer = getChangePlayer();
 
     const dayGame = tableOfTheDay.getTable();
     const weekGame = tableOfTheWeek.getTable();
@@ -37,6 +42,7 @@ export default function init() {
         // Top to bottom. "Stay" has no action: the dialog closing is all it must do.
         buttons: [
             { label: STARTUP_PROMPT_TEXT.stayOnLastPlayed },
+            ...(changePlayer ? [{ label: lang.profiles.menuEntry, action: changePlayer }] : []),
             { label: STARTUP_PROMPT_TEXT.tableOfTheDay, action: tableOfTheDay.launch },
             { label: STARTUP_PROMPT_TEXT.tableOfTheWeek, action: tableOfTheWeek.launch },
             { label: STARTUP_PROMPT_TEXT.randomTable, action: randomGame.launch },
