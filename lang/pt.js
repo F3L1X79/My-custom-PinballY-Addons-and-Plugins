@@ -334,8 +334,8 @@ export default {
         totalTime: (hours, minutes) => `Tempo total: ${hours} h ${String(minutes).padStart(2, "0")}`,
         collection: (played, total, percent) => `Coleção: ${played}/${total} mesas (${percent}%)`,
         achievements: (unlocked, total) => `Conquistas: ${unlocked}/${total}`,
-        tableOfTheDayStreak: (count, longest) => `Sequência Mesa do dia: ${count} (recorde ${longest})`,
-        tableOfTheWeekStreak: (count, longest) => `Sequência Mesa da semana: ${count} (recorde ${longest})`,
+        tableOfTheDayStreak: (count, longest) => `Sequência diária: ${count} (recorde ${longest})`,
+        tableOfTheWeekStreak: (count, longest) => `Sequência semanal: ${count} (recorde ${longest})`,
         back: "Voltar",
     },
 

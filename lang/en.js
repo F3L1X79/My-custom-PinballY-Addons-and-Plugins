@@ -249,8 +249,8 @@ export default {
         totalTime: (hours, minutes) => `Total time: ${hours} h ${String(minutes).padStart(2, "0")}`,
         collection: (played, total, percent) => `Collection: ${played}/${total} tables (${percent}%)`,
         achievements: (unlocked, total) => `Achievements: ${unlocked}/${total}`,
-        tableOfTheDayStreak: (count, longest) => `Table of the Day streak: ${count} (best ${longest})`,
-        tableOfTheWeekStreak: (count, longest) => `Table of the Week streak: ${count} (best ${longest})`,
+        tableOfTheDayStreak: (count, longest) => `Daily streak: ${count} (best ${longest})`,
+        tableOfTheWeekStreak: (count, longest) => `Weekly streak: ${count} (best ${longest})`,
         back: "Back",
     },
 
