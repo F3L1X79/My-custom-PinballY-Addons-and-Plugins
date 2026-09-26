@@ -1,8 +1,8 @@
 // ============================================================
 // Clock: the time at the top left of the wheel screen, facing the active
-// Profile's badge, in the language's format, white with a drop shadow and
-// a short gold underline. Redrawn when the minute changes; hidden on
-// "gamestarted", shown again (on time) on "wheelmode".
+// Profile's badge, in the language's format, soft white with a drop shadow
+// and a gold underline as wide as the time. Redrawn when the minute
+// changes; hidden on "gamestarted", shown again (on time) on "wheelmode".
 // ============================================================
 
 import lang from "../common/i18n.js";
@@ -21,8 +21,9 @@ const CLOCK_Z_INDEX = 4500;
 const CLOCK = Object.freeze({ width: 260, height: 110, left: 30, top: 30 });
 const CLOCK_REFERENCE_HEIGHT = 1920;
 const TIME_TEXT = Object.freeze({ size: 28, weight: 600 });
-const UNDERLINE = Object.freeze({ thickness: 2, gap: 4, lengthRatio: 0.85 });
-const COLORS = Object.freeze({ text: 0xFFFFFFFF, gold: 0xFFE8B84A, transparent: 0x00000000 });
+const UNDERLINE = Object.freeze({ thickness: 2, gap: 4 });
+// Soft white, opaque: a translucent text would show its own shadow through it.
+const COLORS = Object.freeze({ text: 0xFFDCDCDC, gold: 0xFFE8B84A, transparent: 0x00000000 });
 
 export default function init() {
     const host = createPinballYHost();
@@ -40,7 +41,7 @@ export default function init() {
             const measured = drawShadowedText(host, dc, TIME_TEXT, COLORS.text, text, top,
                 { x: left, width: width - left, align: "left" });
             const underlineY = top + measured.height + UNDERLINE.gap;
-            dc.fillRect(left, underlineY, Math.round(measured.width * UNDERLINE.lengthRatio), UNDERLINE.thickness, COLORS.gold);
+            dc.fillRect(left, underlineY, Math.round(measured.width), UNDERLINE.thickness, COLORS.gold);
         }, CLOCK.width, CLOCK.height);
     }
 
