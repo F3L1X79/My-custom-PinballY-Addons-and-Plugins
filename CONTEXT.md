@@ -91,3 +91,7 @@ _Avoid_: group (a group is the set of tables a completion Achievement covers, su
 **Notified**:
 An Achievement whose Achievement Toast has started showing. Toasts still waiting while a game runs are not Notified yet.
 _Avoid_: acknowledged, seen, unlocked (an Achievement can be unlocked but not yet Notified)
+
+**Achievement Progress**:
+How far the active Profile is from a missing Achievement: the very value its unlock condition tests, against the target that unlocks it (for a Streak, the current Streak, not the longest). Only Achievements with a counted target of at least 2 have one; an Unlocked Achievement shows none.
+_Avoid_: progress (alone), completion (a completion Achievement covers a group of tables)
