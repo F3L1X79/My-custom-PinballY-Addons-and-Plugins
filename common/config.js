@@ -31,7 +31,7 @@ const DEFAULTS = {
     // Seconds an Achievement Toast stays fully visible (above 0, at most 60).
     achievementToastSeconds: 4,
     // Size of an Achievement Toast: 1 = the original card, 2 = twice as large (from 0.5 to 3).
-    achievementToastScale: 1.6,
+    achievementToastScale: 1.0,
 
     // --- Add-ons ---
 
