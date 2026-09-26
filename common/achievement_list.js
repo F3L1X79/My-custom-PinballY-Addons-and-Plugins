@@ -77,6 +77,11 @@ export function createAchievementList(host, getAchievements) {
         };
     }
 
+    function titleWithProgress(achievement, unlocked) {
+        const progress = describeProgress(achievement, unlocked);
+        return progress ? TEXT.titleWithProgress(achievement.getTitle(), progress.short) : achievement.getTitle();
+    }
+
     const countUnlocked = entries => entries.filter(entry => entry.unlocked).length;
 
     function showFamilies(selectedFamily = null) {
@@ -104,11 +109,6 @@ export function createAchievementList(host, getAchievements) {
     // page to reopen: it relies on PinballY opening the paged section on the
     // page that holds the selected Achievement. The help doesn't document
     // this; to be checked in PinballY.
-    function titleWithProgress(achievement, unlocked) {
-        const progress = describeProgress(achievement, unlocked);
-        return progress ? TEXT.titleWithProgress(achievement.getTitle(), progress.short) : achievement.getTitle();
-    }
-
     function showFamily(family, selectedAchievementId = null) {
         const entries = readFamilies().get(family);
         const ordered = [...entries.filter(entry => entry.unlocked), ...entries.filter(entry => !entry.unlocked)];

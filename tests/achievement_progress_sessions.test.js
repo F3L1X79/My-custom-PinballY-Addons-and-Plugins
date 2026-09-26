@@ -39,9 +39,8 @@ test("marathons show whole minutes, Random Games and Day's Manufacturers their c
         progressCard(halfHour, ACHIEVEMENT.marathonDescription(30), "minutes", 29, 30));
     assert.deepEqual(familyTitles("randomGame"),
         [10, 50, 100].map(count => withProgress(ACHIEVEMENT.randomGamesTitles[count], "randomGames", 7, count)));
-    assert.deepEqual(familyTitles("manufacturers").filter(title => title.startsWith(ACHIEVEMENT.dayManufacturersTitles[3])
-        || title.startsWith(ACHIEVEMENT.dayManufacturersTitles[5]) || title.startsWith(ACHIEVEMENT.dayManufacturersTitles[8])),
-    [3, 5, 8].map(count => withProgress(ACHIEVEMENT.dayManufacturersTitles[count], "manufacturers", 2, count)));
+    const dayManufacturers = [3, 5, 8].map(count => withProgress(ACHIEVEMENT.dayManufacturersTitles[count], "manufacturers", 2, count));
+    assert.deepEqual(familyTitles("manufacturers").filter(title => dayManufacturers.includes(title)), dayManufacturers);
 
     // A half-hour session reaches the target exactly: the marathon unlocks.
     await play(MEDIEVAL, 30 * 60);
