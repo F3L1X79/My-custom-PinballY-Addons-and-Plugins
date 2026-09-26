@@ -14,3 +14,9 @@ export function getVisibleTables() {
 export function countPlayedTables(visibleTables, profileStore) {
     return visibleTables.filter(game => profileStore.hasPlayed(game.configId)).length;
 }
+
+// The visible tables the active Profile never played: the other side of
+// collection completion.
+export function getUnplayedTables(visibleTables, profileStore) {
+    return visibleTables.filter(game => !profileStore.hasPlayed(game.configId));
+}

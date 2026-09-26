@@ -3,28 +3,60 @@
 // sum up the active Profile's own plays (games played, total time,
 // collection completion, Achievements Unlocked, Period Table Streaks,
 // favourite manufacturer and decade) in a native PinballY menu named after
-// the Profile.
+// the Profile, closed by two sub-menus: the most played tables (the Hall of
+// Fame) and the never played tables.
 // Created from the PinballY host, the Profile store, the Achievement List
 // (its counts, and opening it from the Achievements line) and the Table of
-// the Day and Table of the Week. Every number is read again each time the
-// screen opens. Listens to "command". Opens its menu directly, not through
-// the wheel dialog module: the player asked for it.
+// the Day and Table of the Week. Every number and list is read again each
+// time a menu opens. Listens to "command". Opens its menus directly, not
+// through the wheel dialog module: the player asked for them.
 // ============================================================
 
 import lang from "./i18n.js";
 import { displayNameOf } from "./profile_name.js";
 import { safeHandler } from "./safe_handler.js";
 import { getDecadeStartYear } from "./decade.js";
-import { countPlayedTables } from "./visible_tables.js";
+import { countPlayedTables, getUnplayedTables } from "./visible_tables.js";
+import { getHallOfFame } from "./hall_of_fame.js";
 
 const SCRIPT_NAME = "ProfileStats";
 const MENU_ID = "profileStats";
+const TABLE_LIST_MENU_ID = "profileStatsTables";
 const SECONDS_PER_MINUTE = 60;
 const MINUTES_PER_HOUR = 60;
 
 export function createProfileStats(host, { profileStore, achievementList, tableOfTheDay, tableOfTheWeek }) {
     const { profileStats: TEXT } = lang;
     const achievementsCommand = host.allocateCommand("profileStatsAchievements");
+    const backToStatsCommand = host.allocateCommand("profileStatsBackToStats");
+    // One command per line of a list, by position: a line with cmd -1 can't
+    // be selected, so paging couldn't move through it. The never played list
+    // depends on the collection, so the pool grows on demand instead of
+    // being allocated all at startup.
+    const tableCommands = [];
+    // The list on screen, so Back puts the cursor on its entry.
+    let shownList = null;
+
+    const tableLists = [
+        {
+            command: host.allocateCommand("profileStatsMostPlayed"),
+            label: TEXT.mostPlayedTables,
+            readTables: visibleTables => getHallOfFame(visibleTables, profileStore.getPlay),
+        },
+        {
+            command: host.allocateCommand("profileStatsNeverPlayed"),
+            label: TEXT.neverPlayedTables,
+            readTables: visibleTables => getUnplayedTables(visibleTables, profileStore)
+                .sort((a, b) => a.title.localeCompare(b.title)),
+        },
+    ];
+
+    function getTableCommand(index) {
+        while (tableCommands.length <= index) {
+            tableCommands.push(host.allocateCommand(`profileStatsTable.${tableCommands.length}`));
+        }
+        return tableCommands[index];
+    }
 
     // Over every table the Profile played, hidden or no longer listed ones
     // included: hiding a table never erases a player's history.
@@ -71,7 +103,7 @@ export function createProfileStats(host, { profileStore, achievementList, tableO
         return favourite === null ? noneText : format(favourite.key, ...toHoursAndMinutes(favourite.seconds));
     }
 
-    function show() {
+    function show(selectedList = null) {
         const plays = sumPlays();
         const visibleTables = host.getVisibleTables();
         const completion = readCompletion(visibleTables);
@@ -79,6 +111,15 @@ export function createProfileStats(host, { profileStore, achievementList, tableO
         const favouriteDecade = findFavourite(visibleTables, game => getDecadeStartYear(game.year));
         const achievements = achievementList.countAll();
         const info = title => ({ title, cmd: -1 });
+        // An empty list is left out: the player never opens an empty menu.
+        const listItems = tableLists
+            .map(list => ({ list, count: list.readTables(visibleTables).length }))
+            .filter(({ count }) => count > 0)
+            .map(({ list, count }) => ({
+                title: list.label(count),
+                cmd: list.command,
+                ...(list === selectedList ? { selected: true } : {}),
+            }));
 
         host.showMenu(MENU_ID, [
             info(TEXT.title(displayNameOf(profileStore.getActiveProfile()))),
@@ -91,16 +132,39 @@ export function createProfileStats(host, { profileStore, achievementList, tableO
             info(TEXT.tableOfTheWeekStreak(tableOfTheWeek.getStreak(), tableOfTheWeek.getLongestStreak())),
             info(favouriteLine(favouriteManufacturer, TEXT.favouriteManufacturer, TEXT.noFavouriteManufacturer)),
             info(favouriteLine(favouriteDecade, TEXT.favouriteDecade, TEXT.noFavouriteDecade)),
+            ...(listItems.length > 0 ? [{ cmd: -1 }, ...listItems] : []),
             { cmd: -1 },
             { title: TEXT.back, cmd: host.getBuiltInCommand("MenuReturn") },
         ]);
     }
 
+    // Paged like an Achievement Family: the never played list can be longer
+    // than the screen.
+    function showTableList(list) {
+        const tables = list.readTables(host.getVisibleTables());
+        host.showMenu(TABLE_LIST_MENU_ID, [
+            { cmd: host.getBuiltInCommand("MenuPageUp") },
+            ...tables.map((game, index) => ({ title: game.title, cmd: getTableCommand(index) })),
+            { cmd: host.getBuiltInCommand("MenuPageDown") },
+            { cmd: -1 },
+            { title: TEXT.back, cmd: backToStatsCommand },
+        ]);
+        shownList = list;
+    }
+
     // Fires on every command: the Achievements line opens the Achievement
-    // List in place of this screen.
+    // List in place of this screen, a list entry opens its tables, Back from
+    // a list returns here.
     host.on("command", safeHandler(SCRIPT_NAME, ev => {
-        if (ev.id === achievementsCommand) achievementList.open();
+        const list = tableLists.find(tableList => tableList.command === ev.id);
+        if (ev.id === achievementsCommand) {
+            achievementList.open();
+        } else if (list) {
+            showTableList(list);
+        } else if (ev.id === backToStatsCommand) {
+            show(shownList);
+        }
     }));
 
-    return { open: show };
+    return { open: () => show() };
 }

@@ -340,6 +340,9 @@ export default {
         noFavouriteManufacturer: "Marca preferita: —",
         favouriteDecade: (decadeStartYear, hours, minutes) => `Decennio preferito: anni ${decadeStartYear} (${hours} h ${String(minutes).padStart(2, "0")})`,
         noFavouriteDecade: "Decennio preferito: —",
+        // Sub-menu entries, with how many tables each list holds.
+        mostPlayedTables: (count) => `Tavoli più giocati (${count})`,
+        neverPlayedTables: (count) => `Tavoli mai giocati (${count})`,
         back: "Indietro",
     },
 

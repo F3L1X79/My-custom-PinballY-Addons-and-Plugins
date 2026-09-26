@@ -3,9 +3,10 @@
 // Profile store, real Period Tables and a real Achievement List, checks
 // what the player sees (title naming the active Profile, games played,
 // total time, collection completion, Achievements, both Streaks,
-// favourite manufacturer and decade), that
-// the Achievements line opens the Achievement List, and that every number
-// is read again each time the screen opens.
+// favourite manufacturer and decade, the most played and never played
+// tables lists), that the Achievements line opens the Achievement List, that
+// Back from a list returns to its entry, and that every number is read again
+// each time the screen opens.
 // ============================================================
 
 import { test } from "node:test";
@@ -27,7 +28,7 @@ const PROFILES = "C:\\PinballY\\Scripts\\profiles";
 const profileFile = name => `${PROFILES}\\${name}\\profile.json`;
 
 function table(id, title, { isHidden = false, manufacturer = "Williams", year = 1990 } = {}) {
-    return { id, configId: `${title} (${manufacturer} ${year})`, title, manufacturer, year, isHidden };
+    return { id, configId: `${title} (${manufacturer} ${year})`, title, manufacturer, year, isHidden, isConfigured: true };
 }
 
 const MEDIEVAL = table(1, "Medieval Madness");
@@ -93,9 +94,14 @@ test("the screen names the active Profile and shows its numbers, then Back", () 
         { title: TEXT.favouriteManufacturer("Williams", 2, 15), cmd: -1 },
         { title: TEXT.favouriteDecade(1990, 2, 15), cmd: -1 },
         { cmd: -1 },
+        { title: TEXT.mostPlayedTables(2), cmd: fake.currentMenu().items[11].cmd },
+        { title: TEXT.neverPlayedTables(1), cmd: fake.currentMenu().items[12].cmd },
+        { cmd: -1 },
         { title: TEXT.back, cmd: fake.getBuiltInCommand("MenuReturn") },
     ]);
     assert.ok(fake.currentMenu().items[5].cmd > 0, "the Achievements line can be selected");
+    assert.ok(fake.currentMenu().items[11].cmd > 0, "the most played list can be opened");
+    assert.ok(fake.currentMenu().items[12].cmd > 0, "the never played list can be opened");
 });
 
 test("a new Profile shows 0 games, 0 time and nothing completed", () => {
@@ -107,6 +113,8 @@ test("a new Profile shows 0 games, 0 time and nothing completed", () => {
     assert.equal(shown[4], TEXT.collection(0, 3, 0));
     assert.equal(shown[8], TEXT.noFavouriteManufacturer);
     assert.equal(shown[9], TEXT.noFavouriteDecade);
+    assert.ok(!shown.includes(TEXT.mostPlayedTables(0)), "no most played list before any play");
+    assert.equal(shown[11], TEXT.neverPlayedTables(3));
 });
 
 test("the favourite manufacturer and decade are the ones with the most time on visible tables", () => {
@@ -223,4 +231,74 @@ test("the numbers follow a Profile switch and a finished game the next time the 
     assert.equal(shown[2], TEXT.gamesPlayed(2));
     assert.equal(shown[3], TEXT.totalTime(0, 31));
     assert.equal(shown[4], TEXT.collection(2, 3, 67));
+});
+
+// The table titles of an open list, between its paging items and its Back.
+const listedTitles = menu => menu.items.map(item => item.title).filter(title => title !== undefined && title !== TEXT.back);
+
+test("the most played tables are the Hall of Fame of the active Profile", () => {
+    const tables = [
+        table(1, "Theatre of Magic"),
+        table(2, "Cirqus Voltaire"),
+        table(3, "Monster Bash"),
+        table(4, "Scared Stiff", { isHidden: true }),
+        table(5, "White Water"),
+        table(6, "Black Knight"),
+    ];
+    const { fake } = setUp({
+        tables,
+        guest: {
+            plays: {
+                [tables[0].configId]: play(1, 3600),
+                // Same time as Theatre of Magic, more games: ranked first.
+                [tables[1].configId]: play(3, 3600),
+                [tables[2].configId]: play(9, 7200),
+                // Hidden: never in the Hall of Fame.
+                [tables[3].configId]: play(9, 99 * 3600),
+                // Started but no time recorded: not in the Hall of Fame.
+                [tables[4].configId]: play(1, 0),
+            },
+        },
+    });
+
+    fake.selectMenuItem(TEXT.mostPlayedTables(3));
+
+    assert.deepEqual(listedTitles(fake.currentMenu()), ["Monster Bash", "Cirqus Voltaire", "Theatre of Magic"]);
+});
+
+test("the never played tables are the visible tables without a play, by title", () => {
+    const tables = [
+        table(1, "Whirlwind"),
+        table(2, "Addams Family"),
+        table(3, "Scared Stiff", { isHidden: true }),
+        table(4, "Monster Bash"),
+        table(5, "Earthshaker"),
+    ];
+    const { fake } = setUp({ tables, guest: { plays: { [tables[3].configId]: play(1, 60) } } });
+
+    fake.selectMenuItem(TEXT.neverPlayedTables(3));
+
+    assert.deepEqual(listedTitles(fake.currentMenu()), ["Addams Family", "Earthshaker", "Whirlwind"]);
+});
+
+test("a list entry is left out when every visible table was played", () => {
+    const plays = Object.fromEntries([MEDIEVAL, ATTACK, GODZILLA].map(game => [game.configId, play(1, 60)]));
+    const { fake } = setUp({ guest: { plays } });
+
+    const shown = titles(fake.currentMenu());
+    assert.equal(shown[11], TEXT.mostPlayedTables(3));
+    assert.ok(!shown.includes(TEXT.neverPlayedTables(0)), "no never played list once everything was played");
+});
+
+test("Back from a list returns to the Profile Stats with the cursor on its entry", () => {
+    const { fake } = setUp();
+
+    for (const entry of [TEXT.mostPlayedTables(2), TEXT.neverPlayedTables(1)]) {
+        fake.selectMenuItem(entry);
+        fake.selectMenuItem(TEXT.back);
+
+        const menu = fake.currentMenu();
+        assert.equal(menu.items[0].title, TEXT.title(lang.profiles.guestName));
+        assert.deepEqual(menu.items.filter(item => item.selected).map(item => item.title), [entry]);
+    }
 });
