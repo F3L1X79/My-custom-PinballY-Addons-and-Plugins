@@ -2,7 +2,7 @@
 // In-memory fake PinballY host for the node tests. Offers the same
 // interface as common/pinbally_host.js, plus controls for the tests: set
 // the date (a manual clock that also runs the host's timers), the table
-// list, the wheel selection and the layout size, seed settings, fire
+// list, the wheel selection (and its filter) and the layout size, seed settings, fire
 // PinballY events, pick menu items, play launched games, and inspect shown
 // menus, launches, written settings keys, drawing layers, what was drawn,
 // sounds played and the lower status line; script filters are shown with
@@ -367,6 +367,9 @@ export function createFakePinballYHost({
         return BUILT_IN_COMMANDS[name];
     }
 
+    // PinballY's wheel never shows hidden or unconfigured tables.
+    const canBeOnWheel = game => !game.isHidden && game.isConfigured !== false;
+
     // Runs the filter like PinballY: before(), then select() over the
     // visible, configured tables, sorted with compareForSort(); the wheel
     // then shows them from the first one.
@@ -376,10 +379,36 @@ export function createFakePinballYHost({
         currentFilterId = filterId;
         if (filter.before) filter.before();
         const selected = allTables
-            .filter(game => !game.isHidden && game.isConfigured !== false && filter.select(game));
+            .filter(game => canBeOnWheel(game) && filter.select(game));
         if (filter.compareForSort) selected.sort(filter.compareForSort);
         if (filter.after) filter.after();
         wheelConfigIds = selected.map(game => game.configId);
+    }
+
+    // Like gameList.setCurFilter(): "All" shows every visible, configured
+    // table in collection order, a script filter runs; the current table
+    // stays current when the new filter keeps it.
+    function setCurrentFilter(filterId) {
+        const [current] = host.getWheelTables();
+        if (filterId === "All") {
+            currentFilterId = filterId;
+            wheelConfigIds = allTables
+                .filter(canBeOnWheel)
+                .map(game => game.configId);
+        } else {
+            applyFilter(filterId);
+        }
+        const currentIndex = current ? wheelConfigIds.indexOf(current.configId) : -1;
+        if (currentIndex > 0) setWheelGame(currentIndex);
+    }
+
+    // Like gameList.setWheelGame(): the table at this offset from the current
+    // one becomes the current one; the wheel wraps around.
+    function setWheelGame(offset) {
+        const configIds = host.getWheelTables().map(game => game.configId);
+        if (configIds.length === 0) return;
+        const start = ((offset % configIds.length) + configIds.length) % configIds.length;
+        wheelConfigIds = [...configIds.slice(start), ...configIds.slice(0, start)];
     }
 
     function allocateCommand(name) {
@@ -400,6 +429,8 @@ export function createFakePinballYHost({
             ? host.getVisibleTables()
             : wheelConfigIds.map(getGameInfo)),
         getGameInfo,
+        setCurrentFilter,
+        setWheelGame,
         getUIMode: () => uiMode,
         getFullUIMode,
         showMenu,
@@ -449,12 +480,15 @@ export function createFakePinballYHost({
         readFile: (filePath) => files.get(filePath),
         fileOperations: () => fileOperationList.map(operation => ({ ...operation })),
         setTables(newTables) { allTables = newTables.map(table => ({ ...table })); },
-        // The current wheel selection, in wheel order (index 0 is the current table).
-        setWheelTables(configIds) {
+        // The current wheel selection, in wheel order (index 0 is the current
+        // table), optionally under a filter id such as "Favorites".
+        setWheelTables(configIds, { filterId = currentFilterId } = {}) {
             const unknown = configIds.filter(configId => !getGameInfo(configId));
             if (unknown.length > 0) throw new Error(`Unknown tables in the wheel: ${unknown.join(", ")}`);
             wheelConfigIds = [...configIds];
+            currentFilterId = filterId;
         },
+        currentFilterId: () => currentFilterId,
         // Shows a script filter, by its full id ("User.<id>").
         selectFilter: applyFilter,
         lowerStatusLine: () => [...lowerStatusLine],
@@ -567,6 +601,8 @@ export function createFakePinballYHost({
                         return allocateCommand(`filter ${filter.id}`);
                     },
                     getCurFilter: () => ({ id: currentFilterId }),
+                    setCurFilter: setCurrentFilter,
+                    setWheelGame: (offset) => { setWheelGame(offset); },
                     refreshFilter: () => { if (filters.has(currentFilterId)) applyFilter(currentFilterId); },
                     getGameInfo,
                 },

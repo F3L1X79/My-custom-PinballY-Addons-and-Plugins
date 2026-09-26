@@ -5,8 +5,9 @@
 // total time, collection completion, Achievements, both Streaks,
 // favourite manufacturer and decade, the most played and never played
 // tables lists), that the Achievements line opens the Achievement List, that
-// Back from a list returns to its entry, and that every number is read again
-// each time the screen opens.
+// a listed table puts the wheel on it (switching to all tables when the
+// current filter hides it), that Back from a list returns to its entry, and
+// that every number is read again each time the screen opens.
 // ============================================================
 
 import { test } from "node:test";
@@ -279,6 +280,41 @@ test("the never played tables are the visible tables without a play, by title", 
     fake.selectMenuItem(TEXT.neverPlayedTables(3));
 
     assert.deepEqual(listedTitles(fake.currentMenu()), ["Addams Family", "Earthshaker", "Whirlwind"]);
+});
+
+test("the never played list and its count leave out unconfigured tables", () => {
+    const tables = [...TABLES, { ...table(5, "Whirlwind"), isConfigured: false }];
+    const { fake } = setUp({ tables });
+
+    assert.ok(titles(fake.currentMenu()).includes(TEXT.neverPlayedTables(1)));
+    fake.selectMenuItem(TEXT.neverPlayedTables(1));
+
+    assert.deepEqual(listedTitles(fake.currentMenu()), ["Godzilla"]);
+});
+
+test("selecting a listed table closes the menu and puts the wheel on it, in the current filter", () => {
+    const { fake } = setUp();
+    fake.setWheelTables([GODZILLA.configId, MEDIEVAL.configId, ATTACK.configId], { filterId: "Favorites" });
+
+    fake.selectMenuItem(TEXT.mostPlayedTables(2));
+    fake.selectMenuItem("Attack from Mars");
+
+    assert.equal(fake.getUIMode(), "wheel");
+    assert.equal(fake.currentFilterId(), "Favorites");
+    assert.deepEqual(fake.getWheelTables().map(game => game.title), ["Attack from Mars", "Godzilla", "Medieval Madness"]);
+    assert.deepEqual(fake.launches(), [], "the player launches it with Play");
+});
+
+test("a listed table outside the current filter switches the wheel to all tables first", () => {
+    const { fake } = setUp();
+    fake.setWheelTables([MEDIEVAL.configId, ATTACK.configId], { filterId: "Favorites" });
+
+    fake.selectMenuItem(TEXT.neverPlayedTables(1));
+    fake.selectMenuItem("Godzilla");
+
+    assert.equal(fake.getUIMode(), "wheel");
+    assert.equal(fake.currentFilterId(), "All");
+    assert.equal(fake.getWheelTables()[0].title, "Godzilla");
 });
 
 test("a list entry is left out when every visible table was played", () => {

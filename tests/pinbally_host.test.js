@@ -94,6 +94,27 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
             assert.deepEqual(host.getWheelTables().map(game => game.title), ["Attack from Mars", "Medieval Madness"]);
         });
 
+        test("moves the wheel's current table by an offset, wrapping around", () => {
+            fake.setTables([...TABLES, { id: 4, configId: "Whirlwind (Williams 1990)", title: "Whirlwind" }]);
+
+            host.setWheelGame(2);
+            assert.deepEqual(host.getWheelTables().map(game => game.title),
+                ["Whirlwind", "Medieval Madness", "Attack from Mars"]);
+
+            host.setWheelGame(-1);
+            assert.equal(host.getWheelTables()[0].title, "Attack from Mars");
+        });
+
+        test("switches to the all-tables filter, keeping the current table", () => {
+            fake.setTables([...TABLES, { id: 4, configId: "Whirlwind (Williams 1990)", title: "Whirlwind", isConfigured: false }]);
+            fake.setWheelTables(["Attack from Mars (Bally 1995)"], { filterId: "Favorites" });
+
+            host.setCurrentFilter("All");
+
+            assert.equal(fake.currentFilterId(), "All");
+            assert.deepEqual(host.getWheelTables().map(game => game.title), ["Attack from Mars", "Medieval Madness"]);
+        });
+
         test("allocates a distinct command ID per name", () => {
             const first = host.allocateCommand("first");
             const second = host.allocateCommand("second");

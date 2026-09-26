@@ -4,7 +4,8 @@
 // collection completion, Achievements Unlocked, Period Table Streaks,
 // favourite manufacturer and decade) in a native PinballY menu named after
 // the Profile, closed by two sub-menus: the most played tables (the Hall of
-// Fame) and the never played tables.
+// Fame) and the never played tables. Selecting a table there puts the wheel
+// on it, switching to the all-tables filter when the current one hides it.
 // Created from the PinballY host, the Profile store, the Achievement List
 // (its counts, and opening it from the Achievements line) and the Table of
 // the Day and Table of the Week. Every number and list is read again each
@@ -24,6 +25,8 @@ const MENU_ID = "profileStats";
 const TABLE_LIST_MENU_ID = "profileStatsTables";
 const SECONDS_PER_MINUTE = 60;
 const MINUTES_PER_HOUR = 60;
+// PinballY's own filter showing every table.
+const ALL_TABLES_FILTER = "All";
 
 export function createProfileStats(host, { profileStore, achievementList, tableOfTheDay, tableOfTheWeek }) {
     const { profileStats: TEXT } = lang;
@@ -34,8 +37,9 @@ export function createProfileStats(host, { profileStore, achievementList, tableO
     // depends on the collection, so the pool grows on demand instead of
     // being allocated all at startup.
     const tableCommands = [];
-    // The list on screen, so Back puts the cursor on its entry.
-    let shownList = null;
+    // The list on screen, so Back puts the cursor on its entry, and its
+    // tables, so a line's command finds its table.
+    let shown = { list: null, tables: [] };
 
     const tableLists = [
         {
@@ -46,7 +50,10 @@ export function createProfileStats(host, { profileStore, achievementList, tableO
         {
             command: host.allocateCommand("profileStatsNeverPlayed"),
             label: TEXT.neverPlayedTables,
+            // Unconfigured tables left out, like the Hall of Fame: PinballY's
+            // wheel never shows them, so the jump could not land on them.
             readTables: visibleTables => getUnplayedTables(visibleTables, profileStore)
+                .filter(game => game.isConfigured)
                 .sort((a, b) => a.title.localeCompare(b.title)),
         },
     ];
@@ -149,20 +156,39 @@ export function createProfileStats(host, { profileStore, achievementList, tableO
             { cmd: -1 },
             { title: TEXT.back, cmd: backToStatsCommand },
         ]);
-        shownList = list;
+        shown = { list, tables };
+    }
+
+    // Instantly, without the Random Game spin: the player then launches it
+    // with Play. The current filter is kept when it shows the table.
+    function putWheelOn(game) {
+        const findOnWheel = () => host.getWheelTables().findIndex(wheelGame => wheelGame.configId === game.configId);
+        let offset = findOnWheel();
+        if (offset < 0) {
+            host.setCurrentFilter(ALL_TABLES_FILTER);
+            offset = findOnWheel();
+        }
+        if (offset < 0) {
+            host.log(`[${SCRIPT_NAME}] "${game.title}" is not on the wheel, even with every table shown.`);
+            return;
+        }
+        host.setWheelGame(offset);
     }
 
     // Fires on every command: the Achievements line opens the Achievement
-    // List in place of this screen, a list entry opens its tables, Back from
-    // a list returns here.
+    // List in place of this screen, a list entry opens its tables, a table
+    // puts the wheel on it as the menu closes, Back from a list returns here.
     host.on("command", safeHandler(SCRIPT_NAME, ev => {
         const list = tableLists.find(tableList => tableList.command === ev.id);
+        const tableIndex = tableCommands.indexOf(ev.id);
         if (ev.id === achievementsCommand) {
             achievementList.open();
         } else if (list) {
             showTableList(list);
+        } else if (tableIndex >= 0 && tableIndex < shown.tables.length) {
+            putWheelOn(shown.tables[tableIndex]);
         } else if (ev.id === backToStatsCommand) {
-            show(shownList);
+            show(shown.list);
         }
     }));
 
