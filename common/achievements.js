@@ -27,6 +27,10 @@ export const ACHIEVEMENT_FAMILY = Object.freeze({
 export const PROGRESS_UNIT = Object.freeze({
     TABLES: "tables",
     HOURS: "hours",
+    DAYS_IN_A_ROW: "daysInARow",
+    WEEKS_IN_A_ROW: "weeksInARow",
+    DAYS_PLAYED: "daysPlayed",
+    WEEKS_PLAYED: "weeksPlayed",
 });
 
 // Below this target, an Achievement Progress would only ever read "0/1".

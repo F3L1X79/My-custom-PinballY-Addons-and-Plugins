@@ -288,6 +288,22 @@ export default {
                 short: (current, target) => `${formatHours(current)}/${target} h`,
                 long: (current, target) => `${formatHours(current)} h sur ${target} h`,
             },
+            daysInARow: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} jour${current > 1 ? "s" : ""} d'affilée sur ${target}`,
+            },
+            weeksInARow: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} semaine${current > 1 ? "s" : ""} d'affilée sur ${target}`,
+            },
+            daysPlayed: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} ${current > 1 ? "jours joués" : "jour joué"} sur ${target}`,
+            },
+            weeksPlayed: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} ${current > 1 ? "semaines jouées" : "semaine jouée"} sur ${target}`,
+            },
         },
         families: {
             collection: "Collection",

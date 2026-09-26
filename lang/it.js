@@ -284,6 +284,22 @@ export default {
                 short: (current, target) => `${formatHours(current)}/${target} h`,
                 long: (current, target) => `${formatHours(current)} di ${target} ore`,
             },
+            daysInARow: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} di ${target} giorni di fila`,
+            },
+            weeksInARow: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} di ${target} settimane di fila`,
+            },
+            daysPlayed: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} di ${target} giorni giocati`,
+            },
+            weeksPlayed: {
+                short: (current, target) => `${current}/${target}`,
+                long: (current, target) => `${current} di ${target} settimane giocate`,
+            },
         },
         families: {
             collection: "Collezione",

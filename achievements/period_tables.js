@@ -3,10 +3,12 @@
 // Table of the Week. First play (once during its Period), Periods Played
 // (10, 50 and 100 days; 10, 26 and 52 weeks, consecutive or not) and
 // Streaks (3, 7 and 30 consecutive days; 4 and 12 consecutive weeks).
-// Reads the counters kept by common/period_table.js; writes nothing.
+// Periods Played and Streaks show those counters as Achievement Progress,
+// the current Streak for a Streak. Reads the counters kept by
+// common/period_table.js; writes nothing.
 // ============================================================
 
-import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
+import { ACHIEVEMENT_FAMILY, countedAchievement, PROGRESS_UNIT } from "../common/achievements.js";
 import lang from "../common/i18n.js";
 import { getTableOfTheDay, getTableOfTheWeek } from "../common/period_table.js";
 
@@ -39,43 +41,51 @@ export function buildPeriodTableAchievements() {
     ];
 
     for (const days of dailyPeriodsPlayedThresholds) {
-        achievements.push({
+        achievements.push(countedAchievement({
             id: `tableOfTheDayPeriodsPlayed:${days}`,
             family: ACHIEVEMENT_FAMILY.PERIOD_TABLES,
             getTitle: () => TEXT.dailyPeriodsPlayedTitles[days],
             getDescription: () => TEXT.dailyPeriodsPlayedDescription(days),
-            checkUnlocked: () => tableOfTheDay.getPeriodsPlayed() >= days,
-        });
+            target: days,
+            unit: PROGRESS_UNIT.DAYS_PLAYED,
+            getCurrent: tableOfTheDay.getPeriodsPlayed,
+        }));
     }
 
     for (const weeks of weeklyPeriodsPlayedThresholds) {
-        achievements.push({
+        achievements.push(countedAchievement({
             id: `tableOfTheWeekPeriodsPlayed:${weeks}`,
             family: ACHIEVEMENT_FAMILY.PERIOD_TABLES,
             getTitle: () => TEXT.weeklyPeriodsPlayedTitles[weeks],
             getDescription: () => TEXT.weeklyPeriodsPlayedDescription(weeks),
-            checkUnlocked: () => tableOfTheWeek.getPeriodsPlayed() >= weeks,
-        });
+            target: weeks,
+            unit: PROGRESS_UNIT.WEEKS_PLAYED,
+            getCurrent: tableOfTheWeek.getPeriodsPlayed,
+        }));
     }
 
     for (const days of dailyStreakThresholds) {
-        achievements.push({
+        achievements.push(countedAchievement({
             id: `tableOfTheDayStreak:${days}`,
             family: ACHIEVEMENT_FAMILY.PERIOD_TABLES,
             getTitle: () => TEXT.dailyStreakTitles[days],
             getDescription: () => TEXT.dailyStreakDescription(days),
-            checkUnlocked: () => tableOfTheDay.getStreak() >= days,
-        });
+            target: days,
+            unit: PROGRESS_UNIT.DAYS_IN_A_ROW,
+            getCurrent: tableOfTheDay.getStreak,
+        }));
     }
 
     for (const weeks of weeklyStreakThresholds) {
-        achievements.push({
+        achievements.push(countedAchievement({
             id: `tableOfTheWeekStreak:${weeks}`,
             family: ACHIEVEMENT_FAMILY.PERIOD_TABLES,
             getTitle: () => TEXT.weeklyStreakTitles[weeks],
             getDescription: () => TEXT.weeklyStreakDescription(weeks),
-            checkUnlocked: () => tableOfTheWeek.getStreak() >= weeks,
-        });
+            target: weeks,
+            unit: PROGRESS_UNIT.WEEKS_IN_A_ROW,
+            getCurrent: tableOfTheWeek.getStreak,
+        }));
     }
 
     return achievements;

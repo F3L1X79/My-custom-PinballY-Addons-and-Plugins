@@ -101,10 +101,10 @@ test("the Achievement List entry follows Play and lists the real Achievements by
     assert.deepEqual(openFamily("periodTables"), [
         `  ${ACHIEVEMENT.dailyFirstPlayTitle()}`,
         `  ${ACHIEVEMENT.weeklyFirstPlayTitle()}`,
-        ...[10, 50, 100].map(days => `  ${ACHIEVEMENT.dailyPeriodsPlayedTitles[days]}`),
-        ...[10, 26, 52].map(weeks => `  ${ACHIEVEMENT.weeklyPeriodsPlayedTitles[weeks]}`),
-        ...[3, 7, 30].map(days => `  ${ACHIEVEMENT.dailyStreakTitles[days]}`),
-        ...[4, 12].map(weeks => `  ${ACHIEVEMENT.weeklyStreakTitles[weeks]}`),
+        ...[10, 50, 100].map(days => `  ${withProgress(ACHIEVEMENT.dailyPeriodsPlayedTitles[days], "daysPlayed", 0, days)}`),
+        ...[10, 26, 52].map(weeks => `  ${withProgress(ACHIEVEMENT.weeklyPeriodsPlayedTitles[weeks], "weeksPlayed", 0, weeks)}`),
+        ...[3, 7, 30].map(days => `  ${withProgress(ACHIEVEMENT.dailyStreakTitles[days], "daysInARow", 0, days)}`),
+        ...[4, 12].map(weeks => `  ${withProgress(ACHIEVEMENT.weeklyStreakTitles[weeks], "weeksInARow", 0, weeks)}`),
     ]);
     assert.deepEqual(openFamily("sessions"), [
         ...[30, 60].map(minutes => `  ${ACHIEVEMENT.marathonTitles[minutes]}`),
