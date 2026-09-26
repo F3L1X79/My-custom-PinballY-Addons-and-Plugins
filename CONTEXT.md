@@ -28,6 +28,10 @@ _Avoid_: profile picture, photo
 The short greeting, with the Avatar and the Profile's name, shown when a Profile is picked and when PinballY starts, so the player knows whose plays will count. At startup it gives way to the startup prompt, which greets the Profile by name itself.
 _Avoid_: welcome toast, login message
 
+**Profile Stats**:
+The screen, opened by the player from the main menu, that sums up the active Profile's own plays: games played, total time, favourite manufacturer and decade, most played and never played tables, collection completion, Achievements Unlocked, and Streaks. Shown as "Statistiques" in French.
+_Avoid_: Pinball Profile, player card, profile screen (a Profile is the identity, not the screen)
+
 ### Choosing what to play
 
 **Period**:
