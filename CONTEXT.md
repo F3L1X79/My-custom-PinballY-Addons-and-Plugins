@@ -70,6 +70,24 @@ _Avoid_: exploration count, total streak
 **Day's Manufacturers**:
 The distinct non-empty manufacturers of the tables that started playing during one calendar day, however they were launched, hidden tables included.
 
+### Challenges
+
+**Challenge**:
+An easy play goal set for one week, the same for every Profile except Guest, who has none, such as playing five different Stern tables; each Profile's own progress counts only games of at least one minute on visible tables, started during the week, and the Challenge is completed or missed when the week ends. Shown as "Défi" in French.
+_Avoid_: quest, goal, mission, Achievement (an Achievement is a permanent milestone)
+
+**Challenge Card**:
+The small card under the Profile badge, at the top right of the wheel screen, that keeps the week's Challenge and the active Profile's progress in view; compact most of the time, it opens up for a few seconds when there is something new to show. Never shown for Guest.
+_Avoid_: challenge widget, challenge popup, status line
+
+**Challenge Tables**:
+The visible tables that would move the active Profile's Challenge forward if played now, offered as a wheel selection from the main menu; only some Challenges have them, for example not one about total play time.
+_Avoid_: challenge filter, eligible tables
+
+**Challenge Toast**:
+A toast like the Achievement Toast, but with its own colour and no trophy, that announces that the active Profile completed the week's Challenge.
+_Avoid_: challenge popup, challenge achievement
+
 ### Achievements
 
 **Achievement**:
@@ -89,7 +107,7 @@ The screen, opened by the player, that shows every Achievement sorted into Achie
 _Avoid_: My Achievements, trophy room
 
 **Achievement Family**:
-A kind of Achievement, used to sort the Achievement List: Collection, Play Time, Period Tables, Sessions, Random Game, Manufacturers, Decades, Categories. Period Tables gathers every Achievement about playing the Table of the Day or the Table of the Week (first play, total Periods played, Streaks).
+A kind of Achievement, used to sort the Achievement List: Collection, Play Time, Period Tables, Sessions, Random Game, Manufacturers, Decades, Categories, Challenges. Period Tables gathers every Achievement about playing the Table of the Day or the Table of the Week (first play, total Periods played, Streaks).
 _Avoid_: group (a group is the set of tables a completion Achievement covers, such as one manufacturer's tables), category (a PinballY table category)
 
 **Notified**:
