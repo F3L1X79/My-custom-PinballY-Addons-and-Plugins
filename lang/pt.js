@@ -336,6 +336,11 @@ export default {
         achievements: (unlocked, total) => `Conquistas: ${unlocked}/${total}`,
         tableOfTheDayStreak: (count, longest) => `Sequência diária: ${count} (recorde ${longest})`,
         tableOfTheWeekStreak: (count, longest) => `Sequência semanal: ${count} (recorde ${longest})`,
+        // Most time spent, with that time; "—" before any play.
+        favouriteManufacturer: (name, hours, minutes) => `Marca favorita: ${name} (${hours} h ${String(minutes).padStart(2, "0")})`,
+        noFavouriteManufacturer: "Marca favorita: —",
+        favouriteDecade: (decadeStartYear, hours, minutes) => `Década favorita: anos ${decadeStartYear} (${hours} h ${String(minutes).padStart(2, "0")})`,
+        noFavouriteDecade: "Década favorita: —",
         back: "Voltar",
     },
 

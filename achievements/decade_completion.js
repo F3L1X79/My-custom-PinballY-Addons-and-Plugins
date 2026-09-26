@@ -9,18 +9,14 @@
 import { buildGroupedCompletionAchievements } from "../common/grouped_completion.js";
 import { ACHIEVEMENT_FAMILY } from "../common/achievements.js";
 import lang from "../common/i18n.js";
-
-function getDecadeLabel(year) {
-    if (!year) return null;
-    return `${Math.floor(year / 10) * 10}s`;
-}
+import { getDecadeStartYear } from "../common/decade.js";
 
 export function buildDecadeCompletionAchievements() {
     const { achievements: TEXT } = lang;
     return buildGroupedCompletionAchievements({
         getGroupKeys: (game) => {
-            const decade = getDecadeLabel(game.year);
-            return decade ? [decade] : [];
+            const decadeStartYear = getDecadeStartYear(game.year);
+            return decadeStartYear === null ? [] : [`${decadeStartYear}s`];
         },
         idPrefix: "decadeCompletion",
         family: ACHIEVEMENT_FAMILY.DECADES,

@@ -2,7 +2,8 @@
 // Profile Stats module tests: over the fake PinballY host with a real
 // Profile store, real Period Tables and a real Achievement List, checks
 // what the player sees (title naming the active Profile, games played,
-// total time, collection completion, Achievements, both Streaks), that
+// total time, collection completion, Achievements, both Streaks,
+// favourite manufacturer and decade), that
 // the Achievements line opens the Achievement List, and that every number
 // is read again each time the screen opens.
 // ============================================================
@@ -25,8 +26,8 @@ const NOW = new Date(2026, 8, 23, 10, 0, 0);
 const PROFILES = "C:\\PinballY\\Scripts\\profiles";
 const profileFile = name => `${PROFILES}\\${name}\\profile.json`;
 
-function table(id, title, { isHidden = false } = {}) {
-    return { id, configId: `${title} (Williams 1990)`, title, manufacturer: "Williams", year: 1990, isHidden };
+function table(id, title, { isHidden = false, manufacturer = "Williams", year = 1990 } = {}) {
+    return { id, configId: `${title} (${manufacturer} ${year})`, title, manufacturer, year, isHidden };
 }
 
 const MEDIEVAL = table(1, "Medieval Madness");
@@ -53,8 +54,8 @@ function fakeAchievement(id, unlocked) {
     };
 }
 
-function setUp({ guest = { plays: GUEST_PLAYS }, others = {} } = {}) {
-    const fake = createFakePinballYHost({ now: NOW, tables: TABLES });
+function setUp({ guest = { plays: GUEST_PLAYS }, others = {}, tables = TABLES } = {}) {
+    const fake = createFakePinballYHost({ now: NOW, tables });
     fake.addFile(profileFile("guest"), JSON.stringify({ version: 1, ...guest }));
     for (const [name, data] of Object.entries(others)) {
         fake.addFile(profileFile(name), JSON.stringify({ version: 1, ...data }));
@@ -89,6 +90,8 @@ test("the screen names the active Profile and shows its numbers, then Back", () 
         { title: TEXT.achievements(2, 3), cmd: fake.currentMenu().items[5].cmd },
         { title: TEXT.tableOfTheDayStreak(0, 0), cmd: -1 },
         { title: TEXT.tableOfTheWeekStreak(0, 0), cmd: -1 },
+        { title: TEXT.favouriteManufacturer("Williams", 2, 15), cmd: -1 },
+        { title: TEXT.favouriteDecade(1990, 2, 15), cmd: -1 },
         { cmd: -1 },
         { title: TEXT.back, cmd: fake.getBuiltInCommand("MenuReturn") },
     ]);
@@ -102,6 +105,71 @@ test("a new Profile shows 0 games, 0 time and nothing completed", () => {
     assert.equal(shown[2], TEXT.gamesPlayed(0));
     assert.equal(shown[3], TEXT.totalTime(0, 0));
     assert.equal(shown[4], TEXT.collection(0, 3, 0));
+    assert.equal(shown[8], TEXT.noFavouriteManufacturer);
+    assert.equal(shown[9], TEXT.noFavouriteDecade);
+});
+
+test("the favourite manufacturer and decade are the ones with the most time on visible tables", () => {
+    const tables = [
+        table(1, "Twilight Zone", { manufacturer: "Bally", year: 1993 }),
+        table(2, "Addams Family", { manufacturer: "Bally", year: 1992 }),
+        table(3, "Pirates", { manufacturer: "Stern", year: 1981 }),
+        // Hidden: its hours never make Gottlieb or the 1970s the favourite.
+        table(4, "Hidden Gem", { manufacturer: "Gottlieb", year: 1975, isHidden: true }),
+        // No manufacturer, no year: left out of both favourites.
+        table(5, "Home Made", { manufacturer: "", year: 0 }),
+    ];
+    const plays = {
+        [tables[0].configId]: play(1, 1800),
+        [tables[1].configId]: play(1, 1800),
+        [tables[2].configId]: play(5, 2 * 3600 + 60),
+        [tables[3].configId]: play(9, 10 * 3600),
+        [tables[4].configId]: play(9, 10 * 3600),
+    };
+    const { fake } = setUp({ guest: { plays }, tables });
+
+    const shown = titles(fake.currentMenu());
+    assert.equal(shown[8], TEXT.favouriteManufacturer("Stern", 2, 1));
+    assert.equal(shown[9], TEXT.favouriteDecade(1980, 2, 1));
+});
+
+test("a tie on time goes to the most games, then to alphabetical order", () => {
+    const tables = [
+        table(1, "Eight Ball", { manufacturer: "Bally", year: 1977 }),
+        table(2, "Firepower", { manufacturer: "Williams", year: 1980 }),
+        table(3, "Cyclone", { manufacturer: "Gottlieb", year: 1988 }),
+        table(4, "Orbitor", { manufacturer: "Stern", year: 1982 }),
+    ];
+    const { fake } = setUp({
+        tables,
+        guest: {
+            plays: {
+                // Same hour each: Williams wins on games played.
+                [tables[0].configId]: play(2, 3600),
+                [tables[1].configId]: play(3, 3600),
+                // 1980s: Firepower, Cyclone and Orbitor. 1970s: Eight Ball.
+                [tables[2].configId]: play(1, 0),
+            },
+        },
+    });
+    let shown = titles(fake.currentMenu());
+    assert.equal(shown[8], TEXT.favouriteManufacturer("Williams", 1, 0));
+    assert.equal(shown[9], TEXT.favouriteDecade(1980, 1, 0));
+
+    const { fake: tied } = setUp({
+        tables,
+        guest: {
+            plays: {
+                // Same hour and same games: Bally comes first alphabetically,
+                // and the 1970s before the 1980s.
+                [tables[0].configId]: play(2, 3600),
+                [tables[1].configId]: play(2, 3600),
+            },
+        },
+    });
+    shown = titles(tied.currentMenu());
+    assert.equal(shown[8], TEXT.favouriteManufacturer("Bally", 1, 0));
+    assert.equal(shown[9], TEXT.favouriteDecade(1970, 1, 0));
 });
 
 test("the Achievements line matches the Achievement List and opens it", () => {
