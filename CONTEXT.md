@@ -77,7 +77,7 @@ An easy play goal set for one week, the same for every Profile except Guest, who
 _Avoid_: quest, goal, mission, Achievement (an Achievement is a permanent milestone)
 
 **Challenge Card**:
-The small card under the Profile badge, at the top right of the wheel screen, that keeps the week's Challenge and the active Profile's progress in view; compact most of the time, it opens up for a few seconds when there is something new to show. Never shown for Guest.
+The small card under the Profile badge, at the top right of the wheel screen, that keeps the week's Challenge and the active Profile's progress always in view; when there is something new, such as progress or the previous week's verdict, its content changes in place. Never shown for Guest.
 _Avoid_: challenge widget, challenge popup, status line
 
 **Challenge Tables**:
