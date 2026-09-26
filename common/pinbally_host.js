@@ -3,7 +3,8 @@
 // modules reach PinballY (settings, clock, timers, visible tables, wheel
 // selection, main window menus / UI mode / events / drawing layers,
 // StyledText, commands and running them, table launch, program folder,
-// sound playback, and the few file operations the Profile store needs).
+// sound playback, logfile.log, and the few file operations the Profile
+// store needs).
 // Every call passes straight through to PinballY's globals; tests use the
 // in-memory fake host from tests/fake_pinbally_host.js instead. No side
 // effects on import.
@@ -12,6 +13,8 @@
 const ADODB_TEXT_TYPE = 2;
 const ADODB_READ_ALL = -1;
 const ADODB_SAVE_OVERWRITE = 2;
+// Behind PinballY's own background layer (z 0), so the probe never shows.
+const IMAGE_PROBE_Z_INDEX = -1000;
 
 // Text through ADODB.Stream, which encodes UTF-8 so accented names and paths
 // survive (Scripting.FileSystemObject only knows ANSI and UTF-16).
@@ -64,6 +67,27 @@ function createFileSystem() {
         // Does nothing when the folder exists; its parent folder must exist.
         createFolder: (folderPath) => {
             if (!fso().FolderExists(folderPath)) fso().CreateFolder(folderPath);
+        },
+        // dc.getImageSize is the only check that decodes the image: it throws
+        // on a missing or unreadable file, where drawImage draws nothing
+        // without an error. It exists only inside a draw callback, so a
+        // throwaway layer behind every other one provides it.
+        isImageReadable: (path) => {
+            const probe = mainWindow.createDrawingLayer(IMAGE_PROBE_Z_INDEX);
+            try {
+                let readable = false;
+                probe.draw(dc => {
+                    try {
+                        dc.getImageSize(path);
+                        readable = true;
+                    } catch (error) {
+                        // The answer itself: the caller logs the unreadable image.
+                    }
+                }, 1, 1);
+                return readable;
+            } finally {
+                mainWindow.removeDrawingLayer(probe);
+            }
         },
     };
 }
@@ -125,5 +149,6 @@ export function createPinballYHost() {
             mediaPlayer.URL = filePath;
         },
         files: createFileSystem(),
+        log: (text) => { logfile.log(text); },
     };
 }

@@ -7,7 +7,8 @@
 // menus, launches, written settings keys, drawing layers, what was drawn,
 // sounds played and the lower status line; script filters are shown with
 // selectFilter(). Its in-memory file system is seeded with files and
-// folders and inspected (file contents, writes, renames and deletes).
+// folders (and unreadable images) and inspected (file contents, writes,
+// renames and deletes).
 // installGlobals() also exposes it as PinballY's globals (and the global
 // Date and timers, and the COM file objects over the same file system), so
 // code not yet on the host runs too. settle() waits on a real timer for
@@ -89,6 +90,8 @@ export function createFakePinballYHost({
     // program folder and its Scripts folder exist, as in PinballY.
     const folders = new Set();
     const files = new Map();
+    // Image files that exist but cannot be decoded (broken or half-written).
+    const unreadableImages = new Set();
     // Every write, rename and delete, in order: { operation, path, to? }.
     const fileOperationList = [];
     addFolder(`${withoutTrailingSlash(programFolder)}\\Scripts`);
@@ -211,6 +214,11 @@ export function createFakePinballYHost({
             fillRect() {},
             frameRect() {},
             drawImage: (path) => { images.push(path); },
+            // Like PinballY: throws on a missing or unreadable image.
+            getImageSize: (path) => {
+                if (!isImageReadable(path)) throw new Error(`Cannot load image: ${path}`);
+                return { width: 256, height: 256 };
+            },
             drawText: (text) => { texts.push(text); },
         };
         const layer = {
@@ -238,6 +246,13 @@ export function createFakePinballYHost({
         layers.push(layer);
         return layer;
     }
+
+    function removeDrawingLayer(layer) {
+        const index = layers.indexOf(layer);
+        if (index >= 0) layers.splice(index, 1);
+    }
+
+    const isImageReadable = path => files.has(path) && !unreadableImages.has(path);
 
     // Like the production host: a file never added by addFile() is missing.
     function playSound(filePath) {
@@ -294,6 +309,7 @@ export function createFakePinballYHost({
             requireParentFolder(withoutTrailingSlash(folderPath));
             folders.add(withoutTrailingSlash(folderPath));
         },
+        isImageReadable,
     };
 
     // Scripting.FileSystemObject over the in-memory file system, for code
@@ -397,6 +413,7 @@ export function createFakePinballYHost({
         getProgramFolder: () => programFolder,
         playSound,
         files: fileSystem,
+        log: (text) => { logLines.push(text); },
 
         // Moves the date without running the timers.
         setNow(date) { nowMs = date.getTime(); },
@@ -409,6 +426,11 @@ export function createFakePinballYHost({
         addFile(filePath, content = "") {
             addFolder(parentFolder(filePath));
             files.set(filePath, content);
+        },
+        // Seeds an image file that exists but cannot be decoded.
+        addUnreadableImage(filePath) {
+            host.addFile(filePath, "not an image");
+            unreadableImages.add(filePath);
         },
         addFolder,
         // Removes the folder with everything in it, as a player would by hand.
@@ -550,6 +572,7 @@ export function createFakePinballYHost({
                     playGame: host.playGame,
                     doCommand: host.doCommand,
                     createDrawingLayer,
+                    removeDrawingLayer,
                     statusLines: {
                         lower: {
                             getText: () => [...lowerStatusLine],

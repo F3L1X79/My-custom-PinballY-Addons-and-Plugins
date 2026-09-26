@@ -4,7 +4,9 @@
 // Avatar and its profile.json; cabinet.json, next to them, holds what the
 // household shares: the active Profile and the Period Table locks. Files
 // are read at startup and on each switch, kept in memory, and rewritten
-// whole on every change (tmp, backup, rename).
+// whole on every change (tmp, backup, rename). A broken file comes back
+// from its backup, or is set aside under a dated name when the backup is
+// broken too; every such problem is logged to logfile.log.
 // Listens to "gamestarted" / "gameover" to record every finished game for
 // the Profile active when it started; at startup, creates the Guest folder
 // and writes cabinet.json when they are missing.
@@ -25,6 +27,9 @@ const CABINET_VERSION = 1;
 const AVATAR_FILES = ["avatar.png", "avatar.jpg"];
 
 const isGuestName = name => name.toLowerCase() === GUEST_NAME;
+// A player parks or hides a Profile by renaming its folder.
+const isIgnoredFolder = name => name.startsWith(".") || name.startsWith("_");
+const isRecord = value => value !== null && typeof value === "object" && !Array.isArray(value);
 const sameName = (a, b) => a.toLowerCase() === b.toLowerCase();
 const pad = number => String(number).padStart(2, "0");
 
@@ -33,6 +38,9 @@ function toLocalIsoString(date) {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
         + `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
+
+// For a file name, where ":" is not allowed: "2026-09-24_21-10-00".
+const toFileDate = date => toLocalIsoString(date).replace("T", "_").replace(/:/g, "-");
 
 // The session stats: shortestSeconds stays 0 until a first timed game.
 const emptySessions = () => ({
@@ -54,10 +62,21 @@ export function createProfileStore(host) {
     const defaultAvatarPath = `${scriptsFolder}\\assets\\default_avatar.png`;
     const files = host.files;
     const switchListeners = [];
+    const log = text => host.log(`[${SCRIPT_NAME}] ${text}`);
+    // Logged once per session: the picker lists the Profiles on every opening.
+    const loggedUnreadableAvatars = new Set();
 
+    // The first readable one of the Profile's own Avatars, otherwise the default Avatar.
     function avatarPathOf(folder) {
-        const ownAvatar = AVATAR_FILES.map(name => `${folder}\\${name}`).find(path => files.fileExists(path));
-        return ownAvatar || defaultAvatarPath;
+        for (const path of AVATAR_FILES.map(name => `${folder}\\${name}`)) {
+            if (!files.fileExists(path)) continue;
+            if (files.isImageReadable(path)) return path;
+            if (!loggedUnreadableAvatars.has(path)) {
+                loggedUnreadableAvatars.add(path);
+                log(`${path} is not a readable PNG or JPEG image; showing the default Avatar.`);
+            }
+        }
+        return defaultAvatarPath;
     }
 
     function profileAt(folderName) {
@@ -67,20 +86,67 @@ export function createProfileStore(host) {
 
     // Guest first, then the others alphabetically. Re-read on every call, so a folder added while
     // PinballY runs shows up.
-    function listProfileRecords() {
-        const folderNames = files.listFolders(profilesFolder);
-        const guest = profileAt(folderNames.find(isGuestName) || GUEST_NAME);
-        const others = folderNames
-            .filter(name => !isGuestName(name))
-            .sort((a, b) => a.localeCompare(b))
-            .map(profileAt);
-        return [guest, ...others];
+    function listProfileNames() {
+        const folderNames = files.listFolders(profilesFolder).filter(name => !isIgnoredFolder(name));
+        const others = folderNames.filter(name => !isGuestName(name)).sort((a, b) => a.localeCompare(b));
+        return [folderNames.find(isGuestName) || GUEST_NAME, ...others];
+    }
+    const listProfileRecords = () => listProfileNames().map(profileAt);
+
+    // Only the found Profile's Avatar is checked: each check draws a probe layer.
+    function findProfile(name) {
+        const folderName = listProfileNames().find(folder => sameName(folder, name));
+        return folderName === undefined ? null : profileAt(folderName);
     }
 
-    const findProfile = name => listProfileRecords().find(profile => sameName(profile.name, name));
+    // The file's data, or null when it is missing, not JSON or not an object;
+    // the cause of an unreadable file is logged here, its outcome by the caller.
+    function tryReadJson(path) {
+        if (!files.fileExists(path)) return null;
+        try {
+            const data = JSON.parse(files.readText(path));
+            if (isRecord(data)) return data;
+            log(`${path} does not hold a JSON object.`);
+        } catch (error) {
+            log(`${path} cannot be read: ${error.message}`);
+        }
+        return null;
+    }
 
-    function readJson(path) {
-        return files.fileExists(path) ? JSON.parse(files.readText(path)) : null;
+    // Renames a broken file to "<name>.broken-<date>.json" next to it, for
+    // the player to repair; returns the new file name.
+    function setAside(folder, name) {
+        const baseName = `${name}.broken-${toFileDate(host.now())}`;
+        let asideName = `${baseName}.json`;
+        for (let copy = 2; files.fileExists(`${folder}\\${asideName}`); copy++) asideName = `${baseName}-${copy}.json`;
+        files.renameFile(`${folder}\\${name}.json`, `${folder}\\${asideName}`);
+        return asideName;
+    }
+
+    // The saved data, or null for a file never saved. A missing or broken
+    // file comes back from its readable backup; when the backup is broken
+    // too, both are set aside and the file starts from zero (null). A
+    // broken file is set aside, never deleted: it may hold a hand edit.
+    function loadJson(folder, baseName, label) {
+        const path = `${folder}\\${baseName}.json`;
+        const backupPath = `${folder}\\${baseName}.bak.json`;
+        const data = tryReadJson(path);
+        if (data) return data;
+        const hasFile = files.fileExists(path);
+        if (!hasFile && !files.fileExists(backupPath)) return null;
+
+        const brokenFile = hasFile ? setAside(folder, baseName) : null;
+        const backup = tryReadJson(backupPath);
+        if (backup) {
+            saveJson(folder, baseName, backup);
+            log(`${label} is missing or unreadable; restored from its backup`
+                + `${brokenFile ? ` (broken file kept as ${brokenFile})` : ""}.`);
+            return backup;
+        }
+        const asideFiles = brokenFile ? [brokenFile] : [];
+        if (files.fileExists(backupPath)) asideFiles.push(setAside(folder, `${baseName}.bak`));
+        log(`${label} and its backup are unreadable; kept aside as ${asideFiles.join(" and ")}, starting from zero.`);
+        return null;
     }
 
     // Writes "<name>.tmp.json", renames the current file to "<name>.bak.json"
@@ -102,7 +168,7 @@ export function createProfileStore(host) {
 
     // A file saved before a domain or a session stat existed gets it empty.
     function readProfileData(profile) {
-        const saved = readJson(`${profile.folder}\\profile.json`) || {};
+        const saved = loadJson(profile.folder, "profile", `${profile.name}\\profile.json`) || {};
         return { ...emptyProfileData(), ...saved, sessions: { ...emptySessions(), ...saved.sessions } };
     }
     const saveProfileData = (profile, data) => saveJson(profile.folder, "profile", data);
@@ -113,11 +179,17 @@ export function createProfileStore(host) {
     files.createFolder(profilesFolder);
     files.createFolder(findProfile(GUEST_NAME).folder);
 
-    const savedCabinet = readJson(`${profilesFolder}\\cabinet.json`);
+    const savedCabinet = loadJson(profilesFolder, "cabinet", "cabinet.json");
     const cabinet = savedCabinet || { version: CABINET_VERSION, activeProfile: GUEST_NAME };
-    let activeProfile = findProfile(cabinet.activeProfile) || findProfile(GUEST_NAME);
+    let activeProfile = typeof cabinet.activeProfile === "string" ? findProfile(cabinet.activeProfile) : null;
+    const activeFolderMissing = !activeProfile;
+    if (activeFolderMissing) {
+        log(`The active Profile "${cabinet.activeProfile}" has no folder in ${profilesFolder}; Guest is active.`);
+        activeProfile = findProfile(GUEST_NAME);
+        cabinet.activeProfile = activeProfile.name;
+    }
     let activeData = readProfileData(activeProfile);
-    if (!savedCabinet) saveCabinet();
+    if (!savedCabinet || activeFolderMissing) saveCabinet();
 
     const publicProfile = ({ name, isGuest, avatarPath }) => ({ name, isGuest, avatarPath });
 

@@ -265,6 +265,23 @@ for (const { name, createHost, usesGlobals } of ADAPTERS) {
         test("writing into a missing folder fails", () => {
             assert.throws(() => host.files.writeText("C:\\PinballY\\Scripts\\missing\\file.json", "{}"), /not found/);
         });
+
+        test("tells a readable image from a missing or unreadable one, leaving no drawing layer behind", () => {
+            const readable = "C:\\PinballY\\Scripts\\profiles\\Alice\\avatar.png";
+            const unreadable = "C:\\PinballY\\Scripts\\profiles\\Bob\\avatar.png";
+            fake.addFile(readable);
+            fake.addUnreadableImage(unreadable);
+
+            assert.equal(host.files.isImageReadable(readable), true);
+            assert.equal(host.files.isImageReadable(unreadable), false);
+            assert.equal(host.files.isImageReadable("C:\\PinballY\\Scripts\\missing.png"), false);
+            assert.deepEqual(fake.drawingLayers(), []);
+        });
+
+        test("writes log lines", () => {
+            host.log("[Test] hello");
+            assert.deepEqual(fake.logLines(), ["[Test] hello"]);
+        });
     });
 }
 
